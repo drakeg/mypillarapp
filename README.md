@@ -392,3 +392,26 @@ v=spf1 include:spf.protection.outlook.com include:amazonses.com ~all
 ```
 
 Cost impact is effectively zero at current usage; SES charges are usage-based and tiny for low-volume contact notifications.
+
+
+## Messaging and near-free notifications
+
+The live site now includes a lightweight dedicated messaging component deployed as normal site artifacts:
+
+- SQLite-backed conversations and messages on the EC2 instance
+- Project request form and async chat both create conversations
+- Admin inbox at `/admin/login` and `/admin/inbox`
+- Statuses: `new`, `waiting_on_me`, `waiting_on_client`, `closed`
+- Priorities: `low`, `normal`, `high`
+- Tags and internal notes
+- SES notifications when enabled
+
+Email notification triggers:
+
+1. New project request: sends admin notification and visitor conversation link.
+2. New chat: sends admin notification and visitor conversation link.
+3. Visitor reply: sends admin notification.
+4. Admin public reply: sends visitor notification.
+5. Admin internal note: saved only; no visitor email.
+
+Cost impact remains near-free: SQLite runs on the existing EC2 instance and SES is usage-based/pennies at small volume. No RDS, Redis, ALB, WAF, AI, or paid chat service is used.
