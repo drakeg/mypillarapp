@@ -67,6 +67,8 @@ module "ses" {
   ses_domain                = var.ses_domain
   notify_email_to           = var.notify_email_to
   create_recipient_identity = var.create_ses_recipient_identity
+  enable_custom_mail_from   = var.enable_custom_mail_from
+  mail_from_subdomain       = var.mail_from_subdomain
   tags                      = local.tags
 }
 

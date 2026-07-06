@@ -62,6 +62,11 @@ output "ses_domain_identity_name" {
   value = module.ses.ses_domain_identity_name
 }
 
+output "ses_mail_from_domain" {
+  value       = module.ses.ses_mail_from_domain
+  description = "SES custom MAIL FROM domain, if enabled."
+}
+
 output "ses_external_dns_records" {
   value       = module.ses.external_dns_records
   description = "DNS records to add at your external DNS provider for SES verification/DKIM/SPF/DMARC."

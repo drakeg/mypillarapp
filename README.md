@@ -355,3 +355,40 @@ Then copy the `ses_external_dns_records` output into your external DNS provider.
 If your SES account is still in sandbox, Terraform also creates an SES identity for `notify_email_to`. AWS will send that address a verification email; click the link before expecting test emails to arrive. Later, request SES production access so the platform can email unverified visitors their chat links.
 
 Cost impact: SES identities and DKIM have no standing monthly charge. Sending email is usage-based and should be effectively free/pennies at this early volume.
+
+
+## SES custom MAIL FROM with external DNS
+
+This stack can create an SES custom MAIL FROM domain for better SPF/DMARC alignment while keeping your normal Outlook/Microsoft 365 mail flow intact. DNS is hosted externally, so Terraform does not create DNS records. It outputs the records you add manually.
+
+Recommended settings:
+
+```hcl
+enable_email_notifications = true
+ses_domain                 = "madmallards.com"
+enable_custom_mail_from    = true
+mail_from_subdomain        = "mail"
+notify_email_from          = "noreply@madmallards.com"
+notify_email_to            = "greg@madmallards.com"
+```
+
+After `terraform apply`, run:
+
+```bash
+make tf-output ENV=prod
+```
+
+Add the records shown in `ses_external_dns_records` at your external DNS provider. The custom MAIL FROM records will look like:
+
+```text
+MX   mail.madmallards.com   10 feedback-smtp.<region>.amazonses.com
+TXT  mail.madmallards.com   v=spf1 include:amazonses.com ~all
+```
+
+Do not replace the root `madmallards.com` MX records used by Outlook/Microsoft 365. For root SPF, keep only one SPF TXT record and merge SES into your existing record if one exists, for example:
+
+```text
+v=spf1 include:spf.protection.outlook.com include:amazonses.com ~all
+```
+
+Cost impact is effectively zero at current usage; SES charges are usage-based and tiny for low-volume contact notifications.

@@ -26,14 +26,36 @@ variable "create_recipient_identity" {
   description = "Create an SES email identity for notify_email_to so sandbox test recipients can be verified."
 }
 
+
+variable "enable_custom_mail_from" {
+  type        = bool
+  default     = true
+  description = "Create an SES custom MAIL FROM domain so outbound mail can align for DMARC. Requires external DNS records."
+}
+
+variable "mail_from_subdomain" {
+  type        = string
+  default     = "mail"
+  description = "Subdomain used for SES custom MAIL FROM, e.g. mail creates mail.example.com."
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]$", var.mail_from_subdomain))
+    error_message = "mail_from_subdomain must be a valid single DNS label such as mail or bounce."
+  }
+}
+
 variable "tags" {
   type    = map(string)
   default = {}
 }
 
+data "aws_region" "current" {}
+
 locals {
   create_domain_identity    = var.enabled && length(trimspace(var.ses_domain)) > 0
   create_recipient_identity = var.enabled && var.create_recipient_identity && length(trimspace(var.notify_email_to)) > 0
+  create_mail_from          = local.create_domain_identity && var.enable_custom_mail_from
+  mail_from_domain          = "${var.mail_from_subdomain}.${var.ses_domain}"
 }
 
 resource "aws_ses_domain_identity" "this" {
@@ -44,6 +66,12 @@ resource "aws_ses_domain_identity" "this" {
 resource "aws_ses_domain_dkim" "this" {
   count  = local.create_domain_identity ? 1 : 0
   domain = aws_ses_domain_identity.this[0].domain
+}
+
+resource "aws_ses_domain_mail_from" "this" {
+  count            = local.create_mail_from ? 1 : 0
+  domain           = aws_ses_domain_identity.this[0].domain
+  mail_from_domain = local.mail_from_domain
 }
 
 resource "aws_ses_email_identity" "recipient" {
@@ -66,16 +94,31 @@ locals {
     }
   ] : []
 
-  spf_txt_record = local.create_domain_identity ? {
+  mail_from_mx_record = local.create_mail_from ? {
+    name     = local.mail_from_domain
+    type     = "MX"
+    priority = 10
+    value    = "feedback-smtp.${data.aws_region.current.name}.amazonses.com"
+  } : null
+
+  mail_from_spf_txt_record = local.create_mail_from ? {
+    name  = local.mail_from_domain
+    type  = "TXT"
+    value = "v=spf1 include:amazonses.com ~all"
+  } : null
+
+  recommended_root_spf_txt_record = local.create_domain_identity ? {
     name  = var.ses_domain
     type  = "TXT"
     value = "v=spf1 include:amazonses.com ~all"
+    note  = "If the root domain already has an SPF TXT record for Microsoft 365/Outlook or another mail service, DO NOT create a second SPF record. Merge include:amazonses.com into the existing SPF record instead. Example: v=spf1 include:spf.protection.outlook.com include:amazonses.com ~all"
   } : null
 
   dmarc_txt_record = local.create_domain_identity ? {
     name  = "_dmarc.${var.ses_domain}"
     type  = "TXT"
     value = "v=DMARC1; p=none; rua=mailto:postmaster@${var.ses_domain}"
+    note  = "Recommended starter DMARC policy. If a DMARC record already exists, review before replacing it."
   } : null
 }
 
@@ -91,13 +134,19 @@ output "ses_recipient_identity_arn" {
   value = local.create_recipient_identity ? aws_ses_email_identity.recipient[0].arn : ""
 }
 
+output "ses_mail_from_domain" {
+  value = local.create_mail_from ? local.mail_from_domain : ""
+}
+
 output "external_dns_records" {
-  description = "DNS records to add at the external DNS provider for SES verification and authentication."
+  description = "DNS records to add at the external DNS provider for SES verification, DKIM, custom MAIL FROM, and recommended SPF/DMARC."
   value = local.create_domain_identity ? {
-    verification_txt = local.verification_txt_record
-    dkim_cnames      = local.dkim_cname_records
-    recommended_spf  = local.spf_txt_record
-    recommended_dmarc = local.dmarc_txt_record
+    verification_txt     = local.verification_txt_record
+    dkim_cnames          = local.dkim_cname_records
+    mail_from_mx         = local.mail_from_mx_record
+    mail_from_spf        = local.mail_from_spf_txt_record
+    recommended_root_spf = local.recommended_root_spf_txt_record
+    recommended_dmarc    = local.dmarc_txt_record
   } : null
 }
 

@@ -150,3 +150,16 @@ variable "create_ses_recipient_identity" {
   default     = true
   description = "Create SES email identity for notify_email_to so SES sandbox testing can work after email confirmation."
 }
+
+
+variable "enable_custom_mail_from" {
+  type        = bool
+  default     = true
+  description = "Create SES custom MAIL FROM configuration. Requires adding output DNS records at external DNS provider."
+}
+
+variable "mail_from_subdomain" {
+  type        = string
+  default     = "mail"
+  description = "Subdomain for SES custom MAIL FROM, e.g. mail creates mail.madmallards.com."
+}

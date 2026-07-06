@@ -34,3 +34,8 @@ notify_email_to            = ""
 # While SES is in sandbox, confirm verification for notify_email_to before test emails will deliver.
 ses_domain                    = "madmallards.com"
 create_ses_recipient_identity = true
+
+# SES custom MAIL FROM. Safe with external Outlook/Microsoft 365 email as long as you add these records
+# under the mail_from_subdomain only and do not replace the root domain MX records.
+enable_custom_mail_from = true
+mail_from_subdomain     = "mail"
