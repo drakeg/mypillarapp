@@ -1,0 +1,11 @@
+services:
+  app:
+    build: ./app
+    restart: unless-stopped
+    environment:
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,pillar.madmallards.com"
+      DJANGO_DEBUG: "False"
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "127.0.0.1:8000:8000"

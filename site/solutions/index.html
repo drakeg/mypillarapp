@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mad Mallard Solutions</title>
+  <meta name="description" content="Practical AWS, Linux, Terraform, automation, and small business technology help." />
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Mad Mallard Solutions home">
+      <img src="/assets/mad-mallard-solutions-logo-icon.png" alt="" />
+      <span><strong>Mad Mallard</strong><small>Solutions</small></span>
+    </a>
+    <nav>
+      <a href="#services">Services</a>
+      <a href="#platform">Platform</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">AWS • Linux • Terraform • Automation</div>
+        <h1>Technology that helps small businesses move faster.</h1>
+        <p class="lead">Mad Mallard Solutions builds practical cloud, server, automation, and web systems without unnecessary enterprise complexity or runaway monthly costs.</p>
+        <div class="actions">
+          <a class="btn primary" href="#contact">Start a Conversation</a>
+          <a class="btn secondary" href="#services">Explore Services</a>
+        </div>
+        <div class="pill-row">
+          <span>Free-first architecture</span>
+          <span>Terraform-managed</span>
+          <span>Built for growth</span>
+        </div>
+      </div>
+      <aside class="hero-card">
+        <div class="logo-stage"><img src="/assets/mad-mallard-solutions-logo-lockup.png" alt="Mad Mallard Solutions logo" /></div>
+        <div class="status-card"><span class="dot"></span> Live AWS/Caddy/Terraform deployment</div>
+        <div class="mini-grid">
+          <div><strong>Cloud</strong><small>AWS foundations</small></div>
+          <div><strong>IaC</strong><small>Terraform</small></div>
+          <div><strong>Ops</strong><small>Linux + Docker</small></div>
+          <div><strong>Automate</strong><small>Scripts + workflows</small></div>
+        </div>
+      </aside>
+    </section>
+
+    <section id="services" class="section">
+      <div class="section-title"><span>What we do</span><h2>Focused technology help for lean businesses.</h2></div>
+      <div class="cards">
+        <article class="card"><h3>AWS & cloud setup</h3><p>Right-sized infrastructure, secure access, HTTPS, backups, and deployment patterns that keep costs under control.</p></article>
+        <article class="card"><h3>Linux & Docker support</h3><p>Server hardening, troubleshooting, container deployments, logging, patches, and practical operational documentation.</p></article>
+        <article class="card"><h3>Terraform & automation</h3><p>Repeatable infrastructure, scripted workflows, GitHub-driven deployments, and small tools that save time every week.</p></article>
+      </div>
+    </section>
+
+    <section id="platform" class="section split">
+      <div>
+        <div class="section-title compact"><span>Platform-first</span><h2>More than a business card site.</h2></div>
+        <p>This page is the start of a self-hosted Pillar-style platform: links, services, lead capture, conversations, and eventually dashboards for multiple brands while keeping identities separate.</p>
+      </div>
+      <div class="timeline">
+        <div><strong>Now</strong><span>Landing page, contact form, async chat.</span></div>
+        <div><strong>Next</strong><span>Admin dashboard, editable pages, link hub.</span></div>
+        <div><strong>Later</strong><span>Client portal, proposals, analytics, AI when it makes financial sense.</span></div>
+      </div>
+    </section>
+
+    <section id="contact" class="section contact-section">
+      <div class="section-title"><span>Start here</span><h2>Tell us what you’re trying to build.</h2><p>Choose the structured project form or start a lightweight async chat. Both are stored on this server with no extra monthly service cost.</p></div>
+      <div class="contact-grid">
+        <form id="contactForm" class="contact-panel">
+          <h3>Project request</h3>
+          <input name="website" class="hp" autocomplete="off" tabindex="-1" />
+          <label>Name<input name="name" required /></label>
+          <label>Email<input name="email" type="email" required /></label>
+          <label>Company<input name="company" /></label>
+          <label>Interested in<select name="service" id="serviceSelect"></select></label>
+          <label>Timeline<select name="timeline" id="timelineSelect"></select></label>
+          <label>Budget<select name="budget" id="budgetSelect"></select></label>
+          <label>Project details<textarea name="message" rows="5" required placeholder="What are you trying to accomplish?"></textarea></label>
+          <button class="btn primary" type="submit">Send project request</button>
+          <p class="form-status" id="contactStatus"></p>
+        </form>
+
+        <form id="chatForm" class="contact-panel chat-panel">
+          <h3>Async chat</h3>
+          <p>Send a quick message and get a private conversation link you can bookmark.</p>
+          <label>Name<input name="name" /></label>
+          <label>Email<input name="email" type="email" /></label>
+          <label>Message<textarea name="body" rows="6" required placeholder="Quick question or project idea..."></textarea></label>
+          <button class="btn secondary" type="submit">Open conversation</button>
+          <p class="form-status" id="chatStatus"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer>© <span id="year"></span> Mad Mallard Solutions. Practical technology, built carefully.</footer>
+  <script src="/assets/site.js"></script>
+</body>
+</html>

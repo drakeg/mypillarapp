@@ -1,0 +1,36 @@
+# Required
+primary_domain = "pillar.madmallards.com"
+acme_email     = "greg@madmallards.com"
+
+# Access
+# Use 0.0.0.0/0 if you travel and need SSH from changing networks.
+# Set enable_ssh = false later if you decide to use SSM Session Manager only.
+enable_ssh = true
+ssh_cidr   = "0.0.0.0/0"
+public_key = "ssh-ed25519 AAAA...your-public-key..."
+
+# Low-cost defaults
+instance_type               = "t3.micro"
+ami_family                  = "amazon-linux-2023"
+ami_id                      = ""
+root_volume_size            = 20
+use_elastic_ip              = false
+user_data_replace_on_change = false
+security_profile            = "standard"
+
+# Optional domains Caddy should also serve.
+additional_domains = []
+
+# Optional: enables /admin/inbox?token=YOUR_TOKEN. Leave blank to disable.
+admin_token = ""
+
+# Optional SES notifications. While SES is in sandbox, both addresses must be verified.
+enable_email_notifications = false
+notify_email_from          = ""
+notify_email_to            = ""
+
+# SES email notifications. DNS is external, so Terraform will output records to add manually.
+# Near-free: SES identities/DKIM have no standing monthly cost; normal SES send charges are usage-based and tiny at this scale.
+# While SES is in sandbox, confirm verification for notify_email_to before test emails will deliver.
+ses_domain                    = "madmallards.com"
+create_ses_recipient_identity = true

@@ -1,0 +1,145 @@
+#!/usr/bin/env bash
+set -euxo pipefail
+LOG=/var/log/madmallard-bootstrap.log
+exec > >(tee -a "$LOG") 2>&1
+
+echo "[$(date -Is)] Mad Mallard bootstrap starting"
+
+if [ -f /etc/os-release ]; then
+  . /etc/os-release
+else
+  echo "Cannot determine OS" >&2
+  exit 1
+fi
+
+dnf_retry_install_amzn() {
+  local packages=("$@")
+  dnf clean all || true
+  rm -rf /var/cache/dnf || true
+  dnf makecache --refresh -y || true
+
+  if dnf install -y --refresh "$${packages[@]}"; then
+    return 0
+  fi
+
+  echo "[$(date -Is)] First dnf install attempt failed; cleaning cache and retrying with --allowerasing"
+  dnf clean all || true
+  rm -rf /var/cache/dnf || true
+  dnf makecache --refresh -y || true
+  dnf install -y --refresh --allowerasing "$${packages[@]}"
+}
+
+install_base_amzn() {
+  dnf clean all || true
+  rm -rf /var/cache/dnf || true
+  dnf update -y --refresh || dnf update -y --refresh --allowerasing
+  dnf_retry_install_amzn docker git tar gzip amazon-ssm-agent iptables-nft
+  systemctl enable --now docker
+  systemctl enable --now amazon-ssm-agent
+}
+
+install_base_ubuntu() {
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update
+  apt-get install -y docker.io git curl tar gzip ca-certificates amazon-ssm-agent || true
+  systemctl enable --now docker
+  systemctl enable --now amazon-ssm-agent || systemctl enable --now snap.amazon-ssm-agent.amazon-ssm-agent || true
+}
+
+if [[ "$ID" == "amzn" ]]; then
+  install_base_amzn
+else
+  install_base_ubuntu
+fi
+
+mkdir -p /opt/madmallard-platform/app /opt/madmallard-platform/caddy/data /opt/madmallard-platform/caddy/config
+cat > /opt/madmallard-platform/caddy/Caddyfile <<'CADDY'
+{
+    email ${acme_email}
+}
+
+${caddy_sites}
+CADDY
+
+cat > /opt/madmallard-platform/app/server.py <<'PY'
+from http.server import BaseHTTPRequestHandler, HTTPServer
+import os
+
+PRIMARY_DOMAIN = os.environ.get("PRIMARY_DOMAIN", "")
+
+class Handler(BaseHTTPRequestHandler):
+    def _send_page(self):
+        body = f"""<!doctype html>
+<html><head><title>Mad Mallard Platform</title></head>
+<body style='font-family: system-ui; max-width: 760px; margin: 4rem auto; line-height: 1.5;'>
+<h1>Mad Mallard Platform</h1>
+<p>The base AWS/Caddy deployment is working.</p>
+<p><strong>Requested host:</strong> {self.headers.get('Host', '')}</p>
+<p><strong>Configured primary domain:</strong> {PRIMARY_DOMAIN}</p>
+<p>Next step: replace this health page with the Django platform.</p>
+</body></html>""".encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        if self.command != "HEAD":
+            self.wfile.write(body)
+
+    def do_GET(self):
+        self._send_page()
+
+    def do_HEAD(self):
+        self._send_page()
+
+HTTPServer(("0.0.0.0", 8000), Handler).serve_forever()
+PY
+
+cat > /etc/systemd/system/madmallard-app.service <<'SERVICE'
+[Unit]
+Description=Mad Mallard Platform temporary app container
+After=docker.service
+Requires=docker.service
+
+[Service]
+Restart=always
+ExecStartPre=-/usr/bin/docker rm -f madmallard-app
+ExecStart=/usr/bin/docker run --name madmallard-app --pull=always \
+  -e PRIMARY_DOMAIN=${primary_domain} \
+  -v /opt/madmallard-platform/app:/app:ro \
+  -p 8000:8000 \
+  python:3.12-slim python /app/server.py
+ExecStop=/usr/bin/docker stop madmallard-app
+ExecStopPost=-/usr/bin/docker rm -f madmallard-app
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+
+cat > /etc/systemd/system/madmallard-caddy.service <<'SERVICE'
+[Unit]
+Description=Mad Mallard Platform Caddy container
+After=docker.service madmallard-app.service
+Requires=docker.service
+
+[Service]
+Restart=always
+ExecStartPre=-/usr/bin/docker rm -f madmallard-caddy
+ExecStart=/usr/bin/docker run --name madmallard-caddy --pull=always \
+  --add-host=host.docker.internal:host-gateway \
+  -p 80:80 -p 443:443 -p 443:443/udp \
+  -v /opt/madmallard-platform/caddy/Caddyfile:/etc/caddy/Caddyfile:ro \
+  -v /opt/madmallard-platform/caddy/data:/data \
+  -v /opt/madmallard-platform/caddy/config:/config \
+  caddy:2-alpine
+ExecStop=/usr/bin/docker stop madmallard-caddy
+ExecStopPost=-/usr/bin/docker rm -f madmallard-caddy
+
+[Install]
+WantedBy=multi-user.target
+SERVICE
+
+systemctl daemon-reload
+systemctl enable --now madmallard-app.service
+systemctl enable --now madmallard-caddy.service
+
+echo "[$(date -Is)] Mad Mallard bootstrap complete"
