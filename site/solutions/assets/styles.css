@@ -145,3 +145,74 @@
 @media (max-width: 900px) {
   .admin-side-nav nav { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:8px; }
 }
+
+/* v2.7 admin layout polish: center content next to fixed sidebar */
+.admin-app {
+  grid-template-columns: 260px minmax(0, 1fr);
+}
+.admin-main {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  padding: 38px 42px;
+}
+.admin-main > * {
+  width: min(1180px, 100%);
+  margin-left: auto;
+  margin-right: auto;
+}
+.admin-header {
+  width: min(1180px, 100%);
+}
+.admin-section,
+.admin-card,
+.metric-grid,
+.org-grid,
+.two-col,
+.inbox-list,
+.conversation-admin-grid,
+.admin-top,
+.section-title,
+.action-row {
+  max-width: 1180px;
+}
+.admin-table {
+  min-width: 720px;
+}
+.admin-card {
+  width: min(1180px, 100%);
+}
+.auth-shell .admin-card,
+.admin-card.admin-login,
+.admin-card.narrow {
+  width: min(520px, 100%);
+}
+.conversation-admin-grid {
+  width: min(1180px, 100%);
+}
+@media (min-width: 901px) {
+  .admin-side-nav {
+    position: sticky;
+    left: 0;
+  }
+}
+@media (max-width: 900px) {
+  .admin-main {
+    padding: 24px 20px 40px;
+  }
+  .admin-main > *,
+  .admin-header,
+  .admin-section,
+  .admin-card,
+  .metric-grid,
+  .org-grid,
+  .two-col,
+  .inbox-list,
+  .conversation-admin-grid,
+  .admin-top,
+  .section-title,
+  .action-row {
+    width: 100%;
+    max-width: none;
+  }
+}

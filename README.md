@@ -14,7 +14,7 @@ The current goal is simple:
 
 
 
-## v2.6 - Admin Navigation + CRM Foundation
+## v2.7 - Admin Navigation + CRM Foundation
 
 This release focuses on the next practical coding step instead of infrastructure churn. It keeps the same low-cost EC2 + SQLite + SES architecture and adds:
 
@@ -537,3 +537,11 @@ This version improves the admin side with:
 - visitor link access from the admin view.
 
 Added monthly cost: **$0**. It still uses the existing EC2 instance, SQLite database, and SES for low-cost notifications.
+
+
+## v2.7
+
+- Polished admin layout spacing.
+- Centered admin content beside the sidebar.
+- Added consistent max-width wrapping for dashboard, CRM, messages, cards, and tables.
+- Improved responsive admin spacing.
