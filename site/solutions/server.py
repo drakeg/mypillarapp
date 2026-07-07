@@ -381,7 +381,7 @@ class Handler(BaseHTTPRequestHandler):
             ('logout', '/admin/logout', 'Sign out'),
         ]
         nav_html = ''.join(f"<a class='admin-nav-link {'active' if key == active else ''}' href='{href}'>{label}</a>" for key, href, label in nav)
-        return html_response(self, 200, f"""<!doctype html><html><head><title>{esc(title)} - Mad Mallard Platform</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head>
+        return html_response(self, 200, f"""<!doctype html><html><head><title>{esc(title)} - Mad Mallard Platform</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'><link rel='stylesheet' href='/assets/admin.css'></head>
 <body class='admin-app'><aside class='admin-side-nav'><div class='admin-brand'><img src='/assets/mad-mallard-solutions-logo-icon.png' alt=''><div><strong>Mad Mallard</strong><span>Business OS</span></div></div><nav>{nav_html}</nav></aside><main class='admin-main'>{content}</main></body></html>""")
 
     def render_dashboard(self):
@@ -532,10 +532,10 @@ class Handler(BaseHTTPRequestHandler):
 
     def render_login(self):
         if ADMIN_PASSWORD_HASH:
-            body = f"""<!doctype html><html><head><title>Admin Login - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head>
+            body = f"""<!doctype html><html><head><title>Admin Login - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'><link rel='stylesheet' href='/assets/admin.css'></head>
 <body class='conversation-page'><main class='conversation-shell auth-shell'><div class='admin-card'><h1>Admin login</h1><p>Sign in to manage leads, conversations, notes, and replies.</p><form method='post' action='/admin/login' class='contact-panel'><label>Username<input type='text' name='username' value='{esc(ADMIN_USERNAME)}' autocomplete='username' required autofocus></label><label>Password<input type='password' name='password' autocomplete='current-password' required></label><button class='btn primary' type='submit'>Open inbox</button></form></div></main></body></html>"""
         else:
-            body = """<!doctype html><html><head><title>Admin Login - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head>
+            body = """<!doctype html><html><head><title>Admin Login - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'><link rel='stylesheet' href='/assets/admin.css'></head>
 <body class='conversation-page'><main class='conversation-shell auth-shell'><div class='admin-card'><h1>Admin login</h1><p>Legacy token mode is active. Set <code>admin_password_hash</code> in Terraform to use username/password login.</p><form method='post' action='/admin/login' class='contact-panel'><label>Admin token<input type='password' name='token' autocomplete='current-password' required autofocus></label><button class='btn primary' type='submit'>Open inbox</button></form></div></main></body></html>"""
         return html_response(self, 200, body)
 
@@ -545,7 +545,7 @@ class Handler(BaseHTTPRequestHandler):
             return html_response(self, 404, '<h1>Conversation not found</h1>')
         visible = [m for m in messages if not m['internal']]
         rows = ''.join(f"<div class='msg {esc(m['sender_type'])}'><strong>{esc(m['sender'])}</strong><p>{esc(m['body'])}</p></div>" for m in visible)
-        body = f"""<!doctype html><html><head><title>Conversation - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head>
+        body = f"""<!doctype html><html><head><title>Conversation - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'><link rel='stylesheet' href='/assets/admin.css'></head>
 <body class='conversation-page'><main class='conversation-shell'><a href='/'>← Back</a><h1>Conversation</h1><p>This private link lets you continue the conversation with Mad Mallard Solutions.</p><section class='message-list'>{rows}</section><form id='replyForm' class='contact-panel'><textarea name='body' rows='5' placeholder='Add a message...' required></textarea><button class='btn primary' type='submit'>Send message</button></form></main><script>document.getElementById('replyForm').addEventListener('submit', async e=>{{e.preventDefault(); const body=e.target.body.value; const r=await fetch('/api/chat/{token}/messages',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{body}})}}); if(r.ok) location.reload();}});</script></body></html>"""
         return html_response(self, 200, body)
 

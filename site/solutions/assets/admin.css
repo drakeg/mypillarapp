@@ -1,0 +1,320 @@
+/* v2.8 Business OS shell stabilization
+   This file intentionally overrides the public marketing-site layout. */
+:root {
+  --admin-bg: #050d18;
+  --admin-panel: rgba(10, 28, 48, .92);
+  --admin-panel-soft: rgba(255,255,255,.055);
+  --admin-line: rgba(149, 214, 255, .16);
+  --admin-text: #ecf7ff;
+  --admin-muted: #9db3c6;
+  --admin-cyan: #57e2ff;
+  --admin-green: #40f0bd;
+  --admin-sidebar: 286px;
+}
+
+html, body.admin-app {
+  margin: 0 !important;
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+body.admin-app {
+  display: grid !important;
+  grid-template-columns: var(--admin-sidebar) minmax(0, 1fr) !important;
+  color: var(--admin-text) !important;
+  background:
+    radial-gradient(circle at 80% 0%, rgba(87,226,255,.14), transparent 34%),
+    radial-gradient(circle at 0% 100%, rgba(64,240,189,.10), transparent 30%),
+    var(--admin-bg) !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body.admin-app main,
+body.admin-app .admin-main {
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 !important;
+}
+
+.admin-side-nav {
+  width: var(--admin-sidebar) !important;
+  min-width: var(--admin-sidebar) !important;
+  height: 100vh !important;
+  position: sticky !important;
+  top: 0 !important;
+  padding: 24px 20px !important;
+  background: linear-gradient(180deg, rgba(8,22,39,.98), rgba(3,10,18,.99)) !important;
+  border-right: 1px solid var(--admin-line) !important;
+  overflow-y: auto !important;
+  z-index: 20 !important;
+}
+
+.admin-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 8px 8px 22px !important;
+  margin: 0 0 18px !important;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.admin-brand img {
+  width: 54px !important;
+  height: 54px !important;
+  object-fit: contain !important;
+  border-radius: 16px !important;
+  filter: drop-shadow(0 12px 28px rgba(87,226,255,.2));
+}
+
+.admin-brand strong {
+  display: block !important;
+  color: #fff !important;
+  font-size: 1.08rem !important;
+  line-height: 1.1 !important;
+}
+
+.admin-brand span {
+  display: block !important;
+  color: var(--admin-muted) !important;
+  margin-top: 4px !important;
+  font-size: .86rem !important;
+}
+
+.admin-side-nav nav {
+  display: grid !important;
+  gap: 8px !important;
+}
+
+.admin-nav-link {
+  display: flex !important;
+  align-items: center !important;
+  min-height: 44px !important;
+  color: #bdd4e7 !important;
+  text-decoration: none !important;
+  padding: 0 14px !important;
+  border-radius: 14px !important;
+  border: 1px solid transparent !important;
+  font-weight: 800 !important;
+  letter-spacing: -.01em;
+}
+
+.admin-nav-link:hover,
+.admin-nav-link.active {
+  color: #fff !important;
+  background: rgba(87,226,255,.12) !important;
+  border-color: rgba(87,226,255,.32) !important;
+}
+
+.admin-main {
+  min-width: 0 !important;
+  padding: 34px clamp(24px, 4vw, 56px) 64px !important;
+}
+
+.admin-main > *,
+.admin-header,
+.admin-section,
+.admin-card,
+.metric-grid,
+.org-grid,
+.two-col,
+.inbox-list,
+.conversation-admin-grid,
+.admin-top,
+.section-title,
+.action-row {
+  width: min(1220px, 100%) !important;
+  max-width: 1220px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.admin-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  gap: 24px !important;
+  margin-bottom: 26px !important;
+  padding: 2px 0 0 !important;
+}
+
+.admin-header h1 {
+  margin: 0 !important;
+  font-size: clamp(2.25rem, 4vw, 4.4rem) !important;
+  line-height: .95 !important;
+  letter-spacing: -.06em !important;
+}
+
+.admin-header p {
+  color: var(--admin-muted) !important;
+  max-width: 760px !important;
+  line-height: 1.55 !important;
+  margin: 10px 0 0 !important;
+}
+
+.metric-grid {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+  margin-bottom: 26px !important;
+}
+
+.metric-card,
+.admin-card,
+.admin-section,
+.org-card,
+.inbox-card,
+.conversation-title,
+.detail-grid div,
+.stat {
+  background: linear-gradient(180deg, rgba(255,255,255,.082), rgba(255,255,255,.04)) !important;
+  border: 1px solid var(--admin-line) !important;
+  box-shadow: 0 22px 70px rgba(0,0,0,.25) !important;
+}
+
+.metric-card {
+  min-height: 128px !important;
+  padding: 20px !important;
+  border-radius: 22px !important;
+}
+
+.metric-card span,
+.metric-card small {
+  color: var(--admin-muted) !important;
+}
+
+.metric-card strong {
+  display: block !important;
+  font-size: clamp(1.75rem, 2.2vw, 2.5rem) !important;
+  line-height: 1 !important;
+  margin: 12px 0 8px !important;
+  color: #fff !important;
+  word-break: normal !important;
+}
+
+.admin-section,
+.admin-card {
+  border-radius: 26px !important;
+  padding: 24px !important;
+  margin-top: 22px !important;
+  margin-bottom: 22px !important;
+}
+
+.section-title {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  gap: 20px !important;
+  margin-bottom: 18px !important;
+}
+
+.section-title h2,
+.admin-section h2 {
+  margin: 0 0 8px !important;
+  font-size: clamp(1.35rem, 2vw, 2rem) !important;
+}
+
+.section-title p {
+  color: var(--admin-muted) !important;
+  margin: 0 !important;
+  max-width: 560px !important;
+}
+
+.org-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 18px !important;
+}
+
+.org-card {
+  min-height: 220px !important;
+  padding: 24px !important;
+  border-radius: 24px !important;
+}
+
+.org-card h3 {
+  font-size: 1.34rem !important;
+  margin: 18px 0 8px !important;
+}
+
+.two-col,
+.conversation-admin-grid {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 22px !important;
+}
+
+.conversation-admin-grid {
+  grid-template-columns: minmax(0, 1fr) 360px !important;
+}
+
+.admin-table {
+  width: 100% !important;
+  min-width: 720px !important;
+  border-collapse: collapse !important;
+}
+
+.admin-card:has(.admin-table),
+.admin-section:has(.admin-table) {
+  overflow-x: auto !important;
+}
+
+.auth-shell {
+  width: 100% !important;
+  min-height: 100vh !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 24px !important;
+}
+
+.auth-shell .admin-card,
+.admin-card.admin-login,
+.admin-card.narrow {
+  width: min(520px, 100%) !important;
+  max-width: 520px !important;
+}
+
+body.admin-app .btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 1180px) {
+  .metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .org-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+
+@media (max-width: 900px) {
+  body.admin-app {
+    display: block !important;
+  }
+  .admin-side-nav {
+    position: relative !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    padding: 18px !important;
+  }
+  .admin-side-nav nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .admin-main {
+    padding: 24px 18px 44px !important;
+  }
+  .admin-header {
+    flex-direction: column !important;
+  }
+  .metric-grid,
+  .org-grid,
+  .two-col,
+  .conversation-admin-grid,
+  .form-grid.two {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .admin-side-nav nav { grid-template-columns: 1fr !important; }
+  .metric-grid { grid-template-columns: 1fr !important; }
+  .admin-section,
+  .admin-card { padding: 18px !important; }
+}
