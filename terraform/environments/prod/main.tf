@@ -1,4 +1,6 @@
 locals {
+  combined_ssh_public_keys = distinct(compact(concat(var.ssh_public_keys, var.public_key != "" ? [var.public_key] : [])))
+
   tags = {
     Project     = var.project_name
     Environment = var.environment
@@ -34,7 +36,7 @@ module "ec2" {
   subnet_id                    = module.networking.public_subnet_id
   security_group_ids           = [module.security.web_security_group_id]
   instance_profile_name        = module.iam.instance_profile_name
-  public_key                   = var.public_key
+  public_key                   = length(local.combined_ssh_public_keys) > 0 ? local.combined_ssh_public_keys[0] : ""
   instance_type                = var.instance_type
   ami_family                   = var.ami_family
   ami_id                       = var.ami_id
@@ -46,6 +48,18 @@ module "ec2" {
   use_elastic_ip               = var.use_elastic_ip
   user_data_replace_on_change  = var.user_data_replace_on_change
   tags                         = local.tags
+}
+
+
+module "ssh_keys" {
+  source          = "../../modules/ssh_keys"
+  project_name    = var.project_name
+  ssh_public_keys = local.combined_ssh_public_keys
+  target_tag_key   = "MadMallardPlatform"
+  target_tag_value = "true"
+  tags            = local.tags
+
+  depends_on = [module.ec2]
 }
 
 module "ssm" {

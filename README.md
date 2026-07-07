@@ -504,3 +504,23 @@ If backend settings change later, run:
 ```bash
 make tf-init-reconfigure ENV=prod
 ```
+
+## Multiple SSH keys
+
+For multiple systems, use `ssh_public_keys` in `terraform/environments/prod/terraform.tfvars`:
+
+```hcl
+ssh_public_keys = [
+  "ssh-ed25519 AAAA... greg-laptop",
+  "ssh-ed25519 AAAA... greg-desktop",
+]
+```
+
+Terraform still uses the first key as the EC2 launch key pair, then an SSM association installs all configured keys into the instance user's `authorized_keys` file. This updates the running instance in place and does not require replacing EC2.
+
+After applying, you can force the key update immediately:
+
+```bash
+make tf-output ENV=prod
+aws ssm start-associations-once --association-ids <ssh_keys_association_id>
+```

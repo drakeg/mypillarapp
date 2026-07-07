@@ -44,8 +44,14 @@ variable "acme_email" {
 
 variable "public_key" {
   type        = string
-  description = "SSH public key contents. Leave empty if using SSM-only access."
+  description = "Legacy single SSH public key. Prefer ssh_public_keys for multiple systems."
   default     = ""
+}
+
+variable "ssh_public_keys" {
+  type        = list(string)
+  description = "SSH public keys allowed to access the instance from multiple systems."
+  default     = []
 }
 
 variable "ssh_cidr" {

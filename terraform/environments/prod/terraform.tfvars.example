@@ -7,7 +7,14 @@ acme_email     = "greg@madmallards.com"
 # Set enable_ssh = false later if you decide to use SSM Session Manager only.
 enable_ssh = true
 ssh_cidr   = "0.0.0.0/0"
-public_key = "ssh-ed25519 AAAA...your-public-key..."
+# Preferred: add one public key per system you use.
+ssh_public_keys = [
+  "ssh-ed25519 AAAA...your-laptop-key... greg-laptop",
+  "ssh-ed25519 AAAA...your-desktop-key... greg-desktop",
+]
+
+# Legacy single-key option still works, but ssh_public_keys is preferred.
+# public_key = "ssh-ed25519 AAAA...your-public-key..."
 
 # Low-cost defaults
 instance_type               = "t3.micro"

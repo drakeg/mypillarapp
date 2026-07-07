@@ -75,3 +75,12 @@ output "ses_external_dns_records" {
 output "ses_sandbox_note" {
   value = module.ses.ses_sandbox_note
 }
+
+
+output "ssh_key_count" {
+  value = module.ssh_keys.managed_key_count
+}
+
+output "ssh_keys_association_id" {
+  value = module.ssh_keys.association_id
+}
