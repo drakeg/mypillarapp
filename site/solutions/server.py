@@ -225,6 +225,22 @@ class Handler(BaseHTTPRequestHandler):
             if not require_admin(self, query):
                 return
             return self.render_inbox()
+        if path == '/admin/crm':
+            if not require_admin(self, query):
+                return
+            return self.render_crm()
+        if path == '/admin/crm/contacts':
+            if not require_admin(self, query):
+                return
+            return self.render_crm_contacts()
+        if path == '/admin/crm/companies':
+            if not require_admin(self, query):
+                return
+            return self.render_crm_companies()
+        if path == '/admin/crm/leads':
+            if not require_admin(self, query):
+                return
+            return self.render_crm_leads()
         if path.startswith('/admin/conversations/'):
             if not require_admin(self, query):
                 return
@@ -270,6 +286,21 @@ class Handler(BaseHTTPRequestHandler):
                 return
             token = parsed.path.split('/')[3]
             return self.handle_admin_update(token, payload)
+        if parsed.path == '/admin/crm/companies/create':
+            query = parse_qs(parsed.query)
+            if not require_admin(self, query):
+                return
+            return self.handle_crm_company_create(payload)
+        if parsed.path == '/admin/crm/contacts/create':
+            query = parse_qs(parsed.query)
+            if not require_admin(self, query):
+                return
+            return self.handle_crm_contact_create(payload)
+        if parsed.path == '/admin/crm/leads/create':
+            query = parse_qs(parsed.query)
+            if not require_admin(self, query):
+                return
+            return self.handle_crm_lead_create(payload)
         if parsed.path.startswith('/admin/organizations/') and parsed.path.endswith('/save'):
             query = parse_qs(parsed.query)
             if not require_admin(self, query):
@@ -343,13 +374,15 @@ class Handler(BaseHTTPRequestHandler):
     def admin_shell(self, title: str, content: str, active: str = 'dashboard'):
         nav = [
             ('dashboard', '/admin/dashboard', 'Dashboard'),
+            ('inbox', '/admin/inbox', 'Messages'),
+            ('crm', '/admin/crm', 'CRM'),
             ('organizations', '/admin/organizations', 'Organizations'),
-            ('inbox', '/admin/inbox', 'Inbox'),
+            ('site', '/', 'Public site'),
             ('logout', '/admin/logout', 'Sign out'),
         ]
         nav_html = ''.join(f"<a class='admin-nav-link {'active' if key == active else ''}' href='{href}'>{label}</a>" for key, href, label in nav)
         return html_response(self, 200, f"""<!doctype html><html><head><title>{esc(title)} - Mad Mallard Platform</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head>
-<body class='admin-app'><aside class='admin-sidebar'><div class='admin-brand'><img src='/assets/mad-mallard-solutions-logo-icon.png' alt=''><div><strong>Mad Mallard</strong><span>Business OS</span></div></div><nav>{nav_html}</nav></aside><main class='admin-main'>{content}</main></body></html>""")
+<body class='admin-app'><aside class='admin-side-nav'><div class='admin-brand'><img src='/assets/mad-mallard-solutions-logo-icon.png' alt=''><div><strong>Mad Mallard</strong><span>Business OS</span></div></div><nav>{nav_html}</nav></aside><main class='admin-main'>{content}</main></body></html>""")
 
     def render_dashboard(self):
         summary = platform_core.dashboard_summary()
@@ -367,6 +400,7 @@ class Handler(BaseHTTPRequestHandler):
   <div class='metric-card'><span>Organizations</span><strong>{len(summary['organizations'])}</strong><small>Separate brands, shared platform</small></div>
   <div class='metric-card'><span>Conversations</span><strong>{summary['conversation_count']}</strong><small>{esc(summary['status_counts'].get('new', 0))} new</small></div>
   <div class='metric-card'><span>Messages</span><strong>{summary['message_count']}</strong><small>Stored locally in SQLite</small></div>
+  <div class='metric-card'><span>CRM</span><strong>{platform_core.crm_summary()['contacts']}</strong><small>Contacts tracked</small></div>
   <div class='metric-card'><span>Cost posture</span><strong>Low</strong><small>EC2 + SQLite + SES</small></div>
 </section>
 <section class='admin-section'><div class='section-title'><h2>Business entities</h2><p>Each can have its own domain, branding, modules, and public identity.</p></div><div class='org-grid'>{org_cards}</div></section>
@@ -430,6 +464,72 @@ class Handler(BaseHTTPRequestHandler):
         )
         return redirect(self, f'/admin/organizations/{slug}' if ok else '/admin/organizations')
 
+    def render_crm(self):
+        crm = platform_core.crm_summary()
+        contact_rows = ''.join(f"<tr><td>{esc(c['name'])}</td><td>{esc(c['email'])}</td><td>{esc(c['company_name'] or '—')}</td><td><span class='badge status-{esc(c['status'])}'>{esc(c['status'])}</span></td></tr>" for c in crm['recent_contacts']) or "<tr><td colspan='4'>No contacts yet.</td></tr>"
+        lead_rows = ''.join(f"<tr><td>{esc(l['title'])}</td><td>{esc(l['contact_name'] or '—')}</td><td>{esc(l['company_name'] or '—')}</td><td><span class='badge status-{esc(l['status'])}'>{esc(l['status'])}</span></td></tr>" for l in crm['recent_leads']) or "<tr><td colspan='4'>No leads yet.</td></tr>"
+        content = f"""
+<header class='admin-header'><div><p class='eyebrow'>CRM</p><h1>Contacts & Leads</h1><p>Start tracking people, companies, and opportunities for each business without adding any monthly service cost.</p></div><div class='action-row'><a class='btn secondary' href='/admin/crm/companies'>Companies</a><a class='btn secondary' href='/admin/crm/contacts'>Contacts</a><a class='btn primary' href='/admin/crm/leads'>Leads</a></div></header>
+<section class='metric-grid'><div class='metric-card'><span>Companies</span><strong>{crm['companies']}</strong><small>Accounts and organizations</small></div><div class='metric-card'><span>Contacts</span><strong>{crm['contacts']}</strong><small>People you know</small></div><div class='metric-card'><span>Leads</span><strong>{crm['leads']}</strong><small>{crm['open_leads']} open</small></div><div class='metric-card'><span>Storage</span><strong>SQLite</strong><small>No added cost</small></div></section>
+<section class='admin-section two-col'><div><div class='section-title'><h2>Recent contacts</h2><a href='/admin/crm/contacts'>View all</a></div><table class='admin-table'><thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Status</th></tr></thead><tbody>{contact_rows}</tbody></table></div><div><div class='section-title'><h2>Recent leads</h2><a href='/admin/crm/leads'>View all</a></div><table class='admin-table'><thead><tr><th>Title</th><th>Contact</th><th>Company</th><th>Status</th></tr></thead><tbody>{lead_rows}</tbody></table></div></section>
+"""
+        return self.admin_shell('CRM', content, 'crm')
+
+    def render_crm_companies(self):
+        companies = platform_core.crm_list_companies()
+        rows = ''.join(f"<tr><td>{esc(c['name'])}</td><td>{esc(c['website'])}</td><td>{esc(c['industry'])}</td><td><span class='badge status-{esc(c['status'])}'>{esc(c['status'])}</span></td></tr>" for c in companies) or "<tr><td colspan='4'>No companies yet.</td></tr>"
+        status_opts = ''.join(f"<option value='{s}'>{s}</option>" for s in platform_core.CRM_STATUSES)
+        content = f"""
+<header class='admin-header'><div><p class='eyebrow'>CRM</p><h1>Companies</h1><p>Track customer, vendor, and prospect organizations.</p></div><a class='btn secondary' href='/admin/crm'>Back to CRM</a></header>
+<section class='admin-section two-col'><div class='admin-card org-form'><h2>Add company</h2><form method='post' action='/admin/crm/companies/create'><label>Name<input name='name' required></label><label>Website<input name='website' placeholder='https://example.com'></label><label>Industry<input name='industry'></label><label>Status<select name='status'>{status_opts}</select></label><label>Notes<textarea name='notes' rows='4'></textarea></label><button class='btn primary' type='submit'>Save company</button></form></div><div class='admin-card'><table class='admin-table'><thead><tr><th>Name</th><th>Website</th><th>Industry</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table></div></section>
+"""
+        return self.admin_shell('Companies', content, 'crm')
+
+    def render_crm_contacts(self):
+        contacts = platform_core.crm_list_contacts()
+        companies = platform_core.crm_list_companies()
+        company_opts = "<option value=''>No company</option>" + ''.join(f"<option value='{c['id']}'>{esc(c['name'])}</option>" for c in companies)
+        status_opts = ''.join(f"<option value='{s}'>{s}</option>" for s in platform_core.CRM_STATUSES)
+        rows = ''.join(f"<tr><td>{esc(c['name'])}</td><td>{esc(c['email'])}</td><td>{esc(c['company_name'] or '—')}</td><td>{esc(c['tags'])}</td><td><span class='badge status-{esc(c['status'])}'>{esc(c['status'])}</span></td></tr>" for c in contacts) or "<tr><td colspan='5'>No contacts yet.</td></tr>"
+        content = f"""
+<header class='admin-header'><div><p class='eyebrow'>CRM</p><h1>Contacts</h1><p>Track people, contact info, tags, and notes.</p></div><a class='btn secondary' href='/admin/crm'>Back to CRM</a></header>
+<section class='admin-section two-col'><div class='admin-card org-form'><h2>Add contact</h2><form method='post' action='/admin/crm/contacts/create'><label>Name<input name='name' required></label><label>Email<input name='email' type='email'></label><label>Phone<input name='phone'></label><label>Title<input name='title'></label><label>Company<select name='company_id'>{company_opts}</select></label><label>Status<select name='status'>{status_opts}</select></label><label>Tags<input name='tags' placeholder='AWS, Terraform, prospect'></label><label>Notes<textarea name='notes' rows='4'></textarea></label><button class='btn primary' type='submit'>Save contact</button></form></div><div class='admin-card'><table class='admin-table'><thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Tags</th><th>Status</th></tr></thead><tbody>{rows}</tbody></table></div></section>
+"""
+        return self.admin_shell('Contacts', content, 'crm')
+
+    def render_crm_leads(self):
+        leads = platform_core.crm_list_leads()
+        contacts = platform_core.crm_list_contacts()
+        companies = platform_core.crm_list_companies()
+        contact_opts = "<option value=''>No contact</option>" + ''.join(f"<option value='{c['id']}'>{esc(c['name'])}</option>" for c in contacts)
+        company_opts = "<option value=''>No company</option>" + ''.join(f"<option value='{c['id']}'>{esc(c['name'])}</option>" for c in companies)
+        status_opts = ''.join(f"<option value='{s}'>{s}</option>" for s in platform_core.LEAD_STATUSES)
+        priority_opts = ''.join(f"<option value='{p}'>{p}</option>" for p in ['low','normal','high','urgent'])
+        rows = ''.join(f"<tr><td>{esc(l['title'])}</td><td>{esc(l['contact_name'] or '—')}</td><td>{esc(l['company_name'] or '—')}</td><td>{esc(l['value_estimate'])}</td><td><span class='badge status-{esc(l['status'])}'>{esc(l['status'])}</span></td><td>{esc(l['priority'])}</td></tr>" for l in leads) or "<tr><td colspan='6'>No leads yet.</td></tr>"
+        content = f"""
+<header class='admin-header'><div><p class='eyebrow'>CRM</p><h1>Leads</h1><p>Track opportunities from service requests, chat, referrals, and manual entry.</p></div><a class='btn secondary' href='/admin/crm'>Back to CRM</a></header>
+<section class='admin-section two-col'><div class='admin-card org-form'><h2>Add lead</h2><form method='post' action='/admin/crm/leads/create'><label>Title<input name='title' required placeholder='AWS migration discovery'></label><label>Contact<select name='contact_id'>{contact_opts}</select></label><label>Company<select name='company_id'>{company_opts}</select></label><label>Source<input name='source' value='manual'></label><label>Estimated value<input name='value_estimate' placeholder='$1,500 - $5,000'></label><label>Status<select name='status'>{status_opts}</select></label><label>Priority<select name='priority'>{priority_opts}</select></label><label>Notes<textarea name='notes' rows='4'></textarea></label><button class='btn primary' type='submit'>Save lead</button></form></div><div class='admin-card'><table class='admin-table'><thead><tr><th>Title</th><th>Contact</th><th>Company</th><th>Value</th><th>Status</th><th>Priority</th></tr></thead><tbody>{rows}</tbody></table></div></section>
+"""
+        return self.admin_shell('Leads', content, 'crm')
+
+    def handle_crm_company_create(self, payload: dict):
+        name = str(payload.get('name', '')).strip()
+        if name:
+            platform_core.crm_create_company(actor=ADMIN_USERNAME, name=name, website=str(payload.get('website','')), industry=str(payload.get('industry','')), status=str(payload.get('status','prospect')), notes=str(payload.get('notes','')))
+        return redirect(self, '/admin/crm/companies')
+
+    def handle_crm_contact_create(self, payload: dict):
+        name = str(payload.get('name', '')).strip()
+        if name:
+            platform_core.crm_create_contact(actor=ADMIN_USERNAME, name=name, email=str(payload.get('email','')), phone=str(payload.get('phone','')), title=str(payload.get('title','')), company_id=payload.get('company_id'), status=str(payload.get('status','lead')), tags=str(payload.get('tags','')), notes=str(payload.get('notes','')))
+        return redirect(self, '/admin/crm/contacts')
+
+    def handle_crm_lead_create(self, payload: dict):
+        title = str(payload.get('title', '')).strip()
+        if title:
+            platform_core.crm_create_lead(actor=ADMIN_USERNAME, title=title, contact_id=payload.get('contact_id'), company_id=payload.get('company_id'), source=str(payload.get('source','manual')), value_estimate=str(payload.get('value_estimate','')), status=str(payload.get('status','new')), priority=str(payload.get('priority','normal')), notes=str(payload.get('notes','')))
+        return redirect(self, '/admin/crm/leads')
+
     def render_login(self):
         if ADMIN_PASSWORD_HASH:
             body = f"""<!doctype html><html><head><title>Admin Login - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head>
@@ -469,8 +569,8 @@ class Handler(BaseHTTPRequestHandler):
 </a>""")
         listing = ''.join(cards) or '<div class="empty-state">No conversations yet.</div>'
         stats = ''.join(f"<div class='stat'><strong>{counts.get(s,0)}</strong><span>{s.replace('_',' ')}</span></div>" for s in messaging.STATUSES)
-        body = f"""<!doctype html><html><head><title>Inbox - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head><body class='conversation-page'><main class='conversation-shell wide admin-shell'><div class='admin-top'><div><p><a href='/'>← Site</a> · <a href='/admin/logout'>Sign out</a></p><h1>Mad Mallard Inbox</h1><p class='muted-text'>Manage project requests, chat threads, replies, internal notes, priority, and tags.</p></div></div><section class='stat-grid'>{stats}</section><section class='inbox-list'>{listing}</section></main></body></html>"""
-        return html_response(self, 200, body)
+        content = f"""<header class='admin-header'><div><p class='eyebrow'>Messages</p><h1>Inbox</h1><p>Manage project requests, chat threads, replies, internal notes, priority, and tags.</p></div></header><section class='stat-grid'>{stats}</section><section class='inbox-list'>{listing}</section>"""
+        return self.admin_shell('Inbox', content, 'inbox')
 
     def render_admin_conversation(self, token: str):
         convo, messages = messaging.get_conversation(token)
@@ -481,8 +581,8 @@ class Handler(BaseHTTPRequestHandler):
         pri_opts = ''.join(f"<option value='{p}' {'selected' if convo['priority']==p else ''}>{p}</option>" for p in messaging.PRIORITIES)
         lead = json.loads(convo['lead_json'] or '{}')
         lead_rows = ''.join(f"<div><span>{esc(k).replace('_',' ').title()}</span><strong>{esc(v)}</strong></div>" for k,v in lead.items() if v)
-        body = f"""<!doctype html><html><head><title>Conversation Admin - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head><body class='conversation-page'><main class='conversation-shell wide admin-shell'><p><a href='/admin/inbox'>← Inbox</a></p><div class='conversation-admin-grid'><section><div class='conversation-title'><span class='badge status-{esc(convo['status'])}'>{esc(convo['status']).replace('_',' ')}</span><h1>{esc(convo['subject'] or 'Conversation')}</h1><p class='muted-text'><strong>{esc(convo['name'])}</strong> · {esc(convo['email'])} · {esc(convo['company'])}</p></div><section class='message-list admin-messages'>{rows}</section><form id='replyForm' class='contact-panel'><h3>Reply</h3><textarea name='body' rows='5' placeholder='Reply to visitor or add internal note...' required></textarea><label class='check'><input type='checkbox' name='internal'> Internal note only</label><button class='btn primary' type='submit'>Send</button></form></section><aside class='admin-sidebar'><form id='metaForm' class='contact-panel'><h3>Manage</h3><label>Status<select name='status'>{status_opts}</select></label><label>Priority<select name='priority'>{pri_opts}</select></label><label>Tags<input name='tags' value='{esc(convo['tags'])}' placeholder='AWS, Terraform, urgent'></label><button class='btn secondary' type='submit'>Save changes</button></form><div class='contact-panel'><h3>Lead details</h3><div class='detail-grid'><div><span>Name</span><strong>{esc(convo['name'])}</strong></div><div><span>Email</span><strong>{esc(convo['email'])}</strong></div><div><span>Company</span><strong>{esc(convo['company'])}</strong></div>{lead_rows}</div><p><a class='btn secondary' href='/chat/{esc(convo['token'])}' target='_blank'>Open visitor link</a></p></div></aside></div></main><script>document.getElementById('replyForm').addEventListener('submit', async e=>{{e.preventDefault(); const fd=new FormData(e.target); const data=Object.fromEntries(fd.entries()); data.internal=e.target.internal.checked; const r=await fetch('/api/admin/conversations/{token}/messages',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(data)}}); if(r.ok) location.reload();}});document.getElementById('metaForm').addEventListener('submit', async e=>{{e.preventDefault(); const data=Object.fromEntries(new FormData(e.target).entries()); const r=await fetch('/api/admin/conversations/{token}/update',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(data)}}); if(r.ok) location.reload();}});</script></body></html>"""
-        return html_response(self, 200, body)
+        content = f"""<p><a href='/admin/inbox'>← Back to inbox</a></p><div class='conversation-admin-grid'><section><div class='conversation-title'><span class='badge status-{esc(convo['status'])}'>{esc(convo['status']).replace('_',' ')}</span><h1>{esc(convo['subject'] or 'Conversation')}</h1><p class='muted-text'><strong>{esc(convo['name'])}</strong> · {esc(convo['email'])} · {esc(convo['company'])}</p></div><section class='message-list admin-messages'>{rows}</section><form id='replyForm' class='contact-panel'><h3>Reply</h3><textarea name='body' rows='5' placeholder='Reply to visitor or add internal note...' required></textarea><label class='check'><input type='checkbox' name='internal'> Internal note only</label><button class='btn primary' type='submit'>Send</button></form></section><aside class='admin-detail-panel'><form id='metaForm' class='contact-panel'><h3>Manage</h3><label>Status<select name='status'>{status_opts}</select></label><label>Priority<select name='priority'>{pri_opts}</select></label><label>Tags<input name='tags' value='{esc(convo['tags'])}' placeholder='AWS, Terraform, urgent'></label><button class='btn secondary' type='submit'>Save changes</button></form><div class='contact-panel'><h3>Lead details</h3><div class='detail-grid'><div><span>Name</span><strong>{esc(convo['name'])}</strong></div><div><span>Email</span><strong>{esc(convo['email'])}</strong></div><div><span>Company</span><strong>{esc(convo['company'])}</strong></div>{lead_rows}</div><p><a class='btn secondary' href='/chat/{esc(convo['token'])}' target='_blank'>Open visitor link</a></p></div></aside></div><script>document.getElementById('replyForm').addEventListener('submit', async e=>{{e.preventDefault(); const fd=new FormData(e.target); const data=Object.fromEntries(fd.entries()); data.internal=e.target.internal.checked; const r=await fetch('/api/admin/conversations/{token}/messages',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(data)}}); if(r.ok) location.reload();}});document.getElementById('metaForm').addEventListener('submit', async e=>{{e.preventDefault(); const data=Object.fromEntries(new FormData(e.target).entries()); const r=await fetch('/api/admin/conversations/{token}/update',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(data)}}); if(r.ok) location.reload();}});</script>"""
+        return self.admin_shell('Conversation', content, 'inbox')
 
 
 if __name__ == '__main__':

@@ -13,6 +13,35 @@ The current goal is simple:
 - avoid replacing the EC2 instance for normal site changes.
 
 
+
+## v2.6 - Admin Navigation + CRM Foundation
+
+This release focuses on the next practical coding step instead of infrastructure churn. It keeps the same low-cost EC2 + SQLite + SES architecture and adds:
+
+- Persistent admin sidebar across Dashboard, Messages, CRM, and Organizations
+- Fixed navigation so you can always get back to the main dashboard
+- First CRM foundation:
+  - Companies
+  - Contacts
+  - Leads
+  - Statuses, tags, notes, priority, and estimated value fields
+- CRM dashboard at `/admin/crm`
+- No new AWS services and no added recurring cost
+
+Deploy normally:
+
+```bash
+make tf-plan ENV=prod
+make tf-apply ENV=prod
+```
+
+Then visit:
+
+```text
+https://pillar.madmallards.com/admin/dashboard
+https://pillar.madmallards.com/admin/crm
+```
+
 ## v2.5 - Core Platform Foundation
 
 This release starts the business operating system foundation without adding paid services. It keeps the same EC2 + SQLite + SES architecture and adds:

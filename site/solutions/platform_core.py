@@ -206,3 +206,132 @@ def dashboard_summary() -> dict[str, Any]:
 
 def _table_exists(conn: sqlite3.Connection, table: str) -> bool:
     return conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,)).fetchone() is not None
+
+# --- CRM foundation -------------------------------------------------------
+CRM_STATUSES = ['lead', 'prospect', 'customer', 'vendor', 'archived']
+LEAD_STATUSES = ['new', 'contacted', 'qualified', 'proposal', 'won', 'lost']
+
+
+def ensure_crm_schema(conn: sqlite3.Connection | None = None) -> None:
+    close = False
+    if conn is None:
+        conn = db()
+        close = True
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS crm_companies (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            organization_slug TEXT NOT NULL DEFAULT 'solutions',
+            name TEXT NOT NULL,
+            website TEXT NOT NULL DEFAULT '',
+            industry TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'prospect',
+            notes TEXT NOT NULL DEFAULT ''
+        )
+    ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS crm_contacts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            organization_slug TEXT NOT NULL DEFAULT 'solutions',
+            company_id INTEGER,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL DEFAULT '',
+            phone TEXT NOT NULL DEFAULT '',
+            title TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'lead',
+            tags TEXT NOT NULL DEFAULT '',
+            notes TEXT NOT NULL DEFAULT '',
+            FOREIGN KEY(company_id) REFERENCES crm_companies(id)
+        )
+    ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS crm_leads (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            organization_slug TEXT NOT NULL DEFAULT 'solutions',
+            contact_id INTEGER,
+            company_id INTEGER,
+            source TEXT NOT NULL DEFAULT 'manual',
+            title TEXT NOT NULL,
+            value_estimate TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'new',
+            priority TEXT NOT NULL DEFAULT 'normal',
+            notes TEXT NOT NULL DEFAULT '',
+            FOREIGN KEY(contact_id) REFERENCES crm_contacts(id),
+            FOREIGN KEY(company_id) REFERENCES crm_companies(id)
+        )
+    ''')
+    conn.commit()
+    if close:
+        conn.close()
+
+
+def crm_summary() -> dict[str, Any]:
+    with db() as conn:
+        ensure_crm_schema(conn)
+        companies = conn.execute('SELECT COUNT(*) AS c FROM crm_companies').fetchone()['c']
+        contacts = conn.execute('SELECT COUNT(*) AS c FROM crm_contacts').fetchone()['c']
+        leads = conn.execute('SELECT COUNT(*) AS c FROM crm_leads').fetchone()['c']
+        open_leads = conn.execute("SELECT COUNT(*) AS c FROM crm_leads WHERE status NOT IN ('won','lost')").fetchone()['c']
+        recent_contacts = conn.execute('''SELECT c.*, co.name AS company_name FROM crm_contacts c LEFT JOIN crm_companies co ON co.id = c.company_id ORDER BY c.updated_at DESC, c.id DESC LIMIT 8''').fetchall()
+        recent_leads = conn.execute('''SELECT l.*, c.name AS contact_name, co.name AS company_name FROM crm_leads l LEFT JOIN crm_contacts c ON c.id = l.contact_id LEFT JOIN crm_companies co ON co.id = l.company_id ORDER BY l.updated_at DESC, l.id DESC LIMIT 8''').fetchall()
+    return {'companies': companies, 'contacts': contacts, 'leads': leads, 'open_leads': open_leads, 'recent_contacts': recent_contacts, 'recent_leads': recent_leads}
+
+
+def crm_list_companies() -> list[sqlite3.Row]:
+    with db() as conn:
+        ensure_crm_schema(conn)
+        return conn.execute('SELECT * FROM crm_companies ORDER BY name').fetchall()
+
+
+def crm_list_contacts() -> list[sqlite3.Row]:
+    with db() as conn:
+        ensure_crm_schema(conn)
+        return conn.execute('''SELECT c.*, co.name AS company_name FROM crm_contacts c LEFT JOIN crm_companies co ON co.id = c.company_id ORDER BY c.updated_at DESC, c.id DESC''').fetchall()
+
+
+def crm_list_leads() -> list[sqlite3.Row]:
+    with db() as conn:
+        ensure_crm_schema(conn)
+        return conn.execute('''SELECT l.*, c.name AS contact_name, co.name AS company_name FROM crm_leads l LEFT JOIN crm_contacts c ON c.id = l.contact_id LEFT JOIN crm_companies co ON co.id = l.company_id ORDER BY l.updated_at DESC, l.id DESC''').fetchall()
+
+
+def crm_create_company(*, actor: str, name: str, website: str = '', industry: str = '', status: str = 'prospect', notes: str = '', organization_slug: str = 'solutions') -> int:
+    ts = now()
+    status = status if status in CRM_STATUSES else 'prospect'
+    with db() as conn:
+        ensure_crm_schema(conn)
+        cur = conn.execute('''INSERT INTO crm_companies(created_at, updated_at, organization_slug, name, website, industry, status, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', (ts, ts, organization_slug, name.strip(), website.strip(), industry.strip(), status, notes.strip()))
+        conn.execute('INSERT INTO audit_events(created_at, actor, action, detail) VALUES (?, ?, ?, ?)', (ts, actor or 'admin', 'crm.company.created', name.strip()))
+        conn.commit()
+        return int(cur.lastrowid)
+
+
+def crm_create_contact(*, actor: str, name: str, email: str = '', phone: str = '', title: str = '', company_id: str | int | None = None, status: str = 'lead', tags: str = '', notes: str = '', organization_slug: str = 'solutions') -> int:
+    ts = now()
+    status = status if status in CRM_STATUSES else 'lead'
+    cid = int(company_id) if str(company_id or '').isdigit() else None
+    with db() as conn:
+        ensure_crm_schema(conn)
+        cur = conn.execute('''INSERT INTO crm_contacts(created_at, updated_at, organization_slug, company_id, name, email, phone, title, status, tags, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', (ts, ts, organization_slug, cid, name.strip(), email.strip(), phone.strip(), title.strip(), status, tags.strip(), notes.strip()))
+        conn.execute('INSERT INTO audit_events(created_at, actor, action, detail) VALUES (?, ?, ?, ?)', (ts, actor or 'admin', 'crm.contact.created', name.strip()))
+        conn.commit()
+        return int(cur.lastrowid)
+
+
+def crm_create_lead(*, actor: str, title: str, contact_id: str | int | None = None, company_id: str | int | None = None, source: str = 'manual', value_estimate: str = '', status: str = 'new', priority: str = 'normal', notes: str = '', organization_slug: str = 'solutions') -> int:
+    ts = now()
+    status = status if status in LEAD_STATUSES else 'new'
+    priority = priority if priority in ['low', 'normal', 'high', 'urgent'] else 'normal'
+    contact = int(contact_id) if str(contact_id or '').isdigit() else None
+    company = int(company_id) if str(company_id or '').isdigit() else None
+    with db() as conn:
+        ensure_crm_schema(conn)
+        cur = conn.execute('''INSERT INTO crm_leads(created_at, updated_at, organization_slug, contact_id, company_id, source, title, value_estimate, status, priority, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', (ts, ts, organization_slug, contact, company, source.strip(), title.strip(), value_estimate.strip(), status, priority, notes.strip()))
+        conn.execute('INSERT INTO audit_events(created_at, actor, action, detail) VALUES (?, ?, ?, ?)', (ts, actor or 'admin', 'crm.lead.created', title.strip()))
+        conn.commit()
+        return int(cur.lastrowid)
