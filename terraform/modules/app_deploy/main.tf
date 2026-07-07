@@ -21,6 +21,26 @@ variable "admin_token" {
   sensitive   = true
   description = "Optional admin inbox token for /admin/inbox?token=... . Leave blank to disable the web inbox."
 }
+variable "admin_username" {
+  type        = string
+  default     = "admin"
+  description = "Admin login username."
+}
+
+variable "admin_password_hash" {
+  type        = string
+  default     = ""
+  sensitive   = true
+  description = "Optional admin password hash for admin login. Leave blank to use token-only admin access."
+}
+
+variable "admin_session_secret" {
+  type        = string
+  default     = ""
+  sensitive   = true
+  description = "Secret used to sign admin sessions/cookies."
+}
+
 
 variable "enable_email_notifications" {
   type        = bool
@@ -102,7 +122,7 @@ CADDY
   artifact_bucket_name = lower("${var.project_name}-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}-site-artifacts")
   artifact_prefix      = "solutions"
   caddyfile_b64        = base64encode(local.caddyfile)
-  deploy_hash          = sha256(join("\n", concat(local.site_file_hashes, [local.caddyfile, var.primary_domain])))
+  deploy_hash          = sha256(join("\n", concat(local.site_file_hashes, [local.caddyfile, var.primary_domain, var.admin_username, var.admin_password_hash, var.admin_session_secret])))
 
   deploy_script = <<-SCRIPT
 #!/usr/bin/env bash
@@ -150,6 +170,9 @@ ExecStartPre=-/usr/bin/docker rm -f madmallard-app
 ExecStart=/usr/bin/docker run --name madmallard-app --pull=always \
   -e MADMALLARD_PRIMARY_DOMAIN='${var.primary_domain}' \
   -e MADMALLARD_ADMIN_TOKEN='${var.admin_token}' \
+  -e MADMALLARD_ADMIN_USERNAME='${var.admin_username}' \
+  -e MADMALLARD_ADMIN_PASSWORD_HASH='${var.admin_password_hash}' \
+  -e MADMALLARD_ADMIN_SESSION_SECRET='${var.admin_session_secret}' \
   -e MADMALLARD_ENABLE_EMAIL='${var.enable_email_notifications}' \
   -e MADMALLARD_NOTIFY_FROM='${var.notify_email_from}' \
   -e MADMALLARD_NOTIFY_TO='${var.notify_email_to}' \

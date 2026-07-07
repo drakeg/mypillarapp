@@ -126,6 +126,26 @@ variable "admin_token" {
   description = "Optional admin inbox token. Leave blank to disable /admin/inbox."
 }
 
+variable "admin_username" {
+  type        = string
+  default     = "admin"
+  description = "Admin login username."
+}
+
+variable "admin_password_hash" {
+  type        = string
+  default     = ""
+  sensitive   = true
+  description = "Optional admin password hash for admin login. Leave blank to use token-only admin access."
+}
+
+variable "admin_session_secret" {
+  type        = string
+  default     = ""
+  sensitive   = true
+  description = "Secret used to sign admin sessions/cookies. Should be a long random value when password login is enabled."
+}
+
 
 variable "enable_email_notifications" {
   type        = bool

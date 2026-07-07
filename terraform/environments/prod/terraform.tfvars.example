@@ -30,6 +30,9 @@ additional_domains = []
 
 # Optional: enables /admin/inbox?token=YOUR_TOKEN. Leave blank to disable.
 admin_token = ""
+admin_username = "admin"
+admin_password_hash = ""
+admin_session_secret = ""
 
 # Optional SES notifications. While SES is in sandbox, both addresses must be verified.
 enable_email_notifications = false

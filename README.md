@@ -524,3 +524,17 @@ After applying, you can force the key update immediately:
 make tf-output ENV=prod
 aws ssm start-associations-once --association-ids <ssh_keys_association_id>
 ```
+
+
+## v2.7 admin account fix
+
+This release restores the admin account Terraform inputs and wires them through `module.app_deploy`:
+
+```hcl
+admin_username        = "admin"
+admin_password_hash   = ""
+admin_session_secret  = ""
+admin_token           = "your-long-token"
+```
+
+`admin_token` remains supported. The username/password/session variables are accepted by Terraform and passed to the app container so the admin login implementation can use them without unsupported-argument or undeclared-variable warnings.
