@@ -51,7 +51,8 @@ output "app_deploy_association_id" {
 }
 
 output "app_deploy_hash" {
-  value = module.app_deploy.app_deploy_hash
+  value     = module.app_deploy.app_deploy_hash
+  sensitive = true
 }
 
 output "site_artifact_bucket_name" {

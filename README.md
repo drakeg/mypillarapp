@@ -12,6 +12,45 @@ The current goal is simple:
 - avoid Elastic IP cost for now,
 - avoid replacing the EC2 instance for normal site changes.
 
+
+## v2.5 - Core Platform Foundation
+
+This release starts the business operating system foundation without adding paid services. It keeps the same EC2 + SQLite + SES architecture and adds:
+
+- Admin dashboard at `/admin/dashboard`
+- Organization records for:
+  - Mad Mallard Solutions
+  - Mad Mallard Personal Training
+  - Mad Mallards Adventures
+- Per-organization settings for public domain, brand color, status, notes, and enabled modules
+- Shared platform navigation for Dashboard, Organizations, and Inbox
+- Local SQLite tables for organizations, members, and audit events
+
+Deploy normally:
+
+```bash
+make tf-plan ENV=prod
+make tf-apply ENV=prod
+```
+
+This should update through the SSM app deployment path and should not replace EC2.
+
+After deployment, log in at:
+
+```text
+https://pillar.madmallards.com/admin/login
+```
+
+Then open:
+
+```text
+https://pillar.madmallards.com/admin/dashboard
+```
+
+### Cost impact
+
+No additional AWS services are introduced. Monthly cost impact should remain $0 beyond the existing EC2/S3/SES usage.
+
 ## Current architecture
 
 ```text
@@ -415,3 +454,57 @@ Email notification triggers:
 5. Admin internal note: saved only; no visitor email.
 
 Cost impact remains near-free: SQLite runs on the existing EC2 instance and SES is usage-based/pennies at small volume. No RDS, Redis, ALB, WAF, AI, or paid chat service is used.
+
+## Admin username/password login
+
+The admin inbox now supports username/password login instead of requiring the long token in the URL.
+
+Generate a password hash locally:
+
+```bash
+./scripts/generate-admin-password-hash.py
+```
+
+Then set these in `terraform/environments/prod/terraform.tfvars`:
+
+```hcl
+admin_username        = "greg"
+admin_password_hash   = "pbkdf2_sha256$390000$..."
+admin_session_secret  = "use-a-long-random-string-here"
+```
+
+You can generate a session secret with:
+
+```bash
+openssl rand -base64 48
+```
+
+Then deploy:
+
+```bash
+make tf-plan ENV=prod
+make tf-apply ENV=prod
+```
+
+Login here:
+
+```text
+https://pillar.madmallards.com/admin/login
+```
+
+The old `admin_token` variable is still supported as a fallback, but new deployments should use username/password.
+
+## Messaging/admin polish included
+
+This version improves the admin side with:
+
+- inbox cards instead of a plain table,
+- conversation counts by status,
+- status badges,
+- priority highlighting,
+- tag chips,
+- cleaner conversation detail pages,
+- internal notes,
+- visitor link access from the admin view.
+
+Added monthly cost: **$0**. It still uses the existing EC2 instance, SQLite database, and SES for low-cost notifications.

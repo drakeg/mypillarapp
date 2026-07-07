@@ -39,3 +39,9 @@ create_ses_recipient_identity = true
 # under the mail_from_subdomain only and do not replace the root domain MX records.
 enable_custom_mail_from = true
 mail_from_subdomain     = "mail"
+
+# Admin username/password login. Generate the hash with:
+# ./scripts/generate-admin-password-hash.py
+admin_username       = "greg"
+admin_password_hash  = ""
+admin_session_secret = ""
