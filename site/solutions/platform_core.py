@@ -194,9 +194,23 @@ def dashboard_summary() -> dict[str, Any]:
     for c in conversations:
         status_counts[c['status']] = status_counts.get(c['status'], 0) + 1
         priority_counts[c['priority']] = priority_counts.get(c['priority'], 0) + 1
+
+    # Dashboard metrics should reflect actionable work, not closed/archive history.
+    # Closed conversations are still included in total_conversation_count for reporting.
+    new_conversation_count = status_counts.get('new', 0)
+    open_conversation_count = (
+        status_counts.get('new', 0)
+        + status_counts.get('waiting_on_me', 0)
+        + status_counts.get('waiting_on_client', 0)
+    )
+
     return {
         'organizations': orgs,
-        'conversation_count': len(conversations),
+        'conversation_count': open_conversation_count,
+        'total_conversation_count': len(conversations),
+        'new_conversation_count': new_conversation_count,
+        'open_conversation_count': open_conversation_count,
+        'closed_conversation_count': status_counts.get('closed', 0),
         'message_count': messages,
         'status_counts': status_counts,
         'priority_counts': priority_counts,

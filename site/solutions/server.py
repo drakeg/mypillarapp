@@ -400,7 +400,7 @@ class Handler(BaseHTTPRequestHandler):
 <header class='admin-header'><div><p class='eyebrow'>Core Platform</p><h1>Dashboard</h1><p>One low-cost control plane for separate Mad Mallard business entities.</p></div><a class='btn primary' href='/admin/organizations'>Manage organizations</a></header>
 <section class='metric-grid'>
   <div class='metric-card'><span>Organizations</span><strong>{len(summary['organizations'])}</strong><small>Separate brands, shared platform</small></div>
-  <div class='metric-card'><span>Conversations</span><strong>{summary['conversation_count']}</strong><small>{esc(summary['status_counts'].get('new', 0))} new</small></div>
+  <div class='metric-card'><span>Open Conversations</span><strong>{summary['open_conversation_count']}</strong><small>{summary['new_conversation_count']} new · {summary['total_conversation_count']} total</small></div>
   <div class='metric-card'><span>Messages</span><strong>{summary['message_count']}</strong><small>Stored locally in SQLite</small></div>
   <div class='metric-card'><span>CRM</span><strong>{platform_core.crm_summary()['contacts']}</strong><small>Contacts tracked</small></div>
   <div class='metric-card'><span>Cost posture</span><strong>Low</strong><small>EC2 + SQLite + SES</small></div>

@@ -566,3 +566,10 @@ make tf-apply ENV=prod
 ```
 
 No EC2 replacement, DNS change, Elastic IP, RDS, Redis, ALB, or WAF is required.
+
+
+### v2.9.1 dashboard count fix
+
+- Dashboard now shows **Open Conversations** instead of all conversations labelled as new.
+- Closed conversations remain in total history but no longer inflate the actionable dashboard count.
+- No AWS infrastructure changes or added cost.
