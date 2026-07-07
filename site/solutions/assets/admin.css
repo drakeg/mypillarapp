@@ -318,3 +318,33 @@ body.admin-app .btn {
   .admin-section,
   .admin-card { padding: 18px !important; }
 }
+
+
+/* v2.8.1 overflow fixes */
+.admin-card,
+.admin-panel,
+.two-col > *,
+.metric-card{
+  min-width:0 !important;
+  overflow:hidden;
+}
+
+.admin-card h2,
+.admin-card h3,
+.admin-section-title,
+.section-title{
+  font-size:1rem !important;
+  line-height:1.25 !important;
+  margin:0 0 1rem !important;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+
+.admin-list-item,
+.inbox-list li,
+table td,
+table th{
+  min-width:0;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
