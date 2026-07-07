@@ -278,13 +278,13 @@ class Handler(BaseHTTPRequestHandler):
             query = parse_qs(parsed.query)
             if not require_admin(self, query):
                 return
-            token = parsed.path.split('/')[3]
+            token = parsed.path.strip('/').split('/')[3]
             return self.handle_admin_message(token, payload)
         if parsed.path.startswith('/api/admin/conversations/') and parsed.path.endswith('/update'):
             query = parse_qs(parsed.query)
             if not require_admin(self, query):
                 return
-            token = parsed.path.split('/')[3]
+            token = parsed.path.strip('/').split('/')[3]
             return self.handle_admin_update(token, payload)
         if parsed.path == '/admin/crm/companies/create':
             query = parse_qs(parsed.query)
@@ -367,8 +367,10 @@ class Handler(BaseHTTPRequestHandler):
         return json_response(self, 200, {'ok': True})
 
     def handle_admin_update(self, token: str, payload: dict):
-        ok = messaging.update_conversation(token, status=payload.get('status'), priority=payload.get('priority'), tags=payload.get('tags'))
-        return json_response(self, 200 if ok else 400, {'ok': ok})
+        convo = messaging.update_conversation(token, status=payload.get('status'), priority=payload.get('priority'), tags=payload.get('tags'))
+        if not convo:
+            return json_response(self, 400, {'ok': False, 'error': 'No valid changes were provided.'})
+        return json_response(self, 200, {'ok': True, 'status': convo['status'], 'priority': convo['priority'], 'tags': convo['tags']})
 
 
     def admin_shell(self, title: str, content: str, active: str = 'dashboard'):
@@ -550,10 +552,15 @@ class Handler(BaseHTTPRequestHandler):
         return html_response(self, 200, body)
 
     def render_inbox(self):
-        convos = messaging.list_conversations()
+        parsed = urlparse(self.path)
+        query = parse_qs(parsed.query)
+        active_status = (query.get('status', [''])[0] or '').strip()
+        search_q = (query.get('q', [''])[0] or '').strip()
+        all_convos = messaging.list_conversations(limit=500)
         counts = {status: 0 for status in messaging.STATUSES}
-        for c in convos:
+        for c in all_convos:
             counts[c['status']] = counts.get(c['status'], 0) + 1
+        convos = messaging.search_conversations(status=active_status, q=search_q, limit=150)
         cards = []
         for c in convos:
             subject = esc(c['subject'] or c['kind'].replace('_', ' ').title())
@@ -567,9 +574,13 @@ class Handler(BaseHTTPRequestHandler):
   </div>
   <div class='inbox-meta'><span>{esc(c['kind']).replace('_',' ')}</span><span>{esc(c['priority'])}</span></div>
 </a>""")
-        listing = ''.join(cards) or '<div class="empty-state">No conversations yet.</div>'
-        stats = ''.join(f"<div class='stat'><strong>{counts.get(s,0)}</strong><span>{s.replace('_',' ')}</span></div>" for s in messaging.STATUSES)
-        content = f"""<header class='admin-header'><div><p class='eyebrow'>Messages</p><h1>Inbox</h1><p>Manage project requests, chat threads, replies, internal notes, priority, and tags.</p></div></header><section class='stat-grid'>{stats}</section><section class='inbox-list'>{listing}</section>"""
+        listing = ''.join(cards) or '<div class="empty-state">No conversations match this view.</div>'
+        def status_link(status):
+            cls = 'active' if active_status == status else ''
+            return f"<a class='filter-pill {cls}' href='/admin/inbox?status={status}'><strong>{counts.get(status,0)}</strong><span>{status.replace('_',' ')}</span></a>"
+        stats = ''.join(status_link(s) for s in messaging.STATUSES)
+        all_cls = 'active' if not active_status else ''
+        content = f"""<header class='admin-header'><div><p class='eyebrow'>Messages</p><h1>Inbox</h1><p>Manage requests, chat threads, replies, internal notes, priority, and tags.</p></div><a class='btn secondary' href='/admin/inbox'>All conversations</a></header><section class='message-toolbar'><a class='filter-pill {all_cls}' href='/admin/inbox'><strong>{len(all_convos)}</strong><span>all</span></a>{stats}<form class='search-box' method='get' action='/admin/inbox'><input name='q' value='{esc(search_q)}' placeholder='Search name, email, company, tags...'><button class='btn secondary' type='submit'>Search</button></form></section><section class='inbox-list'>{listing}</section>"""
         return self.admin_shell('Inbox', content, 'inbox')
 
     def render_admin_conversation(self, token: str):
@@ -581,7 +592,7 @@ class Handler(BaseHTTPRequestHandler):
         pri_opts = ''.join(f"<option value='{p}' {'selected' if convo['priority']==p else ''}>{p}</option>" for p in messaging.PRIORITIES)
         lead = json.loads(convo['lead_json'] or '{}')
         lead_rows = ''.join(f"<div><span>{esc(k).replace('_',' ').title()}</span><strong>{esc(v)}</strong></div>" for k,v in lead.items() if v)
-        content = f"""<p><a href='/admin/inbox'>← Back to inbox</a></p><div class='conversation-admin-grid'><section><div class='conversation-title'><span class='badge status-{esc(convo['status'])}'>{esc(convo['status']).replace('_',' ')}</span><h1>{esc(convo['subject'] or 'Conversation')}</h1><p class='muted-text'><strong>{esc(convo['name'])}</strong> · {esc(convo['email'])} · {esc(convo['company'])}</p></div><section class='message-list admin-messages'>{rows}</section><form id='replyForm' class='contact-panel'><h3>Reply</h3><textarea name='body' rows='5' placeholder='Reply to visitor or add internal note...' required></textarea><label class='check'><input type='checkbox' name='internal'> Internal note only</label><button class='btn primary' type='submit'>Send</button></form></section><aside class='admin-detail-panel'><form id='metaForm' class='contact-panel'><h3>Manage</h3><label>Status<select name='status'>{status_opts}</select></label><label>Priority<select name='priority'>{pri_opts}</select></label><label>Tags<input name='tags' value='{esc(convo['tags'])}' placeholder='AWS, Terraform, urgent'></label><button class='btn secondary' type='submit'>Save changes</button></form><div class='contact-panel'><h3>Lead details</h3><div class='detail-grid'><div><span>Name</span><strong>{esc(convo['name'])}</strong></div><div><span>Email</span><strong>{esc(convo['email'])}</strong></div><div><span>Company</span><strong>{esc(convo['company'])}</strong></div>{lead_rows}</div><p><a class='btn secondary' href='/chat/{esc(convo['token'])}' target='_blank'>Open visitor link</a></p></div></aside></div><script>document.getElementById('replyForm').addEventListener('submit', async e=>{{e.preventDefault(); const fd=new FormData(e.target); const data=Object.fromEntries(fd.entries()); data.internal=e.target.internal.checked; const r=await fetch('/api/admin/conversations/{token}/messages',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(data)}}); if(r.ok) location.reload();}});document.getElementById('metaForm').addEventListener('submit', async e=>{{e.preventDefault(); const data=Object.fromEntries(new FormData(e.target).entries()); const r=await fetch('/api/admin/conversations/{token}/update',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(data)}}); if(r.ok) location.reload();}});</script>"""
+        content = f"""<p><a href='/admin/inbox'>← Back to inbox</a></p><div class='conversation-admin-grid'><section><div class='conversation-title'><span class='badge status-{esc(convo['status'])}'>{esc(convo['status']).replace('_',' ')}</span><h1>{esc(convo['subject'] or 'Conversation')}</h1><p class='muted-text'><strong>{esc(convo['name'])}</strong> · {esc(convo['email'])} · {esc(convo['company'])}</p></div><section class='message-list admin-messages'>{rows}</section><form id='replyForm' class='contact-panel'><h3>Reply</h3><textarea name='body' rows='5' placeholder='Reply to visitor or add internal note...' required></textarea><label class='check'><input type='checkbox' name='internal'> Internal note only</label><button class='btn primary' type='submit'>Send</button></form></section><aside class='admin-detail-panel'><form id='metaForm' class='contact-panel'><h3>Manage</h3><label>Status<select name='status'>{status_opts}</select></label><label>Priority<select name='priority'>{pri_opts}</select></label><label>Tags<input name='tags' value='{esc(convo['tags'])}' placeholder='AWS, Terraform, urgent'></label><button class='btn secondary' type='submit'>Save changes</button></form><div class='contact-panel'><h3>Lead details</h3><div class='detail-grid'><div><span>Name</span><strong>{esc(convo['name'])}</strong></div><div><span>Email</span><strong>{esc(convo['email'])}</strong></div><div><span>Company</span><strong>{esc(convo['company'])}</strong></div>{lead_rows}</div><p><a class='btn secondary' href='/chat/{esc(convo['token'])}' target='_blank'>Open visitor link</a></p></div></aside></div><script>document.getElementById('replyForm').addEventListener('submit', async e=>{{e.preventDefault(); const fd=new FormData(e.target); const data=Object.fromEntries(fd.entries()); data.internal=e.target.internal.checked; const r=await fetch('/api/admin/conversations/{token}/messages',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(data)}}); if(r.ok) location.reload();}});document.getElementById('metaForm').addEventListener('submit', async e=>{{e.preventDefault(); const data=Object.fromEntries(new FormData(e.target).entries()); const r=await fetch('/api/admin/conversations/{token}/update',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(data)}}); if(r.ok) location.reload(); else alert('Unable to save conversation changes.');}});</script>"""
         return self.admin_shell('Conversation', content, 'inbox')
 
 

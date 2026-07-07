@@ -545,3 +545,24 @@ Added monthly cost: **$0**. It still uses the existing EC2 instance, SQLite data
 - Centered admin content beside the sidebar.
 - Added consistent max-width wrapping for dashboard, CRM, messages, cards, and tables.
 - Improved responsive admin spacing.
+
+
+## v2.9 Messaging stabilization
+
+This release fixes conversation status/priority/tag persistence and improves the messaging admin experience without changing infrastructure or adding cost.
+
+Changes:
+- Fixed admin conversation update routing so status changes like `closed` save correctly.
+- Conversation updates now refresh `updated_at`.
+- Added inbox filters for All/New/Waiting on Me/Waiting on Client/Closed.
+- Added inbox search by subject, name, email, company, and tags.
+- Improved messaging card layout, filters, and responsive behavior.
+
+Deploy with the normal in-place SSM flow:
+
+```bash
+make tf-plan ENV=prod
+make tf-apply ENV=prod
+```
+
+No EC2 replacement, DNS change, Elastic IP, RDS, Redis, ALB, or WAF is required.

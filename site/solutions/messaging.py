@@ -177,9 +177,9 @@ def add_message(token: str, *, body: str, sender: str = 'Visitor', sender_type: 
         return conn.execute('SELECT * FROM conversations WHERE id = ?', (convo['id'],)).fetchone()
 
 
-def update_conversation(token: str, *, status: str | None = None, priority: str | None = None, tags: str | None = None) -> bool:
-    updates = []
-    values: list[Any] = []
+def update_conversation(token: str, *, status: str | None = None, priority: str | None = None, tags: str | None = None) -> sqlite3.Row | None:
+    updates = ['updated_at = ?']
+    values: list[Any] = [now()]
     if status in STATUSES:
         updates.append('status = ?')
         values.append(status)
@@ -189,13 +189,13 @@ def update_conversation(token: str, *, status: str | None = None, priority: str 
     if tags is not None:
         updates.append('tags = ?')
         values.append(_tag_string([t.strip() for t in tags.split(',')]))
-    if not updates:
-        return False
+    if len(updates) == 1:
+        return None
     values.append(token)
     with db() as conn:
         conn.execute(f'UPDATE conversations SET {", ".join(updates)} WHERE token = ?', values)
         conn.commit()
-        return True
+        return conn.execute('SELECT * FROM conversations WHERE token = ?', (token,)).fetchone()
 
 
 def get_conversation(token: str) -> tuple[sqlite3.Row | None, list[sqlite3.Row]]:
@@ -210,6 +210,25 @@ def get_conversation(token: str) -> tuple[sqlite3.Row | None, list[sqlite3.Row]]
 def list_conversations(limit: int = 100) -> list[sqlite3.Row]:
     with db() as conn:
         return conn.execute('SELECT * FROM conversations ORDER BY updated_at DESC LIMIT ?', (limit,)).fetchall()
+
+
+def search_conversations(*, status: str = '', q: str = '', limit: int = 100) -> list[sqlite3.Row]:
+    where = []
+    values: list[Any] = []
+    if status and status in STATUSES:
+        where.append('status = ?')
+        values.append(status)
+    if q:
+        like = f'%{q}%'
+        where.append('(subject LIKE ? OR name LIKE ? OR email LIKE ? OR company LIKE ? OR tags LIKE ?)')
+        values.extend([like, like, like, like, like])
+    sql = 'SELECT * FROM conversations'
+    if where:
+        sql += ' WHERE ' + ' AND '.join(where)
+    sql += ' ORDER BY updated_at DESC LIMIT ?'
+    values.append(limit)
+    with db() as conn:
+        return conn.execute(sql, values).fetchall()
 
 
 def notify_new_conversation(convo: sqlite3.Row, first_message: str) -> None:
