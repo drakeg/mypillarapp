@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from pathlib import Path
 import html
 import json
@@ -18,8 +17,9 @@ NOTIFY_FROM = os.environ.get('MADMALLARD_NOTIFY_FROM', '').strip()
 NOTIFY_TO = os.environ.get('MADMALLARD_NOTIFY_TO', '').strip()
 AWS_REGION = os.environ.get('AWS_REGION', os.environ.get('AWS_DEFAULT_REGION', 'us-east-1')).strip()
 
-STATUSES = ['new', 'waiting_on_me', 'waiting_on_client', 'closed']
+STATUSES = ['new', 'waiting_on_me', 'waiting_on_client', 'in_progress', 'closed', 'spam']
 PRIORITIES = ['low', 'normal', 'high']
+RATINGS = ['excellent', 'good', 'ok', 'needs_improvement']
 
 
 def now() -> int:
@@ -59,7 +59,9 @@ def db() -> sqlite3.Connection:
             status TEXT NOT NULL DEFAULT 'new',
             priority TEXT NOT NULL DEFAULT 'normal',
             tags TEXT NOT NULL DEFAULT '',
-            lead_json TEXT NOT NULL DEFAULT '{}'
+            lead_json TEXT NOT NULL DEFAULT '{}',
+            last_feedback_rating TEXT,
+            last_feedback_at INTEGER
         )
     ''')
     conn.execute('''
@@ -71,19 +73,24 @@ def db() -> sqlite3.Connection:
             sender TEXT NOT NULL,
             body TEXT NOT NULL,
             internal INTEGER NOT NULL DEFAULT 0,
+            feedback_token TEXT,
             FOREIGN KEY(conversation_id) REFERENCES conversations(id)
         )
     ''')
-    # Backward-compatible migrations from older bootstrap versions.
-    _ensure_column(conn, 'conversations', 'kind', "TEXT NOT NULL DEFAULT 'chat'")
-    _ensure_column(conn, 'conversations', 'subject', 'TEXT')
-    _ensure_column(conn, 'conversations', 'company', 'TEXT')
-    _ensure_column(conn, 'conversations', 'priority', "TEXT NOT NULL DEFAULT 'normal'")
-    _ensure_column(conn, 'conversations', 'tags', "TEXT NOT NULL DEFAULT ''")
-    _ensure_column(conn, 'conversations', 'lead_json', "TEXT NOT NULL DEFAULT '{}'")
-    _ensure_column(conn, 'messages', 'sender_type', "TEXT NOT NULL DEFAULT 'visitor'")
-    _ensure_column(conn, 'messages', 'internal', 'INTEGER NOT NULL DEFAULT 0')
-    # Keep legacy leads table around if present/needed, but new interactions use conversations.
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            conversation_id INTEGER NOT NULL,
+            message_id INTEGER,
+            token TEXT UNIQUE,
+            rating TEXT NOT NULL,
+            comment TEXT,
+            created_at INTEGER NOT NULL,
+            source TEXT NOT NULL DEFAULT 'visitor',
+            FOREIGN KEY(conversation_id) REFERENCES conversations(id),
+            FOREIGN KEY(message_id) REFERENCES messages(id)
+        )
+    ''')
     conn.execute('''
         CREATE TABLE IF NOT EXISTS leads (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,6 +103,25 @@ def db() -> sqlite3.Connection:
             status TEXT NOT NULL DEFAULT 'new'
         )
     ''')
+    for table, cols in {
+        'conversations': {
+            'kind': "TEXT NOT NULL DEFAULT 'chat'",
+            'subject': 'TEXT',
+            'company': 'TEXT',
+            'priority': "TEXT NOT NULL DEFAULT 'normal'",
+            'tags': "TEXT NOT NULL DEFAULT ''",
+            'lead_json': "TEXT NOT NULL DEFAULT '{}'",
+            'last_feedback_rating': 'TEXT',
+            'last_feedback_at': 'INTEGER',
+        },
+        'messages': {
+            'sender_type': "TEXT NOT NULL DEFAULT 'visitor'",
+            'internal': 'INTEGER NOT NULL DEFAULT 0',
+            'feedback_token': 'TEXT',
+        },
+    }.items():
+        for col, ddl in cols.items():
+            _ensure_column(conn, table, col, ddl)
     conn.commit()
     return conn
 
@@ -153,8 +179,7 @@ def create_conversation(*, kind: str, name: str, email: str, body: str, company:
             (conversation_id, ts, 'visitor', name or 'Visitor', body),
         )
         conn.commit()
-        convo = conn.execute('SELECT * FROM conversations WHERE id = ?', (conversation_id,)).fetchone()
-    return convo
+        return conn.execute('SELECT * FROM conversations WHERE id = ?', (conversation_id,)).fetchone()
 
 
 def add_message(token: str, *, body: str, sender: str = 'Visitor', sender_type: str = 'visitor', internal: bool = False) -> sqlite3.Row | None:
@@ -164,22 +189,24 @@ def add_message(token: str, *, body: str, sender: str = 'Visitor', sender_type: 
         if not convo:
             return None
         status = convo['status']
+        feedback_token = None
         if sender_type == 'admin' and not internal:
             status = 'waiting_on_client'
+            feedback_token = secrets.token_urlsafe(16)
         elif sender_type == 'visitor':
             status = 'waiting_on_me'
         conn.execute(
-            'INSERT INTO messages(conversation_id, created_at, sender_type, sender, body, internal) VALUES (?, ?, ?, ?, ?, ?)',
-            (convo['id'], ts, sender_type, sender, body, 1 if internal else 0),
+            'INSERT INTO messages(conversation_id, created_at, sender_type, sender, body, internal, feedback_token) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            (convo['id'], ts, sender_type, sender, body, 1 if internal else 0, feedback_token),
         )
         conn.execute('UPDATE conversations SET updated_at = ?, status = ? WHERE id = ?', (ts, status, convo['id']))
         conn.commit()
         return conn.execute('SELECT * FROM conversations WHERE id = ?', (convo['id'],)).fetchone()
 
 
-def update_conversation(token: str, *, status: str | None = None, priority: str | None = None, tags: str | None = None) -> sqlite3.Row | None:
-    updates = ['updated_at = ?']
-    values: list[Any] = [now()]
+def update_conversation(token: str, *, status: str | None = None, priority: str | None = None, tags: str | None = None) -> bool:
+    updates = []
+    values: list[Any] = []
     if status in STATUSES:
         updates.append('status = ?')
         values.append(status)
@@ -189,13 +216,13 @@ def update_conversation(token: str, *, status: str | None = None, priority: str 
     if tags is not None:
         updates.append('tags = ?')
         values.append(_tag_string([t.strip() for t in tags.split(',')]))
-    if len(updates) == 1:
-        return None
+    if not updates:
+        return False
     values.append(token)
     with db() as conn:
         conn.execute(f'UPDATE conversations SET {", ".join(updates)} WHERE token = ?', values)
         conn.commit()
-        return conn.execute('SELECT * FROM conversations WHERE token = ?', (token,)).fetchone()
+        return True
 
 
 def get_conversation(token: str) -> tuple[sqlite3.Row | None, list[sqlite3.Row]]:
@@ -207,28 +234,69 @@ def get_conversation(token: str) -> tuple[sqlite3.Row | None, list[sqlite3.Row]]
         return convo, messages
 
 
-def list_conversations(limit: int = 100) -> list[sqlite3.Row]:
-    with db() as conn:
-        return conn.execute('SELECT * FROM conversations ORDER BY updated_at DESC LIMIT ?', (limit,)).fetchall()
-
-
-def search_conversations(*, status: str = '', q: str = '', limit: int = 100) -> list[sqlite3.Row]:
-    where = []
-    values: list[Any] = []
+def list_conversations(limit: int = 100, status: str = '', q: str = '', tag: str = '') -> list[sqlite3.Row]:
+    clauses = []
+    params: list[Any] = []
     if status and status in STATUSES:
-        where.append('status = ?')
-        values.append(status)
+        clauses.append('status = ?')
+        params.append(status)
+    if tag:
+        clauses.append('tags LIKE ?')
+        params.append(f'%{tag}%')
     if q:
-        like = f'%{q}%'
-        where.append('(subject LIKE ? OR name LIKE ? OR email LIKE ? OR company LIKE ? OR tags LIKE ?)')
-        values.extend([like, like, like, like, like])
-    sql = 'SELECT * FROM conversations'
-    if where:
-        sql += ' WHERE ' + ' AND '.join(where)
-    sql += ' ORDER BY updated_at DESC LIMIT ?'
-    values.append(limit)
+        clauses.append('(name LIKE ? OR email LIKE ? OR company LIKE ? OR subject LIKE ? OR tags LIKE ?)')
+        params.extend([f'%{q}%'] * 5)
+    where = 'WHERE ' + ' AND '.join(clauses) if clauses else ''
     with db() as conn:
-        return conn.execute(sql, values).fetchall()
+        return conn.execute(f'SELECT * FROM conversations {where} ORDER BY updated_at DESC LIMIT ?', (*params, limit)).fetchall()
+
+
+def inbox_stats() -> dict[str, Any]:
+    with db() as conn:
+        counts = {row['status']: row['count'] for row in conn.execute('SELECT status, COUNT(*) as count FROM conversations GROUP BY status')}
+        total = conn.execute('SELECT COUNT(*) as c FROM conversations').fetchone()['c']
+        feedback_counts = {row['rating']: row['count'] for row in conn.execute('SELECT rating, COUNT(*) as count FROM feedback GROUP BY rating')}
+        recent = conn.execute('SELECT COUNT(*) as c FROM conversations WHERE created_at >= ?', (now() - 7 * 86400,)).fetchone()['c']
+        return {'counts': counts, 'total': total, 'feedback': feedback_counts, 'recent': recent}
+
+
+def record_feedback_by_conversation(token: str, rating: str, comment: str = '') -> bool:
+    if rating not in RATINGS:
+        return False
+    ts = now()
+    with db() as conn:
+        convo = conn.execute('SELECT * FROM conversations WHERE token = ?', (token,)).fetchone()
+        if not convo:
+            return False
+        conn.execute('INSERT INTO feedback(conversation_id, rating, comment, created_at, source) VALUES (?, ?, ?, ?, ?)', (convo['id'], rating, comment, ts, 'visitor_page'))
+        conn.execute('UPDATE conversations SET last_feedback_rating = ?, last_feedback_at = ? WHERE id = ?', (rating, ts, convo['id']))
+        conn.commit()
+    notify_admin_feedback(token, rating, comment)
+    return True
+
+
+def record_feedback_by_message_token(feedback_token: str, rating: str, comment: str = '') -> bool:
+    if rating not in RATINGS:
+        return False
+    ts = now()
+    with db() as conn:
+        msg = conn.execute('SELECT * FROM messages WHERE feedback_token = ?', (feedback_token,)).fetchone()
+        if not msg:
+            return False
+        convo = conn.execute('SELECT * FROM conversations WHERE id = ?', (msg['conversation_id'],)).fetchone()
+        conn.execute('INSERT INTO feedback(conversation_id, message_id, token, rating, comment, created_at, source) VALUES (?, ?, ?, ?, ?, ?, ?)', (msg['conversation_id'], msg['id'], feedback_token, rating, comment, ts, 'email'))
+        conn.execute('UPDATE conversations SET last_feedback_rating = ?, last_feedback_at = ? WHERE id = ?', (rating, ts, msg['conversation_id']))
+        conn.commit()
+    notify_admin_feedback(convo['token'], rating, comment)
+    return True
+
+
+def _last_admin_feedback_token(convo_token: str) -> str:
+    with db() as conn:
+        row = conn.execute('''SELECT m.feedback_token FROM messages m JOIN conversations c ON c.id=m.conversation_id
+                              WHERE c.token=? AND m.sender_type='admin' AND m.internal=0 AND m.feedback_token IS NOT NULL
+                              ORDER BY m.id DESC LIMIT 1''', (convo_token,)).fetchone()
+        return row['feedback_token'] if row else ''
 
 
 def notify_new_conversation(convo: sqlite3.Row, first_message: str) -> None:
@@ -240,10 +308,7 @@ def notify_new_conversation(convo: sqlite3.Row, first_message: str) -> None:
         f'Company: {convo["company"] or ""}',
         f'Subject: {convo["subject"] or ""}',
         f'Tags: {convo["tags"] or ""}',
-        '',
-        first_message,
-        '',
-        f'Open in admin: {admin_link}',
+        '', first_message, '', f'Open in admin: {admin_link}',
     ]
     send_email(subject, '\n'.join(details), f'<p>{html.escape(first_message)}</p><p><a href="{admin_link}">Open in admin</a></p>')
 
@@ -275,9 +340,25 @@ def notify_visitor_admin_reply(convo: sqlite3.Row, body: str) -> None:
     if not email:
         return
     url = public_url(f'/chat/{convo["token"]}')
+    token = _last_admin_feedback_token(convo['token'])
+    feedback = ''
+    if token:
+        feedback = ''.join([f'<a style="display:inline-block;margin:6px 6px 6px 0;padding:9px 12px;border-radius:999px;background:#eef7ff;color:#08233a;text-decoration:none;font-weight:700" href="{public_url(f"/feedback/{token}/{rating}")}">{label}</a>' for rating, label in [('excellent','Excellent'),('good','Good'),('ok','OK'),('needs_improvement','Needs improvement')]])
+    html_body = f'<p>Greg replied:</p><blockquote>{html.escape(body)}</blockquote><p><a href="{url}">Open conversation</a></p>'
+    if feedback:
+        html_body += f'<hr><p><strong>Optional:</strong> How helpful was this response?</p><p>{feedback}</p>'
     send_email(
         'Greg replied to your Mad Mallard Solutions conversation',
         f'Greg replied:\n\n{body}\n\nOpen conversation: {url}',
-        f'<p>Greg replied:</p><blockquote>{html.escape(body)}</blockquote><p><a href="{url}">Open conversation</a></p>',
+        html_body,
         to_address=email,
+    )
+
+
+def notify_admin_feedback(convo_token: str, rating: str, comment: str = '') -> None:
+    admin_link = public_url(f'/admin/conversations/{convo_token}')
+    send_email(
+        f'Conversation feedback: {rating.replace("_", " ")}',
+        f'Feedback received: {rating}\n\n{comment}\n\nOpen conversation: {admin_link}',
+        f'<p>Feedback received: <strong>{html.escape(rating.replace("_", " "))}</strong></p><p>{html.escape(comment)}</p><p><a href="{admin_link}">Open conversation</a></p>',
     )

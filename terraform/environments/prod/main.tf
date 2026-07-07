@@ -79,9 +79,6 @@ module "app_deploy" {
   additional_domains = var.additional_domains
   acme_email         = var.acme_email
   admin_token                = var.admin_token
-  admin_username             = var.admin_username
-  admin_password_hash        = var.admin_password_hash
-  admin_session_secret       = var.admin_session_secret
   enable_email_notifications = var.enable_email_notifications
   notify_email_from          = var.notify_email_from
   notify_email_to            = var.notify_email_to

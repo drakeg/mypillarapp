@@ -120,26 +120,6 @@ variable "admin_token" {
   description = "Optional admin inbox token. Leave blank to disable /admin/inbox."
 }
 
-variable "admin_username" {
-  type        = string
-  default     = "greg"
-  description = "Admin username for the built-in inbox."
-}
-
-variable "admin_password_hash" {
-  type        = string
-  default     = ""
-  sensitive   = true
-  description = "PBKDF2 admin password hash. Generate with scripts/generate-admin-password-hash.py."
-}
-
-variable "admin_session_secret" {
-  type        = string
-  default     = ""
-  sensitive   = true
-  description = "Secret used to sign admin session cookies. Use a long random value."
-}
-
 
 variable "enable_email_notifications" {
   type        = bool

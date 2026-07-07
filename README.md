@@ -12,74 +12,6 @@ The current goal is simple:
 - avoid Elastic IP cost for now,
 - avoid replacing the EC2 instance for normal site changes.
 
-
-
-## v2.7 - Admin Navigation + CRM Foundation
-
-This release focuses on the next practical coding step instead of infrastructure churn. It keeps the same low-cost EC2 + SQLite + SES architecture and adds:
-
-- Persistent admin sidebar across Dashboard, Messages, CRM, and Organizations
-- Fixed navigation so you can always get back to the main dashboard
-- First CRM foundation:
-  - Companies
-  - Contacts
-  - Leads
-  - Statuses, tags, notes, priority, and estimated value fields
-- CRM dashboard at `/admin/crm`
-- No new AWS services and no added recurring cost
-
-Deploy normally:
-
-```bash
-make tf-plan ENV=prod
-make tf-apply ENV=prod
-```
-
-Then visit:
-
-```text
-https://pillar.madmallards.com/admin/dashboard
-https://pillar.madmallards.com/admin/crm
-```
-
-## v2.5 - Core Platform Foundation
-
-This release starts the business operating system foundation without adding paid services. It keeps the same EC2 + SQLite + SES architecture and adds:
-
-- Admin dashboard at `/admin/dashboard`
-- Organization records for:
-  - Mad Mallard Solutions
-  - Mad Mallard Personal Training
-  - Mad Mallards Adventures
-- Per-organization settings for public domain, brand color, status, notes, and enabled modules
-- Shared platform navigation for Dashboard, Organizations, and Inbox
-- Local SQLite tables for organizations, members, and audit events
-
-Deploy normally:
-
-```bash
-make tf-plan ENV=prod
-make tf-apply ENV=prod
-```
-
-This should update through the SSM app deployment path and should not replace EC2.
-
-After deployment, log in at:
-
-```text
-https://pillar.madmallards.com/admin/login
-```
-
-Then open:
-
-```text
-https://pillar.madmallards.com/admin/dashboard
-```
-
-### Cost impact
-
-No additional AWS services are introduced. Monthly cost impact should remain $0 beyond the existing EC2/S3/SES usage.
-
 ## Current architecture
 
 ```text
@@ -484,92 +416,21 @@ Email notification triggers:
 
 Cost impact remains near-free: SQLite runs on the existing EC2 instance and SES is usage-based/pennies at small volume. No RDS, Redis, ALB, WAF, AI, or paid chat service is used.
 
-## Admin username/password login
+## v2.4 Messaging polish
 
-The admin inbox now supports username/password login instead of requiring the long token in the URL.
+This release keeps the near-free SQLite + SES approach and improves the messaging experience:
 
-Generate a password hash locally:
+- Polished admin inbox with status cards, filters, search, and satisfaction score.
+- Conversation thread UI with timestamps and clearer status badges.
+- Optional visitor feedback on replies.
+- One-click feedback links in reply emails.
+- Internal notes and saved reply snippets.
 
-```bash
-./scripts/generate-admin-password-hash.py
-```
-
-Then set these in `terraform/environments/prod/terraform.tfvars`:
-
-```hcl
-admin_username        = "greg"
-admin_password_hash   = "pbkdf2_sha256$390000$..."
-admin_session_secret  = "use-a-long-random-string-here"
-```
-
-You can generate a session secret with:
-
-```bash
-openssl rand -base64 48
-```
-
-Then deploy:
+Deploy with:
 
 ```bash
 make tf-plan ENV=prod
 make tf-apply ENV=prod
 ```
 
-Login here:
-
-```text
-https://pillar.madmallards.com/admin/login
-```
-
-The old `admin_token` variable is still supported as a fallback, but new deployments should use username/password.
-
-## Messaging/admin polish included
-
-This version improves the admin side with:
-
-- inbox cards instead of a plain table,
-- conversation counts by status,
-- status badges,
-- priority highlighting,
-- tag chips,
-- cleaner conversation detail pages,
-- internal notes,
-- visitor link access from the admin view.
-
-Added monthly cost: **$0**. It still uses the existing EC2 instance, SQLite database, and SES for low-cost notifications.
-
-
-## v2.7
-
-- Polished admin layout spacing.
-- Centered admin content beside the sidebar.
-- Added consistent max-width wrapping for dashboard, CRM, messages, cards, and tables.
-- Improved responsive admin spacing.
-
-
-## v2.9 Messaging stabilization
-
-This release fixes conversation status/priority/tag persistence and improves the messaging admin experience without changing infrastructure or adding cost.
-
-Changes:
-- Fixed admin conversation update routing so status changes like `closed` save correctly.
-- Conversation updates now refresh `updated_at`.
-- Added inbox filters for All/New/Waiting on Me/Waiting on Client/Closed.
-- Added inbox search by subject, name, email, company, and tags.
-- Improved messaging card layout, filters, and responsive behavior.
-
-Deploy with the normal in-place SSM flow:
-
-```bash
-make tf-plan ENV=prod
-make tf-apply ENV=prod
-```
-
-No EC2 replacement, DNS change, Elastic IP, RDS, Redis, ALB, or WAF is required.
-
-
-### v2.9.1 dashboard count fix
-
-- Dashboard now shows **Open Conversations** instead of all conversations labelled as new.
-- Closed conversations remain in total history but no longer inflate the actionable dashboard count.
-- No AWS infrastructure changes or added cost.
+No new AWS services are added. Costs remain essentially the same as v2.3: EC2, tiny S3 artifact storage, and SES per-email charges.
