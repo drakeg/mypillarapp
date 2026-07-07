@@ -434,3 +434,73 @@ make tf-apply ENV=prod
 ```
 
 No new AWS services are added. Costs remain essentially the same as v2.3: EC2, tiny S3 artifact storage, and SES per-email charges.
+
+
+## Terraform remote state
+
+This repo is configured to use the shared S3 state bucket with a project/environment prefix:
+
+```text
+s3://video-short-converter-terraform-state/madmallard-platform/prod/terraform.tfstate
+```
+
+The backend files live here:
+
+```text
+terraform/environments/prod/backend.tf
+terraform/environments/prod/backend.hcl
+```
+
+`backend.tf` intentionally contains only:
+
+```hcl
+terraform {
+  backend "s3" {}
+}
+```
+
+The environment-specific backend settings are in `backend.hcl`:
+
+```hcl
+bucket       = "video-short-converter-terraform-state"
+key          = "madmallard-platform/prod/terraform.tfstate"
+region       = "us-east-1"
+encrypt      = true
+use_lockfile = true
+```
+
+This uses S3 native lock files instead of the deprecated `dynamodb_table` backend setting. No DynamoDB table is required.
+
+### First-time migration from local state
+
+From the repo root, run:
+
+```bash
+make tf-init-migrate ENV=prod
+```
+
+When Terraform asks whether to copy the existing local state to S3, answer `yes`.
+
+Then verify:
+
+```bash
+make tf-output ENV=prod
+terraform -chdir=terraform/environments/prod state list
+aws s3 ls s3://video-short-converter-terraform-state/madmallard-platform/prod/
+```
+
+After confirming the remote state works, keep a backup of the old local state or remove it from the working tree. Do not commit `terraform.tfstate` or `terraform.tfstate.backup`.
+
+### Normal workflow after migration
+
+```bash
+make tf-init ENV=prod
+make tf-plan ENV=prod
+make tf-apply ENV=prod
+```
+
+If backend settings change later, run:
+
+```bash
+make tf-init-reconfigure ENV=prod
+```
