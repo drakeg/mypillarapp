@@ -14,8 +14,8 @@ $('contactForm').addEventListener('submit', async (e)=>{
   $('contactStatus').textContent = 'Sending...';
   const res = await fetch('/api/contact', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
   const json = await res.json().catch(()=>({ok:false,error:'Unexpected response'}));
-  $('contactStatus').textContent = json.ok ? 'Thanks — your request was saved.' : (json.error || 'Something went wrong.');
-  if(json.ok) e.target.reset();
+  if(json.ok){ $('contactStatus').innerHTML = `Thanks — your request was saved. <a href="${json.conversation_url}">Open conversation</a> · <a href="${json.my_requests_url}">My requests</a>`; e.target.reset(); }
+  else { $('contactStatus').textContent = json.error || 'Something went wrong.'; }
 });
 $('chatForm').addEventListener('submit', async (e)=>{
   e.preventDefault();

@@ -7,8 +7,3 @@ __pycache__/
 *.pyc
 .env
 data/
-**/.terraform/
-**/.terraform.lock.hcl
-**/terraform.tfstate
-**/terraform.tfstate.backup
-**/*.tfplan

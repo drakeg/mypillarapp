@@ -37,6 +37,12 @@ CADDY
   artifact_bucket_name = lower("${var.project_name}-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}-site-artifacts")
   artifact_prefix      = "solutions"
   caddyfile_b64        = base64encode(local.caddyfile)
+  admin_config_json    = jsonencode({
+    admin_token          = var.admin_token
+    admin_username       = var.admin_username
+    admin_password_hash  = var.admin_password_hash
+    admin_session_secret = var.admin_session_secret
+  })
   deploy_hash          = sha256(join("\n", concat(local.site_file_hashes, [local.caddyfile, var.primary_domain, var.admin_username, var.admin_password_hash, var.admin_session_secret])))
 
   deploy_script = <<-SCRIPT
@@ -63,6 +69,11 @@ fi
 mkdir -p /opt/madmallard-platform/app /opt/madmallard-platform/data /opt/madmallard-platform/caddy/data /opt/madmallard-platform/caddy/config
 
 aws s3 sync "s3://${local.artifact_bucket_name}/${local.artifact_prefix}/" /opt/madmallard-platform/app/ --delete
+
+cat > /opt/madmallard-platform/data/admin_config.json <<'ADMINCONFIG'
+${local.admin_config_json}
+ADMINCONFIG
+chmod 600 /opt/madmallard-platform/data/admin_config.json
 
 cat > /opt/madmallard-platform/caddy/Caddyfile.b64 <<'CADDYB64'
 ${local.caddyfile_b64}
@@ -165,10 +176,10 @@ resource "aws_s3_object" "site_files" {
     if !startswith(basename(file), ".")
   }
 
-  bucket      = aws_s3_bucket.artifacts.id
-  key         = "${local.artifact_prefix}/${each.value}"
-  source      = "${var.site_source_dir}/${each.value}"
-  source_hash = filesha256("${var.site_source_dir}/${each.value}")
+  bucket       = aws_s3_bucket.artifacts.id
+  key          = "${local.artifact_prefix}/${each.value}"
+  source       = "${var.site_source_dir}/${each.value}"
+  source_hash  = filesha256("${var.site_source_dir}/${each.value}")
   content_type = lookup({
     html = "text/html; charset=utf-8"
     css  = "text/css; charset=utf-8"

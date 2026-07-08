@@ -205,7 +205,7 @@ resource "aws_ssm_association" "security_baseline" {
     values = [var.target_tag_value]
   }
 
-  schedule_expression         = "rate(30 minutes)"
+  schedule_expression        = "rate(30 minutes)"
   apply_only_at_cron_interval = false
 
   compliance_severity = "MEDIUM"

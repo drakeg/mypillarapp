@@ -9,7 +9,7 @@ import sqlite3
 import time
 from typing import Any
 
-DATA_DIR = Path('/data')
+DATA_DIR = Path(os.environ.get('MADMALLARD_DATA_DIR', '/data'))
 DB_PATH = DATA_DIR / 'madmallard.sqlite3'
 PRIMARY_DOMAIN = os.environ.get('MADMALLARD_PRIMARY_DOMAIN', 'pillar.madmallards.com')
 ENABLE_EMAIL = os.environ.get('MADMALLARD_ENABLE_EMAIL', 'false').strip().lower() == 'true'
@@ -103,6 +103,14 @@ def db() -> sqlite3.Connection:
             status TEXT NOT NULL DEFAULT 'new'
         )
     ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS customer_tokens (
+            email TEXT PRIMARY KEY,
+            token TEXT NOT NULL UNIQUE,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL
+        )
+    ''')
     for table, cols in {
         'conversations': {
             'kind': "TEXT NOT NULL DEFAULT 'chat'",
@@ -162,6 +170,37 @@ def _tag_string(values: list[str] | str | None) -> str:
     return ','.join(clean[:12])
 
 
+
+def get_or_create_customer_token(email: str) -> str:
+    email = (email or '').strip().lower()
+    if not email:
+        return ''
+    ts = now()
+    with db() as conn:
+        row = conn.execute('SELECT token FROM customer_tokens WHERE email = ?', (email,)).fetchone()
+        if row:
+            conn.execute('UPDATE customer_tokens SET updated_at = ? WHERE email = ?', (ts, email))
+            conn.commit()
+            return row['token']
+        token = secrets.token_urlsafe(24)
+        conn.execute('INSERT INTO customer_tokens(email, token, created_at, updated_at) VALUES (?, ?, ?, ?)', (email, token, ts, ts))
+        conn.commit()
+        return token
+
+
+def customer_dashboard_url(email: str) -> str:
+    token = get_or_create_customer_token(email)
+    return public_url(f'/my-requests/{token}') if token else ''
+
+
+def get_customer_requests(customer_token: str) -> list[sqlite3.Row]:
+    with db() as conn:
+        row = conn.execute('SELECT email FROM customer_tokens WHERE token = ?', (customer_token,)).fetchone()
+        if not row:
+            return []
+        return conn.execute('SELECT * FROM conversations WHERE lower(email) = lower(?) ORDER BY updated_at DESC', (row['email'],)).fetchall()
+
+
 def create_conversation(*, kind: str, name: str, email: str, body: str, company: str = '', subject: str = '', priority: str = 'normal', tags: list[str] | str | None = None, lead: dict | None = None) -> sqlite3.Row:
     token = secrets.token_urlsafe(18)
     ts = now()
@@ -177,6 +216,17 @@ def create_conversation(*, kind: str, name: str, email: str, body: str, company:
         conn.execute(
             'INSERT INTO messages(conversation_id, created_at, sender_type, sender, body) VALUES (?, ?, ?, ?, ?)',
             (conversation_id, ts, 'visitor', name or 'Visitor', body),
+        )
+        if email:
+            norm_email = email.strip().lower()
+            row = conn.execute('SELECT token FROM customer_tokens WHERE email = ?', (norm_email,)).fetchone()
+            if not row:
+                conn.execute('INSERT INTO customer_tokens(email, token, created_at, updated_at) VALUES (?, ?, ?, ?)', (norm_email, secrets.token_urlsafe(24), ts, ts))
+            else:
+                conn.execute('UPDATE customer_tokens SET updated_at = ? WHERE email = ?', (ts, norm_email))
+        conn.execute(
+            'INSERT INTO leads(created_at, name, email, company, source, fields_json, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            (ts, name, email, company, kind, lead_json, 'new'),
         )
         conn.commit()
         return conn.execute('SELECT * FROM conversations WHERE id = ?', (conversation_id,)).fetchone()
@@ -207,22 +257,30 @@ def add_message(token: str, *, body: str, sender: str = 'Visitor', sender_type: 
 def update_conversation(token: str, *, status: str | None = None, priority: str | None = None, tags: str | None = None) -> bool:
     updates = []
     values: list[Any] = []
-    if status in STATUSES:
+
+    normalized_status = str(status or '').strip().lower()
+    normalized_priority = str(priority or '').strip().lower()
+
+    if normalized_status in STATUSES:
         updates.append('status = ?')
-        values.append(status)
-    if priority in PRIORITIES:
+        values.append(normalized_status)
+    if normalized_priority in PRIORITIES:
         updates.append('priority = ?')
-        values.append(priority)
+        values.append(normalized_priority)
     if tags is not None:
         updates.append('tags = ?')
-        values.append(_tag_string([t.strip() for t in tags.split(',')]))
+        values.append(_tag_string([t.strip() for t in str(tags).split(',')]))
     if not updates:
         return False
+
+    updates.append('updated_at = ?')
+    values.append(now())
     values.append(token)
+
     with db() as conn:
-        conn.execute(f'UPDATE conversations SET {", ".join(updates)} WHERE token = ?', values)
+        cur = conn.execute(f'UPDATE conversations SET {", ".join(updates)} WHERE token = ?', values)
         conn.commit()
-        return True
+        return cur.rowcount > 0
 
 
 def get_conversation(token: str) -> tuple[sqlite3.Row | None, list[sqlite3.Row]]:

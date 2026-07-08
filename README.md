@@ -538,3 +538,27 @@ admin_token           = "your-long-token"
 ```
 
 `admin_token` remains supported. The username/password/session variables are accepted by Terraform and passed to the app container so the admin login implementation can use them without unsupported-argument or undeclared-variable warnings.
+## v2.8.2 admin login regression fix
+
+The admin web login uses username/password again. The admin token remains available for internal/emergency automation only and is not shown on the login page.
+
+Generate an admin password hash with:
+
+```bash
+python - <<'PY'
+import hashlib, secrets, getpass
+password = getpass.getpass('Admin password: ')
+salt = secrets.token_hex(16)
+iterations = 390000
+digest = hashlib.pbkdf2_hmac('sha256', password.encode(), salt.encode(), iterations).hex()
+print(f'pbkdf2_sha256${iterations}${salt}${digest}')
+PY
+```
+
+Then set:
+
+```hcl
+admin_username        = "admin"
+admin_password_hash   = "pbkdf2_sha256$..."
+admin_session_secret  = "long-random-session-secret"
+```
