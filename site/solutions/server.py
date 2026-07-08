@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, parse_qs, urlparse, quote
+from urllib.parse import unquote, parse_qs, urlparse, quote, quote
 import html
 import json
 import mimetypes
