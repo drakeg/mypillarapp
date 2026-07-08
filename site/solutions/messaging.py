@@ -201,29 +201,6 @@ def get_customer_requests(customer_token: str) -> list[sqlite3.Row]:
         return conn.execute('SELECT * FROM conversations WHERE lower(email) = lower(?) ORDER BY updated_at DESC', (row['email'],)).fetchall()
 
 
-def latest_public_message(conversation_id: int):
-    with db() as conn:
-        return conn.execute(
-            'SELECT * FROM messages WHERE conversation_id = ? AND internal = 0 ORDER BY id DESC LIMIT 1',
-            (conversation_id,),
-        ).fetchone()
-
-
-def customer_request_summary(customer_token: str) -> list[dict[str, Any]]:
-    requests = get_customer_requests(customer_token)
-    summaries: list[dict[str, Any]] = []
-    for req in requests:
-        latest = latest_public_message(req['id'])
-        needs_customer = req['status'] == 'waiting_on_client'
-        summaries.append({
-            'request': req,
-            'latest_message': latest,
-            'needs_customer': needs_customer,
-            'state_label': 'Reply requested' if needs_customer else ('Waiting on Mad Mallard' if req['status'] == 'waiting_on_me' else req['status'].replace('_', ' ').title()),
-        })
-    return summaries
-
-
 def create_conversation(*, kind: str, name: str, email: str, body: str, company: str = '', subject: str = '', priority: str = 'normal', tags: list[str] | str | None = None, lead: dict | None = None) -> sqlite3.Row:
     token = secrets.token_urlsafe(18)
     ts = now()
@@ -333,22 +310,61 @@ def inbox_stats() -> dict[str, Any]:
         return {'counts': counts, 'total': total, 'feedback': feedback_counts, 'recent': recent}
 
 
-def record_feedback_by_conversation(token: str, rating: str, comment: str = '') -> bool:
-    if rating not in RATINGS:
-        return False
-    ts = now()
+def _feedback_exists(conn: sqlite3.Connection, *, message_id: int | None = None, token: str | None = None) -> bool:
+    if message_id is not None:
+        row = conn.execute('SELECT id FROM feedback WHERE message_id = ? LIMIT 1', (message_id,)).fetchone()
+        return row is not None
+    if token:
+        row = conn.execute('SELECT id FROM feedback WHERE token = ? LIMIT 1', (token,)).fetchone()
+        return row is not None
+    return False
+
+
+def latest_feedback_target(token: str) -> sqlite3.Row | None:
+    """Return the latest public admin reply that can receive visitor feedback."""
     with db() as conn:
-        convo = conn.execute('SELECT * FROM conversations WHERE token = ?', (token,)).fetchone()
+        return conn.execute(
+            """SELECT m.* FROM messages m
+               JOIN conversations c ON c.id = m.conversation_id
+               WHERE c.token = ?
+                 AND m.sender_type = 'admin'
+                 AND m.internal = 0
+                 AND m.feedback_token IS NOT NULL
+               ORDER BY m.id DESC LIMIT 1""",
+            (token,),
+        ).fetchone()
+
+
+def list_feedback(token: str) -> list[sqlite3.Row]:
+    with db() as conn:
+        convo = conn.execute('SELECT id FROM conversations WHERE token = ?', (token,)).fetchone()
         if not convo:
-            return False
-        conn.execute('INSERT INTO feedback(conversation_id, rating, comment, created_at, source) VALUES (?, ?, ?, ?, ?)', (convo['id'], rating, comment, ts, 'visitor_page'))
-        conn.execute('UPDATE conversations SET last_feedback_rating = ?, last_feedback_at = ? WHERE id = ?', (rating, ts, convo['id']))
-        conn.commit()
-    notify_admin_feedback(token, rating, comment)
-    return True
+            return []
+        return conn.execute(
+            """SELECT f.*, m.sender, m.body AS message_body, m.created_at AS message_created_at
+               FROM feedback f
+               LEFT JOIN messages m ON m.id = f.message_id
+               WHERE f.conversation_id = ?
+               ORDER BY f.created_at DESC""",
+            (convo['id'],),
+        ).fetchall()
 
 
-def record_feedback_by_message_token(feedback_token: str, rating: str, comment: str = '') -> bool:
+def record_feedback_by_conversation(token: str, rating: str, comment: str = '') -> bool:
+    """Record feedback for the latest public admin reply in a conversation.
+
+    This keeps customer feedback optional but prevents duplicate feedback for the
+    same staff response. Older versions stored conversation-level feedback only;
+    this ties feedback to a specific staff message while preserving the existing
+    public chat endpoint.
+    """
+    target = latest_feedback_target(token)
+    if not target:
+        return False
+    return record_feedback_by_message_token(target['feedback_token'], rating, comment, source='visitor_page')
+
+
+def record_feedback_by_message_token(feedback_token: str, rating: str, comment: str = '', source: str = 'email') -> bool:
     if rating not in RATINGS:
         return False
     ts = now()
@@ -356,13 +372,20 @@ def record_feedback_by_message_token(feedback_token: str, rating: str, comment: 
         msg = conn.execute('SELECT * FROM messages WHERE feedback_token = ?', (feedback_token,)).fetchone()
         if not msg:
             return False
+        if _feedback_exists(conn, message_id=msg['id']) or _feedback_exists(conn, token=feedback_token):
+            return False
         convo = conn.execute('SELECT * FROM conversations WHERE id = ?', (msg['conversation_id'],)).fetchone()
-        conn.execute('INSERT INTO feedback(conversation_id, message_id, token, rating, comment, created_at, source) VALUES (?, ?, ?, ?, ?, ?, ?)', (msg['conversation_id'], msg['id'], feedback_token, rating, comment, ts, 'email'))
+        try:
+            conn.execute(
+                'INSERT INTO feedback(conversation_id, message_id, token, rating, comment, created_at, source) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                (msg['conversation_id'], msg['id'], feedback_token, rating, comment, ts, source),
+            )
+        except sqlite3.IntegrityError:
+            return False
         conn.execute('UPDATE conversations SET last_feedback_rating = ?, last_feedback_at = ? WHERE id = ?', (rating, ts, msg['conversation_id']))
         conn.commit()
     notify_admin_feedback(convo['token'], rating, comment)
     return True
-
 
 def _last_admin_feedback_token(convo_token: str) -> str:
     with db() as conn:

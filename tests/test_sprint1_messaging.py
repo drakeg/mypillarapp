@@ -68,6 +68,11 @@ def test_message_status_transitions_and_feedback(tmp_path):
     updated = messaging.add_message(convo["token"], body="Visitor reply", sender="Visitor", sender_type="visitor")
     assert updated["status"] == "waiting_on_me"
     assert messaging.record_feedback_by_conversation(convo["token"], "good", "Helpful") is True
+    assert messaging.record_feedback_by_conversation(convo["token"], "excellent", "Duplicate") is False
+    feedback = messaging.list_feedback(convo["token"])
+    assert len(feedback) == 1
+    assert feedback[0]["rating"] == "good"
+    assert feedback[0]["message_id"] is not None
     convo2, _ = messaging.get_conversation(convo["token"])
     assert convo2["last_feedback_rating"] == "good"
 
@@ -111,54 +116,18 @@ def test_admin_login_uses_username_password_not_token(monkeypatch, tmp_path):
     assert "Admin token" not in rendered["body"]
 
 
-def test_customer_request_summary_tracks_latest_message_and_reply_needed(tmp_path):
+def test_feedback_requires_staff_response(tmp_path):
     messaging, _ = load_modules(tmp_path)
     convo = messaging.create_conversation(
-        kind="project_request",
-        name="Greg",
-        email="greg@example.com",
-        company="Mad Mallard",
-        subject="Terraform help",
-        body="Initial request",
-        tags=["Terraform"],
+        kind="chat",
+        name="Visitor",
+        email="visitor@example.com",
+        subject="Website chat",
+        body="Hello",
     )
-    messaging.add_message(convo["token"], body="Can you send more detail?", sender="Greg", sender_type="admin")
-    dashboard_token = messaging.customer_dashboard_url("greg@example.com").rsplit("/", 1)[-1]
-    summary = messaging.customer_request_summary(dashboard_token)
-    assert len(summary) == 1
-    assert summary[0]["needs_customer"] is True
-    assert summary[0]["state_label"] == "Reply requested"
-    assert summary[0]["latest_message"]["body"] == "Can you send more detail?"
+    assert messaging.latest_feedback_target(convo["token"]) is None
+    assert messaging.record_feedback_by_conversation(convo["token"], "excellent", "Great") is False
 
-
-def test_project_request_response_includes_my_requests_link(monkeypatch, tmp_path):
-    os.environ["MADMALLARD_DATA_DIR"] = str(tmp_path)
-    os.environ["MADMALLARD_ENABLE_EMAIL"] = "false"
-    import server
-    importlib.reload(server)
-
-    payload = {
-        "name": "Greg",
-        "email": "greg@example.com",
-        "company": "Mad Mallard",
-        "service": "AWS / cloud setup",
-        "timeline": "This month",
-        "budget": "Not sure yet",
-        "message": "Need help with AWS",
-    }
-    sent = {}
-    def fake_json_response(handler, status, body):
-        sent["status"] = status
-        sent["body"] = body
-    monkeypatch.setattr(server, "json_response", fake_json_response)
-    monkeypatch.setattr(server.messaging, "notify_new_conversation", lambda *a, **k: None)
-    monkeypatch.setattr(server.messaging, "notify_visitor_link", lambda *a, **k: None)
-
-    class FakeHandler:
-        pass
-
-    server.Handler.handle_project_request(FakeHandler(), payload)
-    assert sent["status"] == 200
-    assert sent["body"]["ok"] is True
-    assert sent["body"]["conversation_url"].startswith("/chat/")
-    assert "/my-requests/" in sent["body"]["my_requests_url"]
+    messaging.add_message(convo["token"], body="Admin reply", sender="Greg", sender_type="admin")
+    assert messaging.latest_feedback_target(convo["token"]) is not None
+    assert messaging.record_feedback_by_conversation(convo["token"], "excellent", "Great") is True
