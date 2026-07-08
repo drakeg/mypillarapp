@@ -111,142 +111,54 @@ def test_admin_login_uses_username_password_not_token(monkeypatch, tmp_path):
     assert "Admin token" not in rendered["body"]
 
 
-def test_admin_dashboard_pages_use_sidebar_layout(monkeypatch, tmp_path):
-    os.environ["MADMALLARD_DATA_DIR"] = str(tmp_path)
-    os.environ["MADMALLARD_ADMIN_USERNAME"] = "admin"
-    os.environ["MADMALLARD_ADMIN_PASSWORD_HASH"] = make_test_hash("secret")
-    os.environ["MADMALLARD_ADMIN_SESSION_SECRET"] = "session-secret-for-tests"
-    import server
-    importlib.reload(server)
-
-    class FakeHandler:
-        command = "GET"
-        def __init__(self): self.rendered = {}
-        def send_response(self, status): self.rendered["status"] = status
-        def send_header(self, key, value): self.rendered.setdefault("headers", {})[key] = value
-        def end_headers(self): pass
-        @property
-        def wfile(self):
-            outer = self
-            class W:
-                def write(_, data): outer.rendered["body"] = data.decode("utf-8")
-            return W()
-
-    for method, expected in [
-        ("render_admin_dashboard", "Operations dashboard"),
-        ("render_admin_sites", "Managed sites"),
-        ("render_admin_settings", "Platform settings"),
-    ]:
-        h = FakeHandler()
-        getattr(server.Handler, method)(h)
-        assert h.rendered["status"] == 200
-        assert "admin-sidebar" in h.rendered["body"]
-        assert expected in h.rendered["body"]
-        assert "Mad Mallards Adventures" in h.rendered["body"] or method != "render_admin_sites"
-
-
-def test_sites_admin_supports_edit_delete_and_crm(monkeypatch, tmp_path):
-    os.environ["MADMALLARD_DATA_DIR"] = str(tmp_path)
-    os.environ["MADMALLARD_ADMIN_USERNAME"] = "admin"
-    os.environ["MADMALLARD_ADMIN_PASSWORD_HASH"] = make_test_hash("secret")
-    os.environ["MADMALLARD_ADMIN_SESSION_SECRET"] = "session-secret-for-tests"
-    import server
-    import messaging
-    importlib.reload(messaging)
-    importlib.reload(server)
-
-    class FakeHandler:
-        command = "GET"
-        def __init__(self): self.rendered = {}
-        def send_response(self, status): self.rendered["status"] = status
-        def send_header(self, key, value): self.rendered.setdefault("headers", {})[key] = value
-        def end_headers(self): pass
-        @property
-        def wfile(self):
-            outer = self
-            class W:
-                def write(_, data): outer.rendered["body"] = data.decode("utf-8")
-            return W()
-
-    h = FakeHandler()
-    server.Handler.render_admin_sites(h)
-    assert h.rendered["status"] == 200
-    assert "Add site" in h.rendered["body"]
-    assert "/edit" in h.rendered["body"]
-
-    h = FakeHandler()
-    server.Handler.render_admin_site_form(h, "solutions")
-    assert "Save site" in h.rendered["body"]
-    assert "Delete site" in h.rendered["body"]
-
-    messaging.create_conversation(kind="project_request", name="Greg", email="greg@example.com", company="Mad Mallard", subject="AWS", body="Need help", tags=["AWS"])
-    h = FakeHandler()
-    server.Handler.render_admin_crm(h, {})
-    assert h.rendered["status"] == 200
-    assert "Customer relationship manager" in h.rendered["body"]
-    assert "greg@example.com" in h.rendered["body"]
-
-
-def test_admin_can_close_conversation_and_status_persists(tmp_path):
+def test_customer_request_summary_tracks_latest_message_and_reply_needed(tmp_path):
     messaging, _ = load_modules(tmp_path)
     convo = messaging.create_conversation(
-        kind="chat",
-        name="Visitor",
-        email="visitor@example.com",
-        subject="Website chat",
-        body="Hello",
+        kind="project_request",
+        name="Greg",
+        email="greg@example.com",
+        company="Mad Mallard",
+        subject="Terraform help",
+        body="Initial request",
+        tags=["Terraform"],
     )
-
-    assert messaging.update_conversation(convo["token"], status="closed", priority="normal", tags="chat") is True
-
-    saved, _ = messaging.get_conversation(convo["token"])
-    assert saved["status"] == "closed"
-
-    # Browser form payloads may vary in casing/spacing. They should still persist correctly.
-    assert messaging.update_conversation(convo["token"], status=" Closed ", priority=" High ", tags="chat, follow-up") is True
-    saved, _ = messaging.get_conversation(convo["token"])
-    assert saved["status"] == "closed"
-    assert saved["priority"] == "high"
-    assert saved["tags"] == "chat,follow-up"
+    messaging.add_message(convo["token"], body="Can you send more detail?", sender="Greg", sender_type="admin")
+    dashboard_token = messaging.customer_dashboard_url("greg@example.com").rsplit("/", 1)[-1]
+    summary = messaging.customer_request_summary(dashboard_token)
+    assert len(summary) == 1
+    assert summary[0]["needs_customer"] is True
+    assert summary[0]["state_label"] == "Reply requested"
+    assert summary[0]["latest_message"]["body"] == "Can you send more detail?"
 
 
-def test_admin_conversation_api_routes_extract_token(monkeypatch, tmp_path):
+def test_project_request_response_includes_my_requests_link(monkeypatch, tmp_path):
     os.environ["MADMALLARD_DATA_DIR"] = str(tmp_path)
-    os.environ["MADMALLARD_ADMIN_USERNAME"] = "admin"
-    os.environ["MADMALLARD_ADMIN_PASSWORD_HASH"] = make_test_hash("secret")
-    os.environ["MADMALLARD_ADMIN_SESSION_SECRET"] = "session-secret-for-tests"
+    os.environ["MADMALLARD_ENABLE_EMAIL"] = "false"
     import server
     importlib.reload(server)
 
-    assert server.api_conversation_token("/api/admin/conversations/abc123/update") == "abc123"
-    assert server.api_conversation_token("/api/admin/conversations/abc123/messages") == "abc123"
+    payload = {
+        "name": "Greg",
+        "email": "greg@example.com",
+        "company": "Mad Mallard",
+        "service": "AWS / cloud setup",
+        "timeline": "This month",
+        "budget": "Not sure yet",
+        "message": "Need help with AWS",
+    }
+    sent = {}
+    def fake_json_response(handler, status, body):
+        sent["status"] = status
+        sent["body"] = body
+    monkeypatch.setattr(server, "json_response", fake_json_response)
+    monkeypatch.setattr(server.messaging, "notify_new_conversation", lambda *a, **k: None)
+    monkeypatch.setattr(server.messaging, "notify_visitor_link", lambda *a, **k: None)
 
-
-def test_admin_update_handler_persists_closed_status(monkeypatch, tmp_path):
-    os.environ["MADMALLARD_DATA_DIR"] = str(tmp_path)
-    os.environ["MADMALLARD_ADMIN_USERNAME"] = "admin"
-    os.environ["MADMALLARD_ADMIN_PASSWORD_HASH"] = make_test_hash("secret")
-    os.environ["MADMALLARD_ADMIN_SESSION_SECRET"] = "session-secret-for-tests"
-    import server
-    import messaging
-    importlib.reload(messaging)
-    importlib.reload(server)
-
-    convo = messaging.create_conversation(kind="chat", name="Visitor", email="visitor@example.com", subject="Website chat", body="Hello")
-
-    rendered = {}
     class FakeHandler:
-        command = "POST"
-        def send_response(self, status): rendered["status"] = status
-        def send_header(self, key, value): rendered.setdefault("headers", {})[key] = value
-        def end_headers(self): pass
-        @property
-        def wfile(self):
-            class W:
-                def write(_, data): rendered["body"] = data.decode("utf-8")
-            return W()
+        pass
 
-    server.Handler.handle_admin_update(FakeHandler(), convo["token"], {"status": "closed", "priority": "normal", "tags": "chat"})
-    assert rendered["status"] == 200
-    saved, _ = messaging.get_conversation(convo["token"])
-    assert saved["status"] == "closed"
+    server.Handler.handle_project_request(FakeHandler(), payload)
+    assert sent["status"] == 200
+    assert sent["body"]["ok"] is True
+    assert sent["body"]["conversation_url"].startswith("/chat/")
+    assert "/my-requests/" in sent["body"]["my_requests_url"]

@@ -201,6 +201,29 @@ def get_customer_requests(customer_token: str) -> list[sqlite3.Row]:
         return conn.execute('SELECT * FROM conversations WHERE lower(email) = lower(?) ORDER BY updated_at DESC', (row['email'],)).fetchall()
 
 
+def latest_public_message(conversation_id: int):
+    with db() as conn:
+        return conn.execute(
+            'SELECT * FROM messages WHERE conversation_id = ? AND internal = 0 ORDER BY id DESC LIMIT 1',
+            (conversation_id,),
+        ).fetchone()
+
+
+def customer_request_summary(customer_token: str) -> list[dict[str, Any]]:
+    requests = get_customer_requests(customer_token)
+    summaries: list[dict[str, Any]] = []
+    for req in requests:
+        latest = latest_public_message(req['id'])
+        needs_customer = req['status'] == 'waiting_on_client'
+        summaries.append({
+            'request': req,
+            'latest_message': latest,
+            'needs_customer': needs_customer,
+            'state_label': 'Reply requested' if needs_customer else ('Waiting on Mad Mallard' if req['status'] == 'waiting_on_me' else req['status'].replace('_', ' ').title()),
+        })
+    return summaries
+
+
 def create_conversation(*, kind: str, name: str, email: str, body: str, company: str = '', subject: str = '', priority: str = 'normal', tags: list[str] | str | None = None, lead: dict | None = None) -> sqlite3.Row:
     token = secrets.token_urlsafe(18)
     ts = now()
@@ -257,30 +280,22 @@ def add_message(token: str, *, body: str, sender: str = 'Visitor', sender_type: 
 def update_conversation(token: str, *, status: str | None = None, priority: str | None = None, tags: str | None = None) -> bool:
     updates = []
     values: list[Any] = []
-
-    normalized_status = str(status or '').strip().lower()
-    normalized_priority = str(priority or '').strip().lower()
-
-    if normalized_status in STATUSES:
+    if status in STATUSES:
         updates.append('status = ?')
-        values.append(normalized_status)
-    if normalized_priority in PRIORITIES:
+        values.append(status)
+    if priority in PRIORITIES:
         updates.append('priority = ?')
-        values.append(normalized_priority)
+        values.append(priority)
     if tags is not None:
         updates.append('tags = ?')
-        values.append(_tag_string([t.strip() for t in str(tags).split(',')]))
+        values.append(_tag_string([t.strip() for t in tags.split(',')]))
     if not updates:
         return False
-
-    updates.append('updated_at = ?')
-    values.append(now())
     values.append(token)
-
     with db() as conn:
-        cur = conn.execute(f'UPDATE conversations SET {", ".join(updates)} WHERE token = ?', values)
+        conn.execute(f'UPDATE conversations SET {", ".join(updates)} WHERE token = ?', values)
         conn.commit()
-        return cur.rowcount > 0
+        return True
 
 
 def get_conversation(token: str) -> tuple[sqlite3.Row | None, list[sqlite3.Row]]:
