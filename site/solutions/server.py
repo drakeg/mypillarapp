@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, parse_qs, urlparse
+from urllib.parse import unquote, parse_qs, urlparse, quote
 import html
 import json
 import mimetypes
@@ -169,6 +169,14 @@ def verify_admin_session(cookie_value: str) -> bool:
     return True
 
 
+
+def admin_login_location(handler: BaseHTTPRequestHandler) -> str:
+    parsed = urlparse(handler.path)
+    next_url = parsed.path + (f"?{parsed.query}" if parsed.query else "")
+    if next_url in ["/admin/login", "/admin/logout"]:
+        return "/admin/login"
+    return f"/admin/login?next={quote(next_url, safe='')}"
+
 def admin_is_authenticated(handler: BaseHTTPRequestHandler, query: dict | None = None) -> bool:
     if not admin_auth_configured():
         return False
@@ -185,7 +193,7 @@ def require_admin(handler: BaseHTTPRequestHandler, query: dict | None = None) ->
         html_response(handler, 403, '<h1>Admin disabled</h1><p>Set admin_username, admin_password_hash, and admin_session_secret in Terraform to enable the inbox.</p>')
         return False
     if not admin_is_authenticated(handler, query):
-        redirect(handler, '/admin/login')
+        redirect(handler, admin_login_location(handler))
         return False
     return True
 
@@ -255,8 +263,12 @@ class Handler(BaseHTTPRequestHandler):
             parts = path.strip('/').split('/')
             if len(parts) >= 3:
                 return self.render_feedback(parts[1], parts[2])
+        if path in ('/admin', '/admin/'):
+            if not require_admin(self, query):
+                return
+            return redirect(self, '/admin/dashboard' if hasattr(self, 'render_admin_dashboard') else '/admin/inbox')
         if path == '/admin/login':
-            return self.render_login()
+            return self.render_login(query)
         if path == '/admin/logout':
             return html_response(self, 200, '<h1>Signed out</h1><p><a href="/admin/login">Sign in again</a></p>', {'Set-Cookie': 'mms_admin_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax'})
         if path == '/admin/inbox':
@@ -282,7 +294,10 @@ class Handler(BaseHTTPRequestHandler):
             password = str(payload.get('password', ''))
             if admin_auth_configured() and secrets.compare_digest(username, ADMIN_USERNAME) and verify_password(password, ADMIN_PASSWORD_HASH):
                 session = make_admin_session(username)
-                return redirect(self, '/admin/inbox', {'Set-Cookie': f'mms_admin_session={session}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000'})
+                next_url = str(payload.get('next', '')).strip()
+                if not next_url.startswith('/admin') or next_url.startswith('/admin/login') or next_url.startswith('//'):
+                    next_url = '/admin/dashboard' if hasattr(self, 'render_admin_dashboard') else '/admin/inbox'
+                return redirect(self, next_url, {'Set-Cookie': f'mms_admin_session={session}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000'})
             return html_response(self, 403, '<h1>Invalid username or password</h1><p><a href="/admin/login">Try again</a></p>')
 
         if parsed.path == '/api/contact':
@@ -381,11 +396,13 @@ class Handler(BaseHTTPRequestHandler):
         body = f"""<!doctype html><html><head><title>{title}</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head><body class='conversation-page'><main class='conversation-shell'><h1>{title}</h1><p>{'We recorded your rating: ' + esc(rating_label(rating)) if ok else 'This feedback link may have expired or already been changed.'}</p><p><a class='btn secondary' href='/'>Back to Mad Mallard Solutions</a></p></main></body></html>"""
         return html_response(self, 200 if ok else 404, body)
 
-    def render_login(self):
+    def render_login(self, query: dict | None = None):
+        next_url = (query or {}).get('next', [''])[0]
+        next_input = f"<input type='hidden' name='next' value='{esc(next_url)}'>" if next_url else ''
         if not admin_auth_configured():
             return html_response(self, 403, """<!doctype html><html><head><title>Admin Disabled - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head><body class='conversation-page'><main class='conversation-shell'><h1>Admin disabled</h1><p>Set <code>admin_username</code>, <code>admin_password_hash</code>, and <code>admin_session_secret</code> in Terraform to enable username/password login.</p></main></body></html>""")
-        body = """<!doctype html><html><head><title>Admin Login - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head>
-<body class='conversation-page'><main class='conversation-shell'><h1>Admin login</h1><p>Sign in with your admin username and password. This browser will remember you for 30 days.</p><form method='post' action='/admin/login' class='contact-panel'><label>Username<input type='text' name='username' autocomplete='username' required autofocus></label><label>Password<input type='password' name='password' autocomplete='current-password' required></label><button class='btn primary' type='submit'>Open inbox</button></form></main></body></html>"""
+        body = f"""<!doctype html><html><head><title>Admin Login - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head>
+<body class='conversation-page'><main class='conversation-shell'><h1>Admin login</h1><p>Sign in with your admin username and password. This browser will remember you for 30 days.</p><form method='post' action='/admin/login' class='contact-panel'>{next_input}<label>Username<input type='text' name='username' autocomplete='username' required autofocus></label><label>Password<input type='password' name='password' autocomplete='current-password' required></label><button class='btn primary' type='submit'>Open inbox</button></form></main></body></html>"""
         return html_response(self, 200, body)
 
     def render_request_form(self):
