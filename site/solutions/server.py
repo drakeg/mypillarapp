@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import unquote, parse_qs, urlparse, quote, quote
+from urllib.parse import unquote, parse_qs, urlparse
 import html
 import json
 import mimetypes
@@ -43,6 +43,66 @@ FORM_CONFIG = {
     'timelines': form_config.select_options('timeline'),
     'budgets': form_config.select_options('budget'),
 }
+
+
+SITES_PATH = Path('/data/sites.json')
+DEFAULT_SITES = [
+    {
+        'id': 'solutions',
+        'name': 'Mad Mallard Solutions',
+        'domain': PRIMARY_DOMAIN,
+        'status': 'Active',
+        'purpose': 'IT, AWS, automation, and platform services',
+        'brand': 'Dark blue / cyan technical services brand',
+    },
+    {
+        'id': 'adventures',
+        'name': 'Mad Mallards Adventures',
+        'domain': 'madmallards.com',
+        'status': 'Planned',
+        'purpose': 'RV travel, creator content, affiliate hub',
+        'brand': 'Adventure, travel, creator brand',
+    },
+    {
+        'id': 'personal-training',
+        'name': 'Mad Mallard Personal Training',
+        'domain': 'madmallardpersonaltraining.com',
+        'status': 'Planned',
+        'purpose': 'Fitness services, client resources, training programs',
+        'brand': 'Fitness and coaching brand',
+    },
+]
+
+
+def _site_slug(value: str) -> str:
+    cleaned = ''.join(ch.lower() if ch.isalnum() else '-' for ch in str(value or '').strip())
+    while '--' in cleaned:
+        cleaned = cleaned.replace('--', '-')
+    return cleaned.strip('-') or secrets.token_urlsafe(6).lower()
+
+
+def load_sites() -> list[dict]:
+    if not SITES_PATH.exists():
+        return [dict(site) for site in DEFAULT_SITES]
+    try:
+        data = json.loads(SITES_PATH.read_text(encoding='utf-8'))
+        if isinstance(data, list):
+            return [site for site in data if isinstance(site, dict)]
+    except Exception:
+        pass
+    return [dict(site) for site in DEFAULT_SITES]
+
+
+def save_sites(sites: list[dict]) -> None:
+    SITES_PATH.parent.mkdir(parents=True, exist_ok=True)
+    SITES_PATH.write_text(json.dumps(sites, indent=2, sort_keys=True), encoding='utf-8')
+
+
+def get_site(site_id: str) -> dict | None:
+    for site in load_sites():
+        if site.get('id') == site_id:
+            return site
+    return None
 
 
 def read_body(handler: BaseHTTPRequestHandler) -> dict:
@@ -169,14 +229,6 @@ def verify_admin_session(cookie_value: str) -> bool:
     return True
 
 
-
-def admin_login_location(handler: BaseHTTPRequestHandler) -> str:
-    parsed = urlparse(handler.path)
-    next_url = parsed.path + (f"?{parsed.query}" if parsed.query else "")
-    if next_url in ["/admin/login", "/admin/logout"]:
-        return "/admin/login"
-    return f"/admin/login?next={quote(next_url, safe='')}"
-
 def admin_is_authenticated(handler: BaseHTTPRequestHandler, query: dict | None = None) -> bool:
     if not admin_auth_configured():
         return False
@@ -193,7 +245,7 @@ def require_admin(handler: BaseHTTPRequestHandler, query: dict | None = None) ->
         html_response(handler, 403, '<h1>Admin disabled</h1><p>Set admin_username, admin_password_hash, and admin_session_secret in Terraform to enable the inbox.</p>')
         return False
     if not admin_is_authenticated(handler, query):
-        redirect(handler, admin_login_location(handler))
+        redirect(handler, '/admin/login')
         return False
     return True
 
@@ -215,6 +267,32 @@ def status_label(status: str) -> str:
 
 def rating_label(rating: str) -> str:
     return {'excellent':'😊 Excellent','good':'🙂 Good','ok':'😐 OK','needs_improvement':'🙁 Needs improvement'}.get(rating, rating)
+
+
+def admin_head(title: str) -> str:
+    return f"""<!doctype html><html><head><title>{esc(title)} - Mad Mallard Solutions Admin</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'><link rel='stylesheet' href='/assets/admin.css'></head>"""
+
+
+def admin_nav(active: str = '') -> str:
+    items = [
+        ('/admin', 'dashboard', 'Dashboard'),
+        ('/admin/inbox', 'inbox', 'Inbox'),
+        ('/admin/requests', 'requests', 'Service Requests'),
+        ('/admin/leads', 'leads', 'Leads'),
+        ('/admin/crm', 'crm', 'CRM'),
+        ('/admin/sites', 'sites', 'Sites'),
+        ('/admin/settings', 'settings', 'Settings'),
+    ]
+    links = ''.join(f"<a class='{('active' if key == active else '')}' href='{href}'><span>{label}</span></a>" for href, key, label in items)
+    return f"""<aside class='admin-sidebar'><a class='admin-brand' href='/admin'><img src='/assets/mad-mallard-solutions-logo-icon.png' alt=''><strong>Mad Mallard</strong><small>Solutions Admin</small></a><nav>{links}</nav><div class='admin-sidebar-footer'><a href='/'>View site</a><a href='/admin/logout'>Sign out</a></div></aside>"""
+
+
+def admin_layout(title: str, active: str, content: str) -> str:
+    return f"""{admin_head(title)}<body class='admin-page'>{admin_nav(active)}<main class='admin-main'>{content}</main></body></html>"""
+
+
+def admin_page_header(eyebrow: str, title: str, subtitle: str = '', actions: str = '') -> str:
+    return f"""<header class='admin-page-header'><div><span class='admin-eyebrow'>{esc(eyebrow)}</span><h1>{esc(title)}</h1>{f'<p>{esc(subtitle)}</p>' if subtitle else ''}</div><div class='admin-header-actions'>{actions}</div></header>"""
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -263,18 +341,46 @@ class Handler(BaseHTTPRequestHandler):
             parts = path.strip('/').split('/')
             if len(parts) >= 3:
                 return self.render_feedback(parts[1], parts[2])
-        if path in ('/admin', '/admin/'):
-            if not require_admin(self, query):
-                return
-            return redirect(self, '/admin/dashboard' if hasattr(self, 'render_admin_dashboard') else '/admin/inbox')
         if path == '/admin/login':
-            return self.render_login(query)
+            return self.render_login()
         if path == '/admin/logout':
             return html_response(self, 200, '<h1>Signed out</h1><p><a href="/admin/login">Sign in again</a></p>', {'Set-Cookie': 'mms_admin_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax'})
+        if path == '/admin' or path == '/admin/':
+            if not require_admin(self, query):
+                return
+            return self.render_admin_dashboard()
         if path == '/admin/inbox':
             if not require_admin(self, query):
                 return
             return self.render_inbox(query)
+        if path == '/admin/requests':
+            if not require_admin(self, query):
+                return
+            return self.render_admin_requests(query)
+        if path == '/admin/leads':
+            if not require_admin(self, query):
+                return
+            return self.render_admin_leads(query)
+        if path == '/admin/crm':
+            if not require_admin(self, query):
+                return
+            return self.render_admin_crm(query)
+        if path == '/admin/sites/new':
+            if not require_admin(self, query):
+                return
+            return self.render_admin_site_form()
+        if path.startswith('/admin/sites/') and path.endswith('/edit'):
+            if not require_admin(self, query):
+                return
+            return self.render_admin_site_form(path.strip('/').split('/')[2])
+        if path == '/admin/sites':
+            if not require_admin(self, query):
+                return
+            return self.render_admin_sites()
+        if path == '/admin/settings':
+            if not require_admin(self, query):
+                return
+            return self.render_admin_settings()
         if path.startswith('/admin/conversations/'):
             if not require_admin(self, query):
                 return
@@ -294,10 +400,7 @@ class Handler(BaseHTTPRequestHandler):
             password = str(payload.get('password', ''))
             if admin_auth_configured() and secrets.compare_digest(username, ADMIN_USERNAME) and verify_password(password, ADMIN_PASSWORD_HASH):
                 session = make_admin_session(username)
-                next_url = str(payload.get('next', '')).strip()
-                if not next_url.startswith('/admin') or next_url.startswith('/admin/login') or next_url.startswith('//'):
-                    next_url = '/admin/dashboard' if hasattr(self, 'render_admin_dashboard') else '/admin/inbox'
-                return redirect(self, next_url, {'Set-Cookie': f'mms_admin_session={session}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000'})
+                return redirect(self, '/admin', {'Set-Cookie': f'mms_admin_session={session}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000'})
             return html_response(self, 403, '<h1>Invalid username or password</h1><p><a href="/admin/login">Try again</a></p>')
 
         if parsed.path == '/api/contact':
@@ -322,8 +425,57 @@ class Handler(BaseHTTPRequestHandler):
                 return
             token = parsed.path.split('/')[3]
             return self.handle_admin_update(token, payload)
+        if parsed.path == '/api/admin/sites/save':
+            query = parse_qs(parsed.query)
+            if not require_admin(self, query):
+                return
+            return self.handle_admin_site_save(payload)
+        if parsed.path == '/api/admin/sites/delete':
+            query = parse_qs(parsed.query)
+            if not require_admin(self, query):
+                return
+            return self.handle_admin_site_delete(payload)
 
         self.send_error(404)
+
+    def handle_admin_site_save(self, payload: dict):
+        site_id = str(payload.get('id', '')).strip()
+        name = str(payload.get('name', '')).strip()
+        domain = str(payload.get('domain', '')).strip()
+        status = str(payload.get('status', 'Planned')).strip() or 'Planned'
+        purpose = str(payload.get('purpose', '')).strip()
+        brand = str(payload.get('brand', '')).strip()
+        if not name or not domain:
+            return json_response(self, 400, {'ok': False, 'error': 'Name and domain are required.'})
+        sites = load_sites()
+        if not site_id:
+            site_id = _site_slug(name)
+            existing_ids = {s.get('id') for s in sites}
+            base = site_id
+            i = 2
+            while site_id in existing_ids:
+                site_id = f'{base}-{i}'
+                i += 1
+            sites.append({'id': site_id, 'name': name, 'domain': domain, 'status': status, 'purpose': purpose, 'brand': brand})
+        else:
+            updated = False
+            for site in sites:
+                if site.get('id') == site_id:
+                    site.update({'name': name, 'domain': domain, 'status': status, 'purpose': purpose, 'brand': brand})
+                    updated = True
+                    break
+            if not updated:
+                sites.append({'id': site_id, 'name': name, 'domain': domain, 'status': status, 'purpose': purpose, 'brand': brand})
+        save_sites(sites)
+        return json_response(self, 200, {'ok': True, 'redirect': '/admin/sites'})
+
+    def handle_admin_site_delete(self, payload: dict):
+        site_id = str(payload.get('id', '')).strip()
+        if not site_id:
+            return json_response(self, 400, {'ok': False, 'error': 'Site id is required.'})
+        sites = [site for site in load_sites() if site.get('id') != site_id]
+        save_sites(sites)
+        return json_response(self, 200, {'ok': True, 'redirect': '/admin/sites'})
 
     def handle_project_request(self, payload: dict):
         if payload.get('website'):
@@ -396,13 +548,11 @@ class Handler(BaseHTTPRequestHandler):
         body = f"""<!doctype html><html><head><title>{title}</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head><body class='conversation-page'><main class='conversation-shell'><h1>{title}</h1><p>{'We recorded your rating: ' + esc(rating_label(rating)) if ok else 'This feedback link may have expired or already been changed.'}</p><p><a class='btn secondary' href='/'>Back to Mad Mallard Solutions</a></p></main></body></html>"""
         return html_response(self, 200 if ok else 404, body)
 
-    def render_login(self, query: dict | None = None):
-        next_url = (query or {}).get('next', [''])[0]
-        next_input = f"<input type='hidden' name='next' value='{esc(next_url)}'>" if next_url else ''
+    def render_login(self):
         if not admin_auth_configured():
             return html_response(self, 403, """<!doctype html><html><head><title>Admin Disabled - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head><body class='conversation-page'><main class='conversation-shell'><h1>Admin disabled</h1><p>Set <code>admin_username</code>, <code>admin_password_hash</code>, and <code>admin_session_secret</code> in Terraform to enable username/password login.</p></main></body></html>""")
-        body = f"""<!doctype html><html><head><title>Admin Login - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head>
-<body class='conversation-page'><main class='conversation-shell'><h1>Admin login</h1><p>Sign in with your admin username and password. This browser will remember you for 30 days.</p><form method='post' action='/admin/login' class='contact-panel'>{next_input}<label>Username<input type='text' name='username' autocomplete='username' required autofocus></label><label>Password<input type='password' name='password' autocomplete='current-password' required></label><button class='btn primary' type='submit'>Open inbox</button></form></main></body></html>"""
+        body = """<!doctype html><html><head><title>Admin Login - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head>
+<body class='conversation-page'><main class='conversation-shell'><h1>Admin login</h1><p>Sign in with your admin username and password. This browser will remember you for 30 days.</p><form method='post' action='/admin/login' class='contact-panel'><label>Username<input type='text' name='username' autocomplete='username' required autofocus></label><label>Password<input type='password' name='password' autocomplete='current-password' required></label><button class='btn primary' type='submit'>Open inbox</button></form></main></body></html>"""
         return html_response(self, 200, body)
 
     def render_request_form(self):
@@ -439,15 +589,30 @@ class Handler(BaseHTTPRequestHandler):
             return html_response(self, 404, '<h1>Conversation not found</h1>')
         visible = [m for m in messages if not m['internal']]
         rows = ''.join(f"<div class='msg {esc(m['sender_type'])}'><div class='msg-meta'><strong>{esc(m['sender'])}</strong><span>{esc(fmt_ts(m['created_at']))}</span></div><p>{esc(m['body'])}</p></div>" for m in visible)
-        feedback_target = messaging.latest_feedback_target(token)
-        feedback_card = ''
-        if feedback_target:
-            feedback = ''.join(f"<button type='button' data-rating='{r}'>{label}</button>" for r, label in [('excellent','😊 Excellent'),('good','🙂 Good'),('ok','😐 OK'),('needs_improvement','🙁 Needs improvement')])
-            feedback_card = f"""<section class='feedback-card'><strong>Optional feedback</strong><p>How helpful was the latest response from Mad Mallard Solutions?</p><div class='feedback-buttons'>{feedback}</div><textarea id='feedbackComment' rows='3' placeholder='Optional: tell us how we could improve.'></textarea><p id='feedbackStatus'></p></section>"""
-        feedback_script = """document.querySelectorAll('.feedback-buttons button').forEach(btn=>btn.addEventListener('click', async()=>{const comment=document.getElementById('feedbackComment').value; const r=await fetch('/api/chat/%s/feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rating:btn.dataset.rating, comment})}); document.getElementById('feedbackStatus').textContent=r.ok?'Thanks — your feedback was recorded.':'Sorry, feedback could not be saved.';}));""" % token if feedback_target else ''
+        feedback = ''.join(f"<button type='button' data-rating='{r}'>{label}</button>" for r, label in [('excellent','😊 Excellent'),('good','🙂 Good'),('ok','😐 OK'),('needs_improvement','🙁 Needs improvement')])
         body = f"""<!doctype html><html><head><title>Conversation - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head>
-<body class='conversation-page'><main class='conversation-shell'><a href='/'>← Back</a><div class='thread-header'><h1>Conversation</h1><span class='badge status-{esc(convo['status'])}'>{esc(status_label(convo['status']))}</span></div><p>This private link lets you continue the conversation with Mad Mallard Solutions.</p><section class='message-list'>{rows}</section>{feedback_card}<form id='replyForm' class='contact-panel'><textarea name='body' rows='5' placeholder='Add a message...' required></textarea><button class='btn primary' type='submit'>Send message</button></form></main><script>document.getElementById('replyForm').addEventListener('submit', async e=>{{e.preventDefault(); const body=e.target.body.value; const r=await fetch('/api/chat/{token}/messages',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{body}})}}); if(r.ok) location.reload();}});{feedback_script}</script></body></html>"""
+<body class='conversation-page'><main class='conversation-shell'><a href='/'>← Back</a><div class='thread-header'><h1>Conversation</h1><span class='badge status-{esc(convo['status'])}'>{esc(status_label(convo['status']))}</span></div><p>This private link lets you continue the conversation with Mad Mallard Solutions.</p><section class='message-list'>{rows}</section><section class='feedback-card'><strong>Optional feedback</strong><p>How helpful was the latest response?</p><div class='feedback-buttons'>{feedback}</div><textarea id='feedbackComment' rows='3' placeholder='Optional: tell us how we could improve.'></textarea><p id='feedbackStatus'></p></section><form id='replyForm' class='contact-panel'><textarea name='body' rows='5' placeholder='Add a message...' required></textarea><button class='btn primary' type='submit'>Send message</button></form></main><script>document.getElementById('replyForm').addEventListener('submit', async e=>{{e.preventDefault(); const body=e.target.body.value; const r=await fetch('/api/chat/{token}/messages',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{body}})}}); if(r.ok) location.reload();}});document.querySelectorAll('.feedback-buttons button').forEach(btn=>btn.addEventListener('click', async()=>{{const comment=document.getElementById('feedbackComment').value; const r=await fetch('/api/chat/{token}/feedback',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{rating:btn.dataset.rating, comment}})}}); document.getElementById('feedbackStatus').textContent=r.ok?'Thanks — your feedback was recorded.':'Sorry, feedback could not be saved.';}}));</script></body></html>"""
         return html_response(self, 200, body)
+
+    def render_admin_dashboard(self):
+        stats = messaging.inbox_stats()
+        feedback_total = sum(stats['feedback'].values()) or 0
+        happy = stats['feedback'].get('excellent', 0) + stats['feedback'].get('good', 0)
+        score = round((happy / feedback_total) * 100) if feedback_total else 0
+        recent = messaging.list_conversations(limit=6)
+        cards = ''.join(
+            f"<a class='admin-stat-card' href='/admin/inbox?status={s}'><span>{status_label(s)}</span><strong>{stats['counts'].get(s, 0)}</strong></a>"
+            for s in ['new', 'waiting_on_me', 'waiting_on_client', 'in_progress', 'closed']
+        )
+        recent_rows = ''.join(
+            f"<a class='admin-list-row' href='/admin/conversations/{esc(c['token'])}'><div><strong>{esc(c['subject'] or c['name'] or 'Conversation')}</strong><small>{esc(c['name'])} · {esc(c['email'])}</small></div><span class='badge status-{esc(c['status'])}'>{esc(status_label(c['status']))}</span></a>"
+            for c in recent
+        ) or "<div class='admin-empty'>No conversations yet.</div>"
+        content = admin_page_header('Dashboard', 'Operations dashboard', 'Quick view of requests, conversations, leads, and site status.') + f"""
+<section class='admin-stats'>{cards}<a class='admin-stat-card' href='/admin/inbox'><span>Satisfaction</span><strong>{score}%</strong></a></section>
+<section class='admin-grid two'><article class='admin-panel'><div class='panel-title'><h2>Recent conversations</h2><a href='/admin/inbox'>View all</a></div><div class='admin-list'>{recent_rows}</div></article><article class='admin-panel'><div class='panel-title'><h2>Platform status</h2></div><div class='status-list'><div><strong>Primary site</strong><span>{esc(PRIMARY_DOMAIN)}</span></div><div><strong>Email notifications</strong><span>{'Enabled' if messaging.ENABLE_EMAIL else 'Disabled'}</span></div><div><strong>Admin login</strong><span>Username / password</span></div><div><strong>Database</strong><span>SQLite on EC2</span></div></div></article></section>
+"""
+        return html_response(self, 200, admin_layout('Dashboard', 'dashboard', content))
 
     def render_inbox(self, query: dict):
         status = query.get('status', [''])[0]
@@ -455,17 +620,109 @@ class Handler(BaseHTTPRequestHandler):
         tag = query.get('tag', [''])[0]
         convos = messaging.list_conversations(status=status, q=q, tag=tag)
         stats = messaging.inbox_stats()
-        count_cards = ''.join(f"<a class='dash-card' href='/admin/inbox?status={s}'><span>{status_label(s)}</span><strong>{stats['counts'].get(s,0)}</strong></a>" for s in ['new','waiting_on_me','waiting_on_client','in_progress','closed'])
         feedback_total = sum(stats['feedback'].values()) or 0
-        happy = stats['feedback'].get('excellent',0) + stats['feedback'].get('good',0)
+        happy = stats['feedback'].get('excellent', 0) + stats['feedback'].get('good', 0)
         score = round((happy / feedback_total) * 100) if feedback_total else 0
         rows = []
         for c in convos:
             feedback = f"<span class='feedback-chip'>{esc(rating_label(c['last_feedback_rating']))}</span>" if c['last_feedback_rating'] else ''
             rows.append(f"<a class='inbox-item priority-{esc(c['priority'])}' href='/admin/conversations/{esc(c['token'])}'><div><strong>{esc(c['subject'] or c['name'] or 'Visitor')}</strong><small>{esc(c['name'])} · {esc(c['email'])} · {esc(c['company'])}</small></div><div class='inbox-meta'><span class='badge status-{esc(c['status'])}'>{esc(status_label(c['status']))}</span><span>{esc(c['priority'])}</span>{feedback}<small>{esc(fmt_ts(c['updated_at']))}</small></div></a>")
-        listing = ''.join(rows) or '<div class="empty-state">No conversations match this filter.</div>'
-        body = f"""<!doctype html><html><head><title>Inbox - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head><body class='conversation-page'><main class='conversation-shell wide'><p><a href='/'>← Site</a> · <a href='/admin/logout'>Sign out</a></p><div class='admin-hero'><div><span class='eyebrow'>Conversations</span><h1>Mad Mallard Inbox</h1><p>Manage project requests, visitor chats, replies, internal notes, and optional response feedback.</p></div><div class='score-card'><span>Satisfaction</span><strong>{score}%</strong><small>{feedback_total} feedback responses</small></div></div><section class='dashboard-grid'>{count_cards}</section><form class='inbox-search' method='get'><input name='q' value='{esc(q)}' placeholder='Search name, email, company, subject, tags'><input name='tag' value='{esc(tag)}' placeholder='Filter tag'><button class='btn secondary' type='submit'>Search</button><a class='btn secondary' href='/admin/inbox'>Clear</a></form><section class='inbox-list'>{listing}</section></main></body></html>"""
-        return html_response(self, 200, body)
+        listing = ''.join(rows) or '<div class="admin-empty">No conversations match this filter.</div>'
+        count_cards = ''.join(f"<a class='admin-stat-card compact' href='/admin/inbox?status={s}'><span>{status_label(s)}</span><strong>{stats['counts'].get(s, 0)}</strong></a>" for s in ['new','waiting_on_me','waiting_on_client','in_progress','closed'])
+        content = admin_page_header('Inbox', 'Conversation inbox', 'Manage project requests, visitor chats, replies, internal notes, and feedback.', f"<a class='btn secondary' href='/admin/settings'>Settings</a>") + f"""
+<section class='admin-stats compact'>{count_cards}<div class='admin-stat-card compact'><span>Satisfaction</span><strong>{score}%</strong></div></section>
+<form class='admin-filter-bar' method='get'><input name='q' value='{esc(q)}' placeholder='Search name, email, company, subject, tags'><input name='tag' value='{esc(tag)}' placeholder='Filter tag'><button class='btn secondary' type='submit'>Search</button><a class='btn secondary' href='/admin/inbox'>Clear</a></form><section class='inbox-list'>{listing}</section>
+"""
+        return html_response(self, 200, admin_layout('Inbox', 'inbox', content))
+
+    def render_admin_requests(self, query: dict):
+        convos = [c for c in messaging.list_conversations(limit=200, q=query.get('q', [''])[0]) if c['kind'] == 'project_request']
+        rows = ''.join(
+            f"<a class='admin-list-row' href='/admin/conversations/{esc(c['token'])}'><div><strong>{esc(c['subject'] or 'Service request')}</strong><small>{esc(c['name'])} · {esc(c['company'])} · {esc(c['email'])}</small></div><span class='badge status-{esc(c['status'])}'>{esc(status_label(c['status']))}</span></a>"
+            for c in convos
+        ) or "<div class='admin-empty'>No service requests yet.</div>"
+        content = admin_page_header('Requests', 'Service requests', 'Customer project and service requests from the public request form.', "<a class='btn secondary' href='/request'>Open public form</a>") + f"<section class='admin-panel'><div class='admin-list'>{rows}</div></section>"
+        return html_response(self, 200, admin_layout('Service Requests', 'requests', content))
+
+    def render_admin_leads(self, query: dict):
+        convos = messaging.list_conversations(limit=200, q=query.get('q', [''])[0])
+        seen = set()
+        rows = []
+        for c in convos:
+            key = (c['email'] or c['name'] or c['token']).lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            rows.append(f"<div class='admin-list-row static'><div><strong>{esc(c['name'] or 'Visitor')}</strong><small>{esc(c['email'])} · {esc(c['company'])}</small></div><span>{esc(c['kind'].replace('_',' ').title())}</span></div>")
+        listing = ''.join(rows) or "<div class='admin-empty'>No leads yet.</div>"
+        content = admin_page_header('Leads', 'Lead list', 'People and companies that have contacted Mad Mallard Solutions.') + f"<section class='admin-panel'><div class='admin-list'>{listing}</div></section>"
+        return html_response(self, 200, admin_layout('Leads', 'leads', content))
+
+    def render_admin_sites(self):
+        sites = load_sites()
+        cards = []
+        for site in sites:
+            cards.append(f"""<article class='site-card'>
+<div><span class='badge'>{esc(site.get('status'))}</span><h2>{esc(site.get('name'))}</h2><p>{esc(site.get('purpose'))}</p><p class='muted'>{esc(site.get('brand'))}</p></div>
+<div class='site-card-footer'><strong>{esc(site.get('domain'))}</strong><span><a class='btn secondary small' href='/admin/sites/{esc(site.get('id'))}/edit'>Edit</a></span></div>
+</article>""")
+        content = admin_page_header('Sites', 'Managed sites', 'Shared platform, separate public identities. Each business can have its own domain, brand, and frontend.', "<a class='btn primary' href='/admin/sites/new'>Add site</a>") + f"<section class='site-grid'>{''.join(cards) or '<div class="admin-empty">No sites configured.</div>'}</section>"
+        return html_response(self, 200, admin_layout('Sites', 'sites', content))
+
+    def render_admin_site_form(self, site_id: str = ''):
+        site = get_site(site_id) if site_id else None
+        if site_id and not site:
+            return html_response(self, 404, admin_layout('Site not found', 'sites', admin_page_header('Sites', 'Site not found', 'That managed site does not exist.', "<a class='btn secondary' href='/admin/sites'>Back</a>")))
+        title = 'Edit site' if site else 'Add site'
+        delete_button = f"<button class='btn danger' type='button' id='deleteSite'>Delete site</button>" if site else ''
+        content = admin_page_header('Sites', title, 'Manage the public identity, domain, and brand notes for this site.', "<a class='btn secondary' href='/admin/sites'>Back to sites</a>") + f"""
+<section class='admin-panel form-panel'>
+<form id='siteForm' class='admin-form'>
+<input type='hidden' name='id' value='{esc(site.get('id') if site else '')}'>
+<label>Site name<input name='name' value='{esc(site.get('name') if site else '')}' required></label>
+<label>Domain<input name='domain' value='{esc(site.get('domain') if site else '')}' required></label>
+<label>Status<select name='status'>
+{''.join(f"<option value='{esc(status)}' {'selected' if (site and site.get('status') == status) else ''}>{esc(status)}</option>" for status in ['Active','Planned','Draft','Paused'])}
+</select></label>
+<label>Purpose<textarea name='purpose' rows='4'>{esc(site.get('purpose') if site else '')}</textarea></label>
+<label>Brand notes<textarea name='brand' rows='4'>{esc(site.get('brand') if site else '')}</textarea></label>
+<div class='form-actions'><button class='btn primary' type='submit'>Save site</button>{delete_button}</div>
+</form>
+</section>
+<script>
+document.getElementById('siteForm').addEventListener('submit', async e=>{{e.preventDefault(); const data=Object.fromEntries(new FormData(e.target).entries()); const r=await fetch('/api/admin/sites/save',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(data)}}); const out=await r.json(); if(out.ok) location.href=out.redirect; else alert(out.error || 'Save failed');}});
+const del=document.getElementById('deleteSite'); if(del) del.addEventListener('click', async()=>{{if(!confirm('Delete this site?')) return; const id=document.querySelector('[name=id]').value; const r=await fetch('/api/admin/sites/delete',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{id}})}}); const out=await r.json(); if(out.ok) location.href=out.redirect; else alert(out.error || 'Delete failed');}});
+</script>"""
+        return html_response(self, 200, admin_layout(title, 'sites', content))
+
+    def render_admin_crm(self, query: dict):
+        convos = messaging.list_conversations(limit=300, q=query.get('q', [''])[0])
+        contacts = {}
+        for c in convos:
+            key = (c['email'] or c['name'] or c['token']).lower()
+            item = contacts.setdefault(key, {'name': c['name'] or 'Visitor', 'email': c['email'] or '', 'company': c['company'] or '', 'requests': 0, 'last': 0, 'tags': set(), 'token': c['token'], 'status': c['status']})
+            item['requests'] += 1
+            item['last'] = max(item['last'], int(c['updated_at'] or 0))
+            item['status'] = c['status']
+            item['token'] = c['token']
+            for tag in (c['tags'] or '').split(','):
+                if tag.strip():
+                    item['tags'].add(tag.strip())
+        rows = []
+        for item in sorted(contacts.values(), key=lambda x: x['last'], reverse=True):
+            tags = ' '.join(f"<span class='badge'>{esc(tag)}</span>" for tag in sorted(item['tags'])[:4])
+            rows.append(f"<a class='admin-list-row crm-row' href='/admin/conversations/{esc(item['token'])}'><div><strong>{esc(item['name'])}</strong><small>{esc(item['email'])} · {esc(item['company'])}</small><div class='mini-tags'>{tags}</div></div><div class='inbox-meta'><span>{item['requests']} request{'s' if item['requests'] != 1 else ''}</span><span class='badge status-{esc(item['status'])}'>{esc(status_label(item['status']))}</span><small>{esc(fmt_ts(item['last']))}</small></div></a>")
+        content = admin_page_header('CRM', 'Customer relationship manager', 'A lightweight view of contacts, companies, requests, tags, and recent activity.', "<a class='btn secondary' href='/admin/leads'>Lead list</a>") + f"""
+<form class='admin-filter-bar simple' method='get'><input name='q' value='{esc(query.get('q', [''])[0])}' placeholder='Search contacts, companies, email, tags'><button class='btn secondary' type='submit'>Search</button><a class='btn secondary' href='/admin/crm'>Clear</a></form>
+<section class='admin-panel'><div class='admin-list'>{''.join(rows) or '<div class="admin-empty">No CRM contacts yet.</div>'}</div></section>
+"""
+        return html_response(self, 200, admin_layout('CRM', 'crm', content))
+
+    def render_admin_settings(self):
+        content = admin_page_header('Settings', 'Platform settings', 'Current runtime and deployment configuration for this low-cost AWS-hosted platform.') + f"""
+<section class='admin-grid two'><article class='admin-panel'><h2>Admin access</h2><div class='settings-list'><div><strong>Login mode</strong><span>Username / password</span></div><div><strong>Configured username</strong><span>{esc(ADMIN_USERNAME)}</span></div><div><strong>Session</strong><span>30-day signed cookie</span></div></div></article><article class='admin-panel'><h2>Email</h2><div class='settings-list'><div><strong>Notifications</strong><span>{'Enabled' if messaging.ENABLE_EMAIL else 'Disabled'}</span></div><div><strong>From</strong><span>{esc(messaging.NOTIFY_FROM or 'Not configured')}</span></div><div><strong>To</strong><span>{esc(messaging.NOTIFY_TO or 'Not configured')}</span></div></div></article><article class='admin-panel'><h2>Site</h2><div class='settings-list'><div><strong>Primary domain</strong><span>{esc(PRIMARY_DOMAIN)}</span></div><div><strong>Web server</strong><span>Caddy</span></div><div><strong>Database</strong><span>{esc(str(messaging.DB_PATH))}</span></div></div></article><article class='admin-panel'><h2>Notes</h2><p class='muted'>Settings are intentionally read-only here for now. Terraform remains the source of truth for infrastructure and sensitive values.</p></article></section>
+"""
+        return html_response(self, 200, admin_layout('Settings', 'settings', content))
 
     def render_admin_conversation(self, token: str):
         convo, messages = messaging.get_conversation(token)
@@ -475,8 +732,8 @@ class Handler(BaseHTTPRequestHandler):
         status_opts = ''.join(f"<option value='{s}' {'selected' if convo['status']==s else ''}>{status_label(s)}</option>" for s in messaging.STATUSES)
         pri_opts = ''.join(f"<option value='{p}' {'selected' if convo['priority']==p else ''}>{p.title()}</option>" for p in messaging.PRIORITIES)
         feedback_banner = f"<div class='feedback-card'><strong>Latest feedback:</strong> {esc(rating_label(convo['last_feedback_rating']))}</div>" if convo['last_feedback_rating'] else ''
-        body = f"""<!doctype html><html><head><title>Conversation Admin - Mad Mallard Solutions</title><meta name='viewport' content='width=device-width, initial-scale=1'><link rel='stylesheet' href='/assets/styles.css'></head><body class='conversation-page'><main class='conversation-shell'><p><a href='/admin/inbox'>← Inbox</a></p><div class='thread-header'><h1>{esc(convo['subject'] or 'Conversation')}</h1><span class='badge status-{esc(convo['status'])}'>{esc(status_label(convo['status']))}</span></div><p><strong>{esc(convo['name'])}</strong> · {esc(convo['email'])} · {esc(convo['company'])}</p>{feedback_banner}<form id='metaForm' class='contact-panel compact'><label>Status<select name='status'>{status_opts}</select></label><label>Priority<select name='priority'>{pri_opts}</select></label><label>Tags<input name='tags' value='{esc(convo['tags'])}' placeholder='AWS, Terraform, Website'></label><button class='btn secondary' type='submit'>Save</button></form><section class='message-list'>{rows}</section><form id='replyForm' class='contact-panel'><textarea name='body' rows='5' placeholder='Reply to visitor or add internal note...' required></textarea><label class='check'><input type='checkbox' name='internal'> Internal note only</label><div class='saved-replies'><button type='button' data-template='Thanks for reaching out. I can help with this. Can you share a little more about your timeline and what you already have in place?'>/thanks</button><button type='button' data-template='For AWS/Terraform work, the next best step is usually a short discovery call so I can understand your current environment and constraints.'>/aws</button><button type='button' data-template='I received this and will take a closer look. I will follow up with next steps shortly.'>/received</button></div><button class='btn primary' type='submit'>Send</button></form></main><script>document.querySelectorAll('.saved-replies button').forEach(b=>b.addEventListener('click',()=>{{document.querySelector('#replyForm textarea').value=b.dataset.template;}}));document.getElementById('replyForm').addEventListener('submit', async e=>{{e.preventDefault(); const fd=new FormData(e.target); const data=Object.fromEntries(fd.entries()); data.internal=e.target.internal.checked; const r=await fetch('/api/admin/conversations/{token}/messages',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(data)}}); if(r.ok) location.reload();}});document.getElementById('metaForm').addEventListener('submit', async e=>{{e.preventDefault(); const data=Object.fromEntries(new FormData(e.target).entries()); const r=await fetch('/api/admin/conversations/{token}/update',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(data)}}); if(r.ok) location.reload();}});</script></body></html>"""
-        return html_response(self, 200, body)
+        content = admin_page_header('Conversation', convo['subject'] or 'Conversation', f"{convo['name']} · {convo['email']} · {convo['company']}", "<a class='btn secondary' href='/admin/inbox'>Back to inbox</a>") + f"""{feedback_banner}<form id='metaForm' class='contact-panel compact'><label>Status<select name='status'>{status_opts}</select></label><label>Priority<select name='priority'>{pri_opts}</select></label><label>Tags<input name='tags' value='{esc(convo['tags'])}' placeholder='AWS, Terraform, Website'></label><button class='btn secondary' type='submit'>Save</button></form><section class='message-list'>{rows}</section><form id='replyForm' class='contact-panel'><textarea name='body' rows='5' placeholder='Reply to visitor or add internal note...' required></textarea><label class='check'><input type='checkbox' name='internal'> Internal note only</label><div class='saved-replies'><button type='button' data-template='Thanks for reaching out. I can help with this. Can you share a little more about your timeline and what you already have in place?'>/thanks</button><button type='button' data-template='For AWS/Terraform work, the next best step is usually a short discovery call so I can understand your current environment and constraints.'>/aws</button><button type='button' data-template='I received this and will take a closer look. I will follow up with next steps shortly.'>/received</button></div><button class='btn primary' type='submit'>Send</button></form><script>document.querySelectorAll('.saved-replies button').forEach(b=>b.addEventListener('click',()=>{{document.querySelector('#replyForm textarea').value=b.dataset.template;}}));document.getElementById('replyForm').addEventListener('submit', async e=>{{e.preventDefault(); const fd=new FormData(e.target); const data=Object.fromEntries(fd.entries()); data.internal=e.target.internal.checked; const r=await fetch('/api/admin/conversations/{token}/messages',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(data)}}); if(r.ok) location.reload();}});document.getElementById('metaForm').addEventListener('submit', async e=>{{e.preventDefault(); const data=Object.fromEntries(new FormData(e.target).entries()); const r=await fetch('/api/admin/conversations/{token}/update',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(data)}}); if(r.ok) location.reload();}});</script>"""
+        return html_response(self, 200, admin_layout('Conversation', 'inbox', content))
 
 
 if __name__ == '__main__':
