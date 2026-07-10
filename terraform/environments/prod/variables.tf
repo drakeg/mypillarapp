@@ -119,31 +119,56 @@ variable "enable_ssh" {
   default     = true
 }
 
+
+variable "admin_username_parameter_name" {
+  type        = string
+  description = "SSM Parameter Store name containing the bootstrap/platform admin username."
+  default     = "/madmallard-platform/prod/admin/username"
+}
+
+variable "admin_password_hash_parameter_name" {
+  type        = string
+  description = "SSM SecureString parameter containing the bootstrap/platform admin password hash."
+  default     = "/madmallard-platform/prod/admin/password_hash"
+}
+
+variable "admin_session_secret_parameter_name" {
+  type        = string
+  description = "SSM SecureString parameter containing the admin session signing secret."
+  default     = "/madmallard-platform/prod/admin/session_secret"
+}
+
+variable "admin_token_parameter_name" {
+  type        = string
+  description = "Optional SSM SecureString parameter containing the legacy emergency admin token."
+  default     = "/madmallard-platform/prod/admin/token"
+}
+
 variable "admin_token" {
   type        = string
   default     = ""
   sensitive   = true
-  description = "Optional admin inbox token. Leave blank to disable /admin/inbox."
+  description = "Deprecated compatibility variable. Admin credentials are now loaded from SSM Parameter Store."
 }
 
 variable "admin_username" {
   type        = string
   default     = "admin"
-  description = "Admin login username."
+  description = "Deprecated compatibility variable. Admin username is now loaded from SSM Parameter Store."
 }
 
 variable "admin_password_hash" {
   type        = string
   default     = ""
   sensitive   = true
-  description = "Optional admin password hash for admin login. Leave blank to use token-only admin access."
+  description = "Deprecated compatibility variable. Admin password hash is now loaded from SSM Parameter Store."
 }
 
 variable "admin_session_secret" {
   type        = string
   default     = ""
   sensitive   = true
-  description = "Secret used to sign admin sessions/cookies. Should be a long random value when password login is enabled."
+  description = "Deprecated compatibility variable. Admin session secret is now loaded from SSM Parameter Store."
 }
 
 

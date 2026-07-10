@@ -81,3 +81,13 @@ output "ssh_key_count" {
 output "ssh_keys_association_id" {
   value = module.ssh_keys.association_id
 }
+
+output "admin_parameter_names" {
+  description = "SSM Parameter Store names used by the running application for bootstrap admin access."
+  value = {
+    username       = var.admin_username_parameter_name
+    password_hash  = var.admin_password_hash_parameter_name
+    session_secret = var.admin_session_secret_parameter_name
+    token          = var.admin_token_parameter_name
+  }
+}
