@@ -15,32 +15,25 @@ variable "acme_email" {
   type = string
 }
 
-variable "admin_token" {
+variable "admin_username_parameter_name" {
   type        = string
-  default     = ""
-  sensitive   = true
-  description = "Optional admin inbox token for /admin/inbox?token=... . Leave blank to disable the web inbox."
-}
-variable "admin_username" {
-  type        = string
-  default     = "admin"
-  description = "Admin login username."
+  description = "SSM parameter name containing the admin username."
 }
 
-variable "admin_password_hash" {
+variable "admin_password_hash_parameter_name" {
   type        = string
-  default     = ""
-  sensitive   = true
-  description = "Optional admin password hash for admin login. Leave blank to use token-only admin access."
+  description = "SSM SecureString parameter name containing the admin password hash."
 }
 
-variable "admin_session_secret" {
+variable "admin_session_secret_parameter_name" {
   type        = string
-  default     = ""
-  sensitive   = true
-  description = "Secret used to sign admin sessions/cookies."
+  description = "SSM SecureString parameter name containing the admin session secret."
 }
 
+variable "admin_token_parameter_name" {
+  type        = string
+  description = "Optional SSM SecureString parameter name containing the legacy admin token."
+}
 
 variable "enable_email_notifications" {
   type        = bool
