@@ -37,13 +37,23 @@ CADDY
   artifact_bucket_name = lower("${var.project_name}-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}-site-artifacts")
   artifact_prefix      = "solutions"
   caddyfile_b64        = base64encode(local.caddyfile)
-  admin_config_json    = jsonencode({
-    admin_token          = var.admin_token
-    admin_username       = var.admin_username
-    admin_password_hash  = var.admin_password_hash
-    admin_session_secret = var.admin_session_secret
-  })
-  deploy_hash          = sha256(join("\n", concat(local.site_file_hashes, [local.caddyfile, var.primary_domain, var.admin_username, var.admin_password_hash, var.admin_session_secret])))
+  admin_parameter_names = {
+    username       = var.admin_username_parameter_name
+    password_hash  = var.admin_password_hash_parameter_name
+    session_secret = var.admin_session_secret_parameter_name
+    token          = var.admin_token_parameter_name
+  }
+
+  admin_parameter_arns = [
+    for parameter_name in values(local.admin_parameter_names) :
+    "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter${parameter_name}"
+  ]
+
+  deploy_hash = sha256(join("\n", concat(
+    local.site_file_hashes,
+    [local.caddyfile, var.primary_domain],
+    values(local.admin_parameter_names)
+  )))
 
   deploy_script = <<-SCRIPT
 #!/usr/bin/env bash
@@ -70,10 +80,42 @@ mkdir -p /opt/madmallard-platform/app /opt/madmallard-platform/data /opt/madmall
 
 aws s3 sync "s3://${local.artifact_bucket_name}/${local.artifact_prefix}/" /opt/madmallard-platform/app/ --delete
 
-cat > /opt/madmallard-platform/data/admin_config.json <<'ADMINCONFIG'
-${local.admin_config_json}
-ADMINCONFIG
-chmod 600 /opt/madmallard-platform/data/admin_config.json
+get_required_parameter() {
+  local parameter_name="$1"
+  local parameter_value
+  parameter_value="$(aws ssm get-parameter --name "$parameter_name" --with-decryption --query 'Parameter.Value' --output text)"
+  if [ -z "$parameter_value" ] || [ "$parameter_value" = "None" ]; then
+    echo "Required SSM parameter is empty: $parameter_name" >&2
+    exit 1
+  fi
+  printf '%s' "$parameter_value"
+}
+
+get_optional_parameter() {
+  local parameter_name="$1"
+  aws ssm get-parameter --name "$parameter_name" --with-decryption --query 'Parameter.Value' --output text 2>/dev/null || true
+}
+
+export MADMALLARD_ADMIN_USERNAME="$(get_required_parameter '${var.admin_username_parameter_name}')"
+export MADMALLARD_ADMIN_PASSWORD_HASH="$(get_required_parameter '${var.admin_password_hash_parameter_name}')"
+export MADMALLARD_ADMIN_SESSION_SECRET="$(get_required_parameter '${var.admin_session_secret_parameter_name}')"
+export MADMALLARD_ADMIN_TOKEN="$(get_optional_parameter '${var.admin_token_parameter_name}')"
+
+python3 <<'PYCONFIG'
+import json
+import os
+from pathlib import Path
+
+config = {
+    "admin_username": os.environ["MADMALLARD_ADMIN_USERNAME"],
+    "admin_password_hash": os.environ["MADMALLARD_ADMIN_PASSWORD_HASH"],
+    "admin_session_secret": os.environ["MADMALLARD_ADMIN_SESSION_SECRET"],
+    "admin_token": os.environ.get("MADMALLARD_ADMIN_TOKEN", ""),
+}
+path = Path("/opt/madmallard-platform/data/admin_config.json")
+path.write_text(json.dumps(config, separators=(",", ":")))
+path.chmod(0o600)
+PYCONFIG
 
 cat > /opt/madmallard-platform/caddy/Caddyfile.b64 <<'CADDYB64'
 ${local.caddyfile_b64}
@@ -95,10 +137,6 @@ Restart=always
 ExecStartPre=-/usr/bin/docker rm -f madmallard-app
 ExecStart=/usr/bin/docker run --name madmallard-app --pull=always \
   -e MADMALLARD_PRIMARY_DOMAIN='${var.primary_domain}' \
-  -e MADMALLARD_ADMIN_TOKEN='${var.admin_token}' \
-  -e MADMALLARD_ADMIN_USERNAME='${var.admin_username}' \
-  -e MADMALLARD_ADMIN_PASSWORD_HASH='${var.admin_password_hash}' \
-  -e MADMALLARD_ADMIN_SESSION_SECRET='${var.admin_session_secret}' \
   -e MADMALLARD_ENABLE_EMAIL='${var.enable_email_notifications}' \
   -e MADMALLARD_NOTIFY_FROM='${var.notify_email_from}' \
   -e MADMALLARD_NOTIFY_TO='${var.notify_email_to}' \
@@ -238,6 +276,25 @@ resource "aws_iam_role_policy" "send_email" {
   })
 }
 
+resource "aws_iam_role_policy" "read_admin_parameters" {
+  name = "${var.project_name}-read-admin-parameters"
+  role = var.instance_role_name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters"
+        ]
+        Resource = local.admin_parameter_arns
+      }
+    ]
+  })
+}
+
 resource "aws_ssm_document" "app_deploy" {
   name            = "${var.project_name}-app-deploy"
   document_type   = "Command"
@@ -276,6 +333,7 @@ resource "aws_ssm_association" "app_deploy" {
   depends_on = [
     aws_s3_object.site_files,
     aws_iam_role_policy.read_artifacts,
+    aws_iam_role_policy.read_admin_parameters,
     aws_iam_role_policy.send_email
   ]
 }

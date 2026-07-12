@@ -49,3 +49,16 @@ create_ses_recipient_identity = true
 # under the mail_from_subdomain only and do not replace the root domain MX records.
 enable_custom_mail_from = true
 mail_from_subdomain     = "mail"
+
+# Admin credentials are stored in SSM Parameter Store, not in tfvars.
+admin_username_parameter_name       = "/madmallard-platform/prod/admin/username"
+admin_password_hash_parameter_name  = "/madmallard-platform/prod/admin/password_hash"
+admin_session_secret_parameter_name = "/madmallard-platform/prod/admin/session_secret"
+admin_token_parameter_name          = "/madmallard-platform/prod/admin/token"
+
+# Deprecated: leave these unset/empty. Existing declarations remain only to avoid
+# breaking older local tfvars files during migration.
+# admin_username       = ""
+# admin_password_hash  = ""
+# admin_session_secret = ""
+# admin_token          = ""
