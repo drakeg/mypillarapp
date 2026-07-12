@@ -1,3 +1,3 @@
-# Mad Mallard Platform
+# Mad Mallard Platform SDLC
 
-SDLC documentation baseline.
+Comprehensive documentation baseline.
