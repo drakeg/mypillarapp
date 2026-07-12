@@ -1,3 +1,2 @@
 # Changelog
-
-- Added SDLC Package 1 documentation.
+Added Package 2.
