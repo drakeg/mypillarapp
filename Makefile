@@ -29,6 +29,9 @@ tf-plan:
 tf-apply:
 	cd $(TF_DIR) && terraform apply
 
+tf-applya:
+	cd $(TF_DIR) && terraform apply --auto-approve
+
 tf-output:
 	cd $(TF_DIR) && terraform output
 

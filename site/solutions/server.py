@@ -15,6 +15,7 @@ import hashlib
 import base64
 import messaging
 import form_config
+import tenant_auth
 
 ROOT = Path('/app').resolve()
 INDEX = ROOT / 'index.html'
@@ -295,6 +296,18 @@ def admin_page_header(eyebrow: str, title: str, subtitle: str = '', actions: str
     return f"""<header class='admin-page-header'><div><span class='admin-eyebrow'>{esc(eyebrow)}</span><h1>{esc(title)}</h1>{f'<p>{esc(subtitle)}</p>' if subtitle else ''}</div><div class='admin-header-actions'>{actions}</div></header>"""
 
 
+def public_account_nav(handler: BaseHTTPRequestHandler) -> str:
+    user = tenant_auth.current_user(get_cookie(handler, tenant_auth.SESSION_COOKIE))
+    if user:
+        name = esc(user['first_name'] or user['email'])
+        return (
+            f"<a href='/dashboard'>Dashboard</a>"
+            f"<a href='/dashboard'>{name}</a>"
+            "<a href='/logout'>Logout</a>"
+        )
+    return "<a href='/login'>Sign In</a><a href='/register'>Register</a>"
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = 'MadMallardPlatform/0.4'
 
@@ -341,6 +354,32 @@ class Handler(BaseHTTPRequestHandler):
             parts = path.strip('/').split('/')
             if len(parts) >= 3:
                 return self.render_feedback(parts[1], parts[2])
+        if path == '/register':
+            return html_response(self, 200, tenant_auth.render_register())
+        if path == '/login':
+            user = tenant_auth.current_user(get_cookie(self, tenant_auth.SESSION_COOKIE))
+            if user:
+                return redirect(self, '/dashboard')
+            return html_response(self, 200, tenant_auth.render_login())
+        if path == '/logout':
+            tenant_auth.logout_session(get_cookie(self, tenant_auth.SESSION_COOKIE))
+            return redirect(self, '/login', {'Set-Cookie': tenant_auth.clear_session_cookie()})
+        if path == '/forgot-password':
+            return html_response(self, 200, tenant_auth.render_forgot())
+        if path.startswith('/verify-email/'):
+            token = path.rstrip('/').split('/')[-1]
+            ok, message, session = tenant_auth.verify_email(token)
+            if ok:
+                return redirect(self, '/dashboard', {'Set-Cookie': tenant_auth.session_cookie(session)})
+            return html_response(self, 400, tenant_auth.page('Email Verification', f'<h1>Verification failed</h1><p>{esc(message)}</p><p><a href="/login">Sign in</a></p>'))
+        if path.startswith('/reset-password/'):
+            token = path.rstrip('/').split('/')[-1]
+            return html_response(self, 200, tenant_auth.render_reset(token))
+        if path == '/dashboard':
+            user = tenant_auth.current_user(get_cookie(self, tenant_auth.SESSION_COOKIE))
+            if not user:
+                return redirect(self, '/login')
+            return html_response(self, 200, tenant_auth.render_dashboard(user))
         if path == '/admin/login':
             return self.render_login()
         if path == '/admin/logout':
@@ -388,12 +427,49 @@ class Handler(BaseHTTPRequestHandler):
 
         file_path = self._resolve_path()
         if file_path and file_path.exists():
-            return self._send_file(file_path, 'text/html; charset=utf-8' if file_path == INDEX else None)
+            if file_path == INDEX:
+                body = file_path.read_text(encoding='utf-8').replace('<!--ACCOUNT_NAV-->', public_account_nav(self))
+                return html_response(self, 200, body)
+            return self._send_file(file_path)
         self.send_error(404)
 
     def do_POST(self):
         parsed = urlparse(self.path)
         payload = read_body(self)
+
+        if parsed.path == '/register':
+            password = str(payload.get('password', ''))
+            confirm = str(payload.get('password_confirm', ''))
+            if password != confirm:
+                return html_response(self, 400, tenant_auth.render_register('Passwords do not match.', True))
+            ok, message = tenant_auth.register_user(
+                organization_slug=str(payload.get('organization', '')).strip(),
+                first_name=str(payload.get('first_name', '')).strip(),
+                last_name=str(payload.get('last_name', '')).strip(),
+                email=str(payload.get('email', '')).strip(),
+                password=password,
+            )
+            status = 200 if ok else 400
+            body = tenant_auth.page('Registration', f'<h1>{"Check your email" if ok else "Registration failed"}</h1><p>{esc(message)}</p><p><a href="/login">Sign in</a></p>') if ok else tenant_auth.render_register(message, True)
+            return html_response(self, status, body)
+        if parsed.path == '/login':
+            ok, message, session = tenant_auth.login_user(str(payload.get('email', '')), str(payload.get('password', '')))
+            if ok:
+                return redirect(self, '/dashboard', {'Set-Cookie': tenant_auth.session_cookie(session)})
+            return html_response(self, 403, tenant_auth.render_login(message, True))
+        if parsed.path == '/forgot-password':
+            tenant_auth.request_password_reset(str(payload.get('email', '')))
+            return html_response(self, 200, tenant_auth.render_forgot('If an active account exists for that email, a reset link has been sent.'))
+        if parsed.path.startswith('/reset-password/'):
+            token = parsed.path.rstrip('/').split('/')[-1]
+            password = str(payload.get('password', ''))
+            confirm = str(payload.get('password_confirm', ''))
+            if password != confirm:
+                return html_response(self, 400, tenant_auth.render_reset(token, 'Passwords do not match.', True))
+            ok, message = tenant_auth.reset_password(token, password)
+            if ok:
+                return html_response(self, 200, tenant_auth.page('Password Changed', f'<h1>Password changed</h1><p>{esc(message)}</p><p><a href="/login">Sign in</a></p>'))
+            return html_response(self, 400, tenant_auth.render_reset(token, message, True))
 
         if parsed.path == '/admin/login':
             username = str(payload.get('username', '')).strip()
