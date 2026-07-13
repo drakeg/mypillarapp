@@ -1,0 +1,17 @@
+# Architecture Decision Records
+
+- [ADR-0001-development-workflow](ADR-0001-development-workflow.md)
+- [ADR-0002-modular-monolith](ADR-0002-modular-monolith.md)
+- [ADR-0003-sqlite-mvp](ADR-0003-sqlite-mvp.md)
+- [ADR-0004-caddy](ADR-0004-caddy.md)
+- [ADR-0005-ssm-secrets](ADR-0005-ssm-secrets.md)
+- [ADR-0006-separate-admin-auth](ADR-0006-separate-admin-auth.md)
+- [ADR-0007-customer-auth-database](ADR-0007-customer-auth-database.md)
+- [ADR-0008-membership-rbac](ADR-0008-membership-rbac.md)
+- [ADR-0009-aws-cost-first](ADR-0009-aws-cost-first.md)
+- [ADR-0010-terraform-layout](ADR-0010-terraform-layout.md)
+- [ADR-0011-s3-remote-state](ADR-0011-s3-remote-state.md)
+- [ADR-0012-external-dns](ADR-0012-external-dns.md)
+- [ADR-0013-single-production-environment](ADR-0013-single-production-environment.md)
+- [ADR-0014-no-unrelated-admin-changes](ADR-0014-no-unrelated-admin-changes.md)
+- [ADR-0015-documentation-as-contract](ADR-0015-documentation-as-contract.md)
