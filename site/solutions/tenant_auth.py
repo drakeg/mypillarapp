@@ -320,7 +320,7 @@ def _customer_activity(user: sqlite3.Row) -> tuple[dict[str, int], list[sqlite3.
         counts_row = conn.execute(
             '''SELECT COUNT(*) AS total,
                       SUM(CASE WHEN status NOT IN ('closed', 'spam') THEN 1 ELSE 0 END) AS open_count,
-                      SUM(CASE WHEN kind = 'request' THEN 1 ELSE 0 END) AS request_count,
+                      SUM(CASE WHEN kind = 'project_request' THEN 1 ELSE 0 END) AS request_count,
                       SUM(CASE WHEN kind = 'chat' THEN 1 ELSE 0 END) AS conversation_count
                FROM conversations WHERE lower(COALESCE(email, '')) = ?''',
             (email,),
@@ -337,6 +337,126 @@ def _customer_activity(user: sqlite3.Row) -> tuple[dict[str, int], list[sqlite3.
         'requests': int(counts_row['request_count'] or 0),
         'conversations': int(counts_row['conversation_count'] or 0),
     }, recent
+
+
+def _customer_history(
+    user: sqlite3.Row,
+    kind: str | None = None,
+) -> list[sqlite3.Row]:
+    email = str(user['email']).strip().lower()
+    sql = """SELECT token, kind, subject, status, priority, created_at, updated_at
+             FROM conversations
+             WHERE lower(COALESCE(email, '')) = ?"""
+    params: list[object] = [email]
+    if kind:
+        sql += ' AND kind = ?'
+        params.append(kind)
+    sql += ' ORDER BY updated_at DESC'
+    with db() as conn:
+        return conn.execute(sql, params).fetchall()
+
+
+def _customer_conversation(
+    user: sqlite3.Row,
+    token: str,
+) -> tuple[sqlite3.Row | None, list[sqlite3.Row]]:
+    email = str(user['email']).strip().lower()
+    with db() as conn:
+        conversation = conn.execute(
+            """SELECT *
+               FROM conversations
+               WHERE token = ? AND lower(COALESCE(email, '')) = ?""",
+            (token, email),
+        ).fetchone()
+        if not conversation:
+            return None, []
+        messages = conn.execute(
+            """SELECT *
+               FROM messages
+               WHERE conversation_id = ? AND internal = 0
+               ORDER BY created_at ASC, id ASC""",
+            (conversation['id'],),
+        ).fetchall()
+    return conversation, messages
+
+
+def _fmt_timestamp(value: object) -> str:
+    try:
+        return time.strftime('%b %d, %Y %I:%M %p', time.localtime(int(value)))
+    except (TypeError, ValueError, OSError):
+        return ''
+
+
+def render_customer_history(user: sqlite3.Row, kind: str) -> str:
+    is_request = kind == 'project_request'
+    title = 'My Requests' if is_request else 'My Conversations'
+    empty = 'No service requests yet.' if is_request else 'No conversations yet.'
+    records = _customer_history(user, kind)
+    rows = ''.join(
+        f'<article class="contact-panel">'
+        f'<p><span class="badge status-{esc(row["status"])}">'
+        f'{esc(row["status"]).replace("_", " ").title()}</span></p>'
+        f'<h2>{esc(row["subject"] or ("Service request" if is_request else "Website chat"))}</h2>'
+        f'<p class="muted">Updated {_fmt_timestamp(row["updated_at"])}</p>'
+        f'<p><a class="btn secondary" href="/account/conversations/{esc(row["token"])}">Open</a></p>'
+        f'</article>'
+        for row in records
+    ) or f'<section class="contact-panel"><p>{empty}</p></section>'
+
+    other_href = '/conversations' if is_request else '/requests'
+    other_label = 'My Conversations' if is_request else 'My Requests'
+    return page(
+        title,
+        f'<p><a href="/dashboard">← Dashboard</a> · '
+        f'<a href="{other_href}">{other_label}</a> · '
+        f'<a href="/logout">Sign out</a></p>'
+        f'<h1>{title}</h1>'
+        f'<p>Activity associated with {esc(user["email"])}.</p>'
+        f'<section class="inbox-list">{rows}</section>',
+    )
+
+
+def render_customer_conversation(user: sqlite3.Row, token: str) -> str | None:
+    conversation, messages = _customer_conversation(user, token)
+    if not conversation:
+        return None
+
+    rows = ''.join(
+        f'<div class="msg {esc(message["sender_type"])}">'
+        f'<div class="msg-meta"><strong>{esc(message["sender"])}</strong>'
+        f'<span>{_fmt_timestamp(message["created_at"])}</span></div>'
+        f'<p>{esc(message["body"])}</p></div>'
+        for message in messages
+    ) or '<p>No messages are available.</p>'
+
+    is_request = conversation['kind'] == 'project_request'
+    back_href = '/requests' if is_request else '/conversations'
+    back_label = 'My Requests' if is_request else 'My Conversations'
+    subject = conversation['subject'] or ('Service request' if is_request else 'Website chat')
+
+    return page(
+        subject,
+        f'<p><a href="{back_href}">← {back_label}</a> · '
+        f'<a href="/dashboard">Dashboard</a> · '
+        f'<a href="/logout">Sign out</a></p>'
+        f'<div class="thread-header"><div><h1>{esc(subject)}</h1>'
+        f'<p class="muted">Created {_fmt_timestamp(conversation["created_at"])}'
+        f' · Updated {_fmt_timestamp(conversation["updated_at"])}</p></div>'
+        f'<span class="badge status-{esc(conversation["status"])}">'
+        f'{esc(conversation["status"]).replace("_", " ").title()}</span></div>'
+        f'<section class="message-list">{rows}</section>'
+        f'<form id="customerReplyForm" class="contact-panel">'
+        f'<label>Add a message<textarea name="body" rows="5" required></textarea></label>'
+        f'<button class="btn primary" type="submit">Send message</button>'
+        f'<p id="customerReplyStatus" class="form-status"></p></form>'
+        f'<script>document.getElementById("customerReplyForm").addEventListener'
+        f'("submit",async e=>{{e.preventDefault();const status=document.getElementById'
+        f'("customerReplyStatus");status.textContent="Sending...";const body=e.target.body.value;'
+        f'const r=await fetch("/api/chat/{esc(token)}/messages",{{method:"POST",headers:'
+        f'{{"Content-Type":"application/json"}},body:JSON.stringify({{body}})}});'
+        f'if(r.ok){{location.reload();}}else{{status.textContent="Message could not be sent.";}}}});'
+        f'</script>',
+    )
 
 
 def update_profile(user_id: int, first_name: str, last_name: str, email: str) -> tuple[bool, str]:
@@ -396,7 +516,30 @@ def render_reset(token: str, message: str = '', error: bool = False) -> str:
 def render_dashboard(user: sqlite3.Row) -> str:
     counts, recent = _customer_activity(user)
     rows = ''.join(
-        f'<li><a href="/chat/{esc(row["token"])}"><strong>{esc(row["subject"] or ("Service request" if row["kind"] == "request" else "Website chat"))}</strong></a><br><small>{esc(row["status"]).replace("_", " ").title()}</small></li>'
+        f'<li><a href="/account/conversations/{esc(row["token"])}"><strong>'
+        f'{esc(row["subject"] or ("Service request" if row["kind"] == "project_request" else "Website chat"))}'
+        f'</strong></a><br><small>'
+        f'{esc(row["status"]).replace("_", " ").title()}</small></li>'
         for row in recent
     ) or '<li>No customer activity yet.</li>'
-    return page('Dashboard', f'''<p><a href="/">← Site</a> · <a href="/profile">Profile</a> · <a href="/logout">Sign out</a></p><h1>Welcome, {esc(user["first_name"])}</h1><p>Your account is active for <strong>{esc(user["organization_name"])}</strong>.</p><section class="dashboard-grid"><article class="dash-card"><span>Open</span><strong>{counts["open"]}</strong></article><article class="dash-card"><span>Requests</span><strong>{counts["requests"]}</strong></article><article class="dash-card"><span>Conversations</span><strong>{counts["conversations"]}</strong></article><article class="dash-card"><span>Total activity</span><strong>{counts["total"]}</strong></article></section><section class="contact-panel"><h2>Recent activity</h2><ul>{rows}</ul></section><section class="contact-panel"><h2>Account</h2><p><strong>Email:</strong> {esc(user["email"])}</p><p><strong>Role:</strong> {esc(user["role"]).title()}</p><p><strong>Business:</strong> {esc(user["organization_name"])}</p><p><a class="btn secondary" href="/profile">Manage profile</a></p></section>''')
+    return page(
+        'Dashboard',
+        f'<p><a href="/">← Site</a> · <a href="/profile">Profile</a> · '
+        f'<a href="/logout">Sign out</a></p>'
+        f'<h1>Welcome, {esc(user["first_name"])}</h1>'
+        f'<p>Your account is active for <strong>{esc(user["organization_name"])}</strong>.</p>'
+        f'<section class="dashboard-grid">'
+        f'<a class="dash-card" href="/requests"><span>Requests</span><strong>{counts["requests"]}</strong></a>'
+        f'<a class="dash-card" href="/conversations"><span>Conversations</span><strong>{counts["conversations"]}</strong></a>'
+        f'<article class="dash-card"><span>Open</span><strong>{counts["open"]}</strong></article>'
+        f'<article class="dash-card"><span>Total activity</span><strong>{counts["total"]}</strong></article>'
+        f'</section>'
+        f'<section class="contact-panel"><h2>Recent activity</h2><ul>{rows}</ul>'
+        f'<p><a href="/requests">View all requests</a> · '
+        f'<a href="/conversations">View all conversations</a></p></section>'
+        f'<section class="contact-panel"><h2>Account</h2>'
+        f'<p><strong>Email:</strong> {esc(user["email"])}</p>'
+        f'<p><strong>Role:</strong> {esc(user["role"]).title()}</p>'
+        f'<p><strong>Business:</strong> {esc(user["organization_name"])}</p>'
+        f'<p><a class="btn secondary" href="/profile">Manage profile</a></p></section>',
+    )

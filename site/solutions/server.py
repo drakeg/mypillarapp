@@ -385,6 +385,34 @@ class Handler(BaseHTTPRequestHandler):
             if not user:
                 return redirect(self, '/login')
             return html_response(self, 200, tenant_auth.render_profile(user))
+        if path == '/conversations':
+            user = tenant_auth.current_user(get_cookie(self, tenant_auth.SESSION_COOKIE))
+            if not user:
+                return redirect(self, '/login')
+            return html_response(self, 200, tenant_auth.render_customer_history(user, 'chat'))
+        if path == '/requests':
+            user = tenant_auth.current_user(get_cookie(self, tenant_auth.SESSION_COOKIE))
+            if not user:
+                return redirect(self, '/login')
+            return html_response(self, 200, tenant_auth.render_customer_history(user, 'project_request'))
+        if path.startswith('/account/conversations/'):
+            user = tenant_auth.current_user(get_cookie(self, tenant_auth.SESSION_COOKIE))
+            if not user:
+                return redirect(self, '/login')
+            token = path.rstrip('/').split('/')[-1]
+            body = tenant_auth.render_customer_conversation(user, token)
+            if body is None:
+                return html_response(
+                    self,
+                    404,
+                    tenant_auth.page(
+                        'Not Found',
+                        '<h1>Conversation not found</h1>'
+                        '<p>The requested conversation is unavailable.</p>'
+                        '<p><a href="/dashboard">Return to dashboard</a></p>',
+                    ),
+                )
+            return html_response(self, 200, body)
         if path == '/admin/login':
             return self.render_login()
         if path == '/admin/logout':

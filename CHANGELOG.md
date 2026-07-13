@@ -8,6 +8,11 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Authenticated customer conversation and service-request history pages.
+- Customer-owned conversation detail pages with chronological message history.
+- Customer conversation authorization by signed-in account email.
+- Dashboard links to complete request and conversation history.
+
 - Sprint 1 customer dashboard activity counts and recent activity.
 - Customer profile editing.
 - Authenticated customer password changes.
