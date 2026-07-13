@@ -8,6 +8,11 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Sprint 1 customer dashboard activity counts and recent activity.
+- Customer profile editing.
+- Authenticated customer password changes.
+- Customer-session invalidation after password changes.
+
 - Complete SDLC documentation baseline.
 - Product vision, PRD, roadmap, epics, stories, and sprint plan.
 - Architecture, AWS, API, testing, operations, CI/CD, and release documentation.

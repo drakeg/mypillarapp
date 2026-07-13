@@ -380,6 +380,11 @@ class Handler(BaseHTTPRequestHandler):
             if not user:
                 return redirect(self, '/login')
             return html_response(self, 200, tenant_auth.render_dashboard(user))
+        if path == '/profile':
+            user = tenant_auth.current_user(get_cookie(self, tenant_auth.SESSION_COOKIE))
+            if not user:
+                return redirect(self, '/login')
+            return html_response(self, 200, tenant_auth.render_profile(user))
         if path == '/admin/login':
             return self.render_login()
         if path == '/admin/logout':
@@ -470,6 +475,29 @@ class Handler(BaseHTTPRequestHandler):
             if ok:
                 return html_response(self, 200, tenant_auth.page('Password Changed', f'<h1>Password changed</h1><p>{esc(message)}</p><p><a href="/login">Sign in</a></p>'))
             return html_response(self, 400, tenant_auth.render_reset(token, message, True))
+        if parsed.path == '/profile':
+            session_token = get_cookie(self, tenant_auth.SESSION_COOKIE)
+            user = tenant_auth.current_user(session_token)
+            if not user:
+                return redirect(self, '/login')
+            action = str(payload.get('action', 'profile'))
+            if action == 'password':
+                password = str(payload.get('password', ''))
+                confirm = str(payload.get('password_confirm', ''))
+                if password != confirm:
+                    return html_response(self, 400, tenant_auth.render_profile(user, 'New passwords do not match.', True))
+                ok, message = tenant_auth.change_password(int(user['id']), str(payload.get('current_password', '')), password)
+                if not ok:
+                    return html_response(self, 400, tenant_auth.render_profile(user, message, True))
+                return redirect(self, '/login', {'Set-Cookie': tenant_auth.clear_session_cookie()})
+            ok, message = tenant_auth.update_profile(
+                int(user['id']),
+                str(payload.get('first_name', '')),
+                str(payload.get('last_name', '')),
+                str(payload.get('email', '')),
+            )
+            refreshed = tenant_auth.current_user(session_token) or user
+            return html_response(self, 200 if ok else 400, tenant_auth.render_profile(refreshed, message, not ok))
 
         if parsed.path == '/admin/login':
             username = str(payload.get('username', '')).strip()

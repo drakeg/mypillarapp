@@ -314,6 +314,64 @@ def page(title: str, content: str) -> str:
     return f'''<!doctype html><html><head><title>{esc(title)} - Mad Mallard Platform</title><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/assets/styles.css"></head><body class="conversation-page"><main class="conversation-shell">{content}</main></body></html>'''
 
 
+def _customer_activity(user: sqlite3.Row) -> tuple[dict[str, int], list[sqlite3.Row]]:
+    email = str(user['email']).strip().lower()
+    with db() as conn:
+        counts_row = conn.execute(
+            '''SELECT COUNT(*) AS total,
+                      SUM(CASE WHEN status NOT IN ('closed', 'spam') THEN 1 ELSE 0 END) AS open_count,
+                      SUM(CASE WHEN kind = 'request' THEN 1 ELSE 0 END) AS request_count,
+                      SUM(CASE WHEN kind = 'chat' THEN 1 ELSE 0 END) AS conversation_count
+               FROM conversations WHERE lower(COALESCE(email, '')) = ?''',
+            (email,),
+        ).fetchone()
+        recent = conn.execute(
+            '''SELECT token, kind, subject, status, updated_at
+               FROM conversations WHERE lower(COALESCE(email, '')) = ?
+               ORDER BY updated_at DESC LIMIT 8''',
+            (email,),
+        ).fetchall()
+    return {
+        'total': int(counts_row['total'] or 0),
+        'open': int(counts_row['open_count'] or 0),
+        'requests': int(counts_row['request_count'] or 0),
+        'conversations': int(counts_row['conversation_count'] or 0),
+    }, recent
+
+
+def update_profile(user_id: int, first_name: str, last_name: str, email: str) -> tuple[bool, str]:
+    first_name, last_name, email = first_name.strip(), last_name.strip(), email.strip().lower()
+    if not first_name or not last_name:
+        return False, 'First and last name are required.'
+    if not email or '@' not in email:
+        return False, 'Enter a valid email address.'
+    with db() as conn:
+        duplicate = conn.execute('SELECT id FROM auth_users WHERE lower(email)=lower(?) AND id<>?', (email, user_id)).fetchone()
+        if duplicate:
+            return False, 'Another account already uses that email address.'
+        conn.execute('UPDATE auth_users SET first_name=?, last_name=?, email=?, updated_at=? WHERE id=?', (first_name,last_name,email,now(),user_id))
+        conn.commit()
+    return True, 'Profile updated.'
+
+
+def change_password(user_id: int, current_password: str, new_password: str) -> tuple[bool, str]:
+    if len(new_password) < 12:
+        return False, 'New password must be at least 12 characters.'
+    with db() as conn:
+        user = conn.execute('SELECT password_hash FROM auth_users WHERE id=?', (user_id,)).fetchone()
+        if not user or not verify_password(current_password, user['password_hash']):
+            return False, 'Current password is incorrect.'
+        conn.execute('UPDATE auth_users SET password_hash=?, updated_at=? WHERE id=?', (hash_password(new_password), now(), user_id))
+        conn.execute('DELETE FROM auth_sessions WHERE user_id=?', (user_id,))
+        conn.commit()
+    return True, 'Password changed. Sign in again with your new password.'
+
+
+def render_profile(user: sqlite3.Row, message: str = '', error: bool = False) -> str:
+    notice = f'<p class="{"error" if error else "muted"}">{esc(message)}</p>' if message else ''
+    return page('Profile', f'''<p><a href="/dashboard">← Dashboard</a> · <a href="/logout">Sign out</a></p><h1>Profile</h1>{notice}<section class="contact-panel"><h2>Account details</h2><form method="post" action="/profile"><input type="hidden" name="action" value="profile"><label>First name<input name="first_name" value="{esc(user["first_name"])}" required></label><label>Last name<input name="last_name" value="{esc(user["last_name"])}" required></label><label>Email<input type="email" name="email" value="{esc(user["email"])}" required></label><button class="btn primary" type="submit">Save profile</button></form></section><section class="contact-panel"><h2>Change password</h2><p class="muted">Changing your password signs out every customer session.</p><form method="post" action="/profile"><input type="hidden" name="action" value="password"><label>Current password<input type="password" name="current_password" required></label><label>New password<input type="password" name="password" minlength="12" required></label><label>Confirm new password<input type="password" name="password_confirm" minlength="12" required></label><button class="btn primary" type="submit">Change password</button></form></section>''')
+
+
 def render_register(message: str = '', error: bool = False) -> str:
     options = ''.join(f'<option value="{esc(o["slug"])}">{esc(o["name"])}</option>' for o in list_organizations())
     notice = f'<p class="{"error" if error else "muted"}">{esc(message)}</p>' if message else ''
@@ -336,4 +394,9 @@ def render_reset(token: str, message: str = '', error: bool = False) -> str:
 
 
 def render_dashboard(user: sqlite3.Row) -> str:
-    return page('Dashboard', f'''<p><a href="/">← Site</a> · <a href="/logout">Sign out</a></p><h1>Welcome, {esc(user["first_name"])}</h1><p>Your account is active for <strong>{esc(user["organization_name"])}</strong>.</p><section class="contact-panel"><p><strong>Email:</strong> {esc(user["email"])}</p><p><strong>Role:</strong> {esc(user["role"]).title()}</p><p><strong>Business:</strong> {esc(user["organization_name"])}</p></section><p>This is the Sprint 1 account dashboard foundation. No admin routes or admin UI are shared with this account.</p>''')
+    counts, recent = _customer_activity(user)
+    rows = ''.join(
+        f'<li><a href="/chat/{esc(row["token"])}"><strong>{esc(row["subject"] or ("Service request" if row["kind"] == "request" else "Website chat"))}</strong></a><br><small>{esc(row["status"]).replace("_", " ").title()}</small></li>'
+        for row in recent
+    ) or '<li>No customer activity yet.</li>'
+    return page('Dashboard', f'''<p><a href="/">← Site</a> · <a href="/profile">Profile</a> · <a href="/logout">Sign out</a></p><h1>Welcome, {esc(user["first_name"])}</h1><p>Your account is active for <strong>{esc(user["organization_name"])}</strong>.</p><section class="dashboard-grid"><article class="dash-card"><span>Open</span><strong>{counts["open"]}</strong></article><article class="dash-card"><span>Requests</span><strong>{counts["requests"]}</strong></article><article class="dash-card"><span>Conversations</span><strong>{counts["conversations"]}</strong></article><article class="dash-card"><span>Total activity</span><strong>{counts["total"]}</strong></article></section><section class="contact-panel"><h2>Recent activity</h2><ul>{rows}</ul></section><section class="contact-panel"><h2>Account</h2><p><strong>Email:</strong> {esc(user["email"])}</p><p><strong>Role:</strong> {esc(user["role"]).title()}</p><p><strong>Business:</strong> {esc(user["organization_name"])}</p><p><a class="btn secondary" href="/profile">Manage profile</a></p></section>''')
