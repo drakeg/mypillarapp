@@ -214,10 +214,10 @@ resource "aws_s3_object" "site_files" {
     if !startswith(basename(file), ".")
   }
 
-  bucket       = aws_s3_bucket.artifacts.id
-  key          = "${local.artifact_prefix}/${each.value}"
-  source       = "${var.site_source_dir}/${each.value}"
-  source_hash  = filesha256("${var.site_source_dir}/${each.value}")
+  bucket      = aws_s3_bucket.artifacts.id
+  key         = "${local.artifact_prefix}/${each.value}"
+  source      = "${var.site_source_dir}/${each.value}"
+  source_hash = filesha256("${var.site_source_dir}/${each.value}")
   content_type = lookup({
     html = "text/html; charset=utf-8"
     css  = "text/css; charset=utf-8"
