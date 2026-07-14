@@ -2,8 +2,12 @@ ENV ?= prod
 TF_DIR := terraform/environments/$(ENV)
 BACKEND_CONFIG := $(TF_DIR)/backend.hcl
 TF_INIT_ARGS := $(if $(wildcard $(BACKEND_CONFIG)),-backend-config=backend.hcl,)
+PYTHON ?= python3
 
-.PHONY: tf-fmt tf-init tf-init-migrate tf-init-reconfigure tf-validate tf-plan tf-apply tf-output tf-destroy package
+.PHONY: test tf-fmt tf-init tf-init-migrate tf-init-reconfigure tf-validate tf-plan tf-apply tf-output tf-destroy package
+
+test:
+	$(PYTHON) -m unittest discover -s tests -p 'test_*.py' -v
 
 tf-fmt:
 	terraform fmt -recursive terraform

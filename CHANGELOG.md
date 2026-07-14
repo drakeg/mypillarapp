@@ -8,6 +8,9 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Sprint 1 automated regression suite for customer authentication, profile management, session invalidation, dashboard counts, and conversation authorization.
+- One-command regression test runner through `make test`.
+
 - Authenticated customer conversation and service-request history pages.
 - Customer-owned conversation detail pages with chronological message history.
 - Customer conversation authorization by signed-in account email.
@@ -23,6 +26,10 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 - Architecture, AWS, API, testing, operations, CI/CD, and release documentation.
 - Architecture Decision Record set.
 - Development workflow and repository governance rules.
+
+### Fixed
+
+- Closed every tenant-auth SQLite connection when its context exits.
 
 ### Current implementation baseline
 
