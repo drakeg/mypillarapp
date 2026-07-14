@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 import html
 import json
@@ -41,97 +43,101 @@ def _ensure_column(conn: sqlite3.Connection, table: str, column: str, ddl: str) 
         conn.execute(f'ALTER TABLE {table} ADD COLUMN {column} {ddl}')
 
 
-def db() -> sqlite3.Connection:
+@contextmanager
+def db() -> Iterator[sqlite3.Connection]:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS conversations (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            created_at INTEGER NOT NULL,
-            updated_at INTEGER NOT NULL,
-            token TEXT NOT NULL UNIQUE,
-            kind TEXT NOT NULL DEFAULT 'chat',
-            subject TEXT,
-            name TEXT,
-            email TEXT,
-            company TEXT,
-            status TEXT NOT NULL DEFAULT 'new',
-            priority TEXT NOT NULL DEFAULT 'normal',
-            tags TEXT NOT NULL DEFAULT '',
-            lead_json TEXT NOT NULL DEFAULT '{}',
-            last_feedback_rating TEXT,
-            last_feedback_at INTEGER
-        )
-    ''')
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            conversation_id INTEGER NOT NULL,
-            created_at INTEGER NOT NULL,
-            sender_type TEXT NOT NULL DEFAULT 'visitor',
-            sender TEXT NOT NULL,
-            body TEXT NOT NULL,
-            internal INTEGER NOT NULL DEFAULT 0,
-            feedback_token TEXT,
-            FOREIGN KEY(conversation_id) REFERENCES conversations(id)
-        )
-    ''')
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS feedback (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            conversation_id INTEGER NOT NULL,
-            message_id INTEGER,
-            token TEXT UNIQUE,
-            rating TEXT NOT NULL,
-            comment TEXT,
-            created_at INTEGER NOT NULL,
-            source TEXT NOT NULL DEFAULT 'visitor',
-            FOREIGN KEY(conversation_id) REFERENCES conversations(id),
-            FOREIGN KEY(message_id) REFERENCES messages(id)
-        )
-    ''')
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS leads (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            created_at INTEGER NOT NULL,
-            name TEXT,
-            email TEXT,
-            company TEXT,
-            source TEXT NOT NULL,
-            fields_json TEXT NOT NULL,
-            status TEXT NOT NULL DEFAULT 'new'
-        )
-    ''')
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS customer_tokens (
-            email TEXT PRIMARY KEY,
-            token TEXT NOT NULL UNIQUE,
-            created_at INTEGER NOT NULL,
-            updated_at INTEGER NOT NULL
-        )
-    ''')
-    for table, cols in {
-        'conversations': {
-            'kind': "TEXT NOT NULL DEFAULT 'chat'",
-            'subject': 'TEXT',
-            'company': 'TEXT',
-            'priority': "TEXT NOT NULL DEFAULT 'normal'",
-            'tags': "TEXT NOT NULL DEFAULT ''",
-            'lead_json': "TEXT NOT NULL DEFAULT '{}'",
-            'last_feedback_rating': 'TEXT',
-            'last_feedback_at': 'INTEGER',
-        },
-        'messages': {
-            'sender_type': "TEXT NOT NULL DEFAULT 'visitor'",
-            'internal': 'INTEGER NOT NULL DEFAULT 0',
-            'feedback_token': 'TEXT',
-        },
-    }.items():
-        for col, ddl in cols.items():
-            _ensure_column(conn, table, col, ddl)
-    conn.commit()
-    return conn
+    try:
+        conn.row_factory = sqlite3.Row
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS conversations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL,
+                token TEXT NOT NULL UNIQUE,
+                kind TEXT NOT NULL DEFAULT 'chat',
+                subject TEXT,
+                name TEXT,
+                email TEXT,
+                company TEXT,
+                status TEXT NOT NULL DEFAULT 'new',
+                priority TEXT NOT NULL DEFAULT 'normal',
+                tags TEXT NOT NULL DEFAULT '',
+                lead_json TEXT NOT NULL DEFAULT '{}',
+                last_feedback_rating TEXT,
+                last_feedback_at INTEGER
+            )
+        ''')
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                conversation_id INTEGER NOT NULL,
+                created_at INTEGER NOT NULL,
+                sender_type TEXT NOT NULL DEFAULT 'visitor',
+                sender TEXT NOT NULL,
+                body TEXT NOT NULL,
+                internal INTEGER NOT NULL DEFAULT 0,
+                feedback_token TEXT,
+                FOREIGN KEY(conversation_id) REFERENCES conversations(id)
+            )
+        ''')
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                conversation_id INTEGER NOT NULL,
+                message_id INTEGER,
+                token TEXT UNIQUE,
+                rating TEXT NOT NULL,
+                comment TEXT,
+                created_at INTEGER NOT NULL,
+                source TEXT NOT NULL DEFAULT 'visitor',
+                FOREIGN KEY(conversation_id) REFERENCES conversations(id),
+                FOREIGN KEY(message_id) REFERENCES messages(id)
+            )
+        ''')
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS leads (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                created_at INTEGER NOT NULL,
+                name TEXT,
+                email TEXT,
+                company TEXT,
+                source TEXT NOT NULL,
+                fields_json TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'new'
+            )
+        ''')
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS customer_tokens (
+                email TEXT PRIMARY KEY,
+                token TEXT NOT NULL UNIQUE,
+                created_at INTEGER NOT NULL,
+                updated_at INTEGER NOT NULL
+            )
+        ''')
+        for table, cols in {
+            'conversations': {
+                'kind': "TEXT NOT NULL DEFAULT 'chat'",
+                'subject': 'TEXT',
+                'company': 'TEXT',
+                'priority': "TEXT NOT NULL DEFAULT 'normal'",
+                'tags': "TEXT NOT NULL DEFAULT ''",
+                'lead_json': "TEXT NOT NULL DEFAULT '{}'",
+                'last_feedback_rating': 'TEXT',
+                'last_feedback_at': 'INTEGER',
+            },
+            'messages': {
+                'sender_type': "TEXT NOT NULL DEFAULT 'visitor'",
+                'internal': 'INTEGER NOT NULL DEFAULT 0',
+                'feedback_token': 'TEXT',
+            },
+        }.items():
+            for col, ddl in cols.items():
+                _ensure_column(conn, table, col, ddl)
+        conn.commit()
+        yield conn
+    finally:
+        conn.close()
 
 
 def send_email(subject: str, text_body: str, html_body: str | None = None, to_address: str | None = None) -> bool:
