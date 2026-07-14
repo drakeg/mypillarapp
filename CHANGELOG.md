@@ -27,6 +27,10 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 - Architecture Decision Record set.
 - Development workflow and repository governance rules.
 
+### Fixed
+
+- Closed every tenant-auth SQLite connection when its context exits.
+
 ### Current implementation baseline
 
 - Public Mad Mallard Solutions site.

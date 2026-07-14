@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from urllib.parse import quote
 import base64
@@ -36,13 +38,17 @@ def public_url(path: str) -> str:
     return f'https://{PRIMARY_DOMAIN}{path}'
 
 
-def db() -> sqlite3.Connection:
+@contextmanager
+def db() -> Iterator[sqlite3.Connection]:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    conn.execute('PRAGMA foreign_keys = ON')
-    ensure_schema(conn)
-    return conn
+    try:
+        conn.row_factory = sqlite3.Row
+        conn.execute('PRAGMA foreign_keys = ON')
+        ensure_schema(conn)
+        yield conn
+    finally:
+        conn.close()
 
 
 def ensure_schema(conn: sqlite3.Connection) -> None:
