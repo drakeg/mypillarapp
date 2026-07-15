@@ -16,6 +16,7 @@ import base64
 import messaging
 import form_config
 import tenant_auth
+import request_context
 
 ROOT = Path('/app').resolve()
 INDEX = ROOT / 'index.html'
@@ -297,7 +298,11 @@ def admin_page_header(eyebrow: str, title: str, subtitle: str = '', actions: str
 
 
 def public_account_nav(handler: BaseHTTPRequestHandler) -> str:
-    user = tenant_auth.current_user(get_cookie(handler, tenant_auth.SESSION_COOKIE))
+    context = request_context.build_request_context(
+        handler.headers,
+        get_cookie(handler, tenant_auth.SESSION_COOKIE),
+    )
+    user = context.user if context else None
     if user:
         name = esc(user['first_name'] or user['email'])
         return (
@@ -313,6 +318,25 @@ class Handler(BaseHTTPRequestHandler):
 
     def log_message(self, fmt, *args):
         print('%s - - [%s] %s' % (self.client_address[0], self.log_date_time_string(), fmt % args), flush=True)
+
+    def request_context(self):
+        return request_context.build_request_context(
+            self.headers,
+            get_cookie(self, tenant_auth.SESSION_COOKIE),
+        )
+
+    def require_public_tenant(self, path: str):
+        if path.startswith('/admin') or path.startswith('/assets/'):
+            return True, None
+        context = self.request_context()
+        if context is None:
+            html_response(
+                self,
+                421,
+                '<h1>Unknown site</h1><p>This host is not configured for an active tenant.</p>',
+            )
+            return False, None
+        return True, context
 
     def _send_file(self, path: Path, content_type: str | None = None):
         body = path.read_bytes()
@@ -340,6 +364,9 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
         query = parse_qs(parsed.query)
+        allowed, context = self.require_public_tenant(path)
+        if not allowed:
+            return
 
         if path == '/api/form-config':
             cfg = FORM_CONFIG | form_config.public_form_config()
@@ -357,7 +384,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == '/register':
             return html_response(self, 200, tenant_auth.render_register())
         if path == '/login':
-            user = tenant_auth.current_user(get_cookie(self, tenant_auth.SESSION_COOKIE))
+            user = context.user if context else None
             if user:
                 return redirect(self, '/dashboard')
             return html_response(self, 200, tenant_auth.render_login())
@@ -376,22 +403,22 @@ class Handler(BaseHTTPRequestHandler):
             token = path.rstrip('/').split('/')[-1]
             return html_response(self, 200, tenant_auth.render_reset(token))
         if path == '/dashboard':
-            user = tenant_auth.current_user(get_cookie(self, tenant_auth.SESSION_COOKIE))
+            user = context.user if context else None
             if not user:
                 return redirect(self, '/login')
             return html_response(self, 200, tenant_auth.render_dashboard(user))
         if path == '/profile':
-            user = tenant_auth.current_user(get_cookie(self, tenant_auth.SESSION_COOKIE))
+            user = context.user if context else None
             if not user:
                 return redirect(self, '/login')
             return html_response(self, 200, tenant_auth.render_profile(user))
         if path == '/conversations':
-            user = tenant_auth.current_user(get_cookie(self, tenant_auth.SESSION_COOKIE))
+            user = context.user if context else None
             if not user:
                 return redirect(self, '/login')
             return html_response(self, 200, tenant_auth.render_customer_history(user, 'chat'))
         if path == '/requests':
-            user = tenant_auth.current_user(get_cookie(self, tenant_auth.SESSION_COOKIE))
+            user = context.user if context else None
             if not user:
                 return redirect(self, '/login')
             return html_response(self, 200, tenant_auth.render_customer_history(user, 'project_request'))
@@ -469,6 +496,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         parsed = urlparse(self.path)
         payload = read_body(self)
+        allowed, context = self.require_public_tenant(parsed.path)
+        if not allowed:
+            return
 
         if parsed.path == '/register':
             password = str(payload.get('password', ''))
@@ -476,7 +506,7 @@ class Handler(BaseHTTPRequestHandler):
             if password != confirm:
                 return html_response(self, 400, tenant_auth.render_register('Passwords do not match.', True))
             ok, message = tenant_auth.register_user(
-                organization_slug=str(payload.get('organization', '')).strip(),
+                organization_slug=context.tenant.slug,
                 first_name=str(payload.get('first_name', '')).strip(),
                 last_name=str(payload.get('last_name', '')).strip(),
                 email=str(payload.get('email', '')).strip(),
@@ -486,9 +516,20 @@ class Handler(BaseHTTPRequestHandler):
             body = tenant_auth.page('Registration', f'<h1>{"Check your email" if ok else "Registration failed"}</h1><p>{esc(message)}</p><p><a href="/login">Sign in</a></p>') if ok else tenant_auth.render_register(message, True)
             return html_response(self, status, body)
         if parsed.path == '/login':
-            ok, message, session = tenant_auth.login_user(str(payload.get('email', '')), str(payload.get('password', '')))
+            ok, message, session = tenant_auth.login_user(
+                str(payload.get('email', '')),
+                str(payload.get('password', '')),
+            )
             if ok:
-                return redirect(self, '/dashboard', {'Set-Cookie': tenant_auth.session_cookie(session)})
+                user = tenant_auth.current_user(session)
+                if request_context.user_belongs_to_tenant(user, context.tenant):
+                    return redirect(
+                        self,
+                        '/dashboard',
+                        {'Set-Cookie': tenant_auth.session_cookie(session)},
+                    )
+                tenant_auth.logout_session(session)
+                message = 'Invalid email or password.'
             return html_response(self, 403, tenant_auth.render_login(message, True))
         if parsed.path == '/forgot-password':
             tenant_auth.request_password_reset(str(payload.get('email', '')))
@@ -505,7 +546,7 @@ class Handler(BaseHTTPRequestHandler):
             return html_response(self, 400, tenant_auth.render_reset(token, message, True))
         if parsed.path == '/profile':
             session_token = get_cookie(self, tenant_auth.SESSION_COOKIE)
-            user = tenant_auth.current_user(session_token)
+            user = context.user if context else None
             if not user:
                 return redirect(self, '/login')
             action = str(payload.get('action', 'profile'))
