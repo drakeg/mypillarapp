@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- HTTP request handling now enforces active tenant hosts and tenant-scoped customer sessions.
 - Tenant-aware request context using `Host` and `X-Forwarded-Host` resolution.
 - Customer-session isolation that rejects authentication from a different tenant.
 - Request-context regression coverage for proxy hosts, unknown domains, and cross-tenant sessions.
