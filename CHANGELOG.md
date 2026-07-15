@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Customer dashboard, request history, and conversation detail are isolated by the authenticated tenant.
 - Public project requests, chats, and visitor replies now persist within the resolved tenant.
 - Tenant ownership for conversations with existing records migrated to the Solutions tenant.
 - Tenant-scoped conversation lookup, customer history, message writes, and status updates.
