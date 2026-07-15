@@ -512,6 +512,7 @@ class Handler(BaseHTTPRequestHandler):
                 last_name=str(payload.get('last_name', '')).strip(),
                 email=str(payload.get('email', '')).strip(),
                 password=password,
+                public_host=context.host,
             )
             status = 200 if ok else 400
             body = tenant_auth.page('Registration', f'<h1>{"Check your email" if ok else "Registration failed"}</h1><p>{esc(message)}</p><p><a href="/login">Sign in</a></p>') if ok else tenant_auth.render_register(message, True)
@@ -533,7 +534,11 @@ class Handler(BaseHTTPRequestHandler):
                 message = 'Invalid email or password.'
             return html_response(self, 403, tenant_auth.render_login(message, True))
         if parsed.path == '/forgot-password':
-            tenant_auth.request_password_reset(str(payload.get('email', '')))
+            tenant_auth.request_password_reset(
+                str(payload.get('email', '')),
+                organization_slug=context.tenant.slug,
+                public_host=context.host,
+            )
             return html_response(self, 200, tenant_auth.render_forgot('If an active account exists for that email, a reset link has been sent.'))
         if parsed.path.startswith('/reset-password/'):
             token = parsed.path.rstrip('/').split('/')[-1]
