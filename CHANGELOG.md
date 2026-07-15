@@ -8,6 +8,9 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Sprint 2 tenant persistence for domains and tenant-specific settings.
+- Host normalization and active-tenant resolution without cross-tenant fallback.
+- Tenant isolation regression coverage for domains and settings.
 - Sprint 1 automated regression suite for customer authentication, profile management, session invalidation, dashboard counts, and conversation authorization.
 - One-command regression test runner through `make test`.
 
