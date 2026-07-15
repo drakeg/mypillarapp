@@ -8,6 +8,9 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Tenant-aware request context using `Host` and `X-Forwarded-Host` resolution.
+- Customer-session isolation that rejects authentication from a different tenant.
+- Request-context regression coverage for proxy hosts, unknown domains, and cross-tenant sessions.
 - Sprint 2 tenant persistence for domains and tenant-specific settings.
 - Host normalization and active-tenant resolution without cross-tenant fallback.
 - Tenant isolation regression coverage for domains and settings.
