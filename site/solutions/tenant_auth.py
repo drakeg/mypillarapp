@@ -33,10 +33,16 @@ def esc(value: object) -> str:
     return html.escape(str(value or ''))
 
 
-def public_url(path: str) -> str:
+def public_url(path: str, host: str = '') -> str:
     if not path.startswith('/'):
         path = '/' + path
-    return f'https://{PRIMARY_DOMAIN}{path}'
+    public_host = (host or PRIMARY_DOMAIN).strip().lower().rstrip('.')
+    if '://' in public_host:
+        public_host = public_host.split('://', 1)[1]
+    public_host = public_host.split('/', 1)[0].split(',', 1)[0].strip()
+    if not public_host:
+        public_host = PRIMARY_DOMAIN
+    return f'https://{public_host}{path}'
 
 
 @contextmanager
@@ -176,7 +182,7 @@ def _new_session(conn: sqlite3.Connection, user_id: int) -> str:
     return token
 
 
-def register_user(*, organization_slug: str, first_name: str, last_name: str, email: str, password: str) -> tuple[bool, str]:
+def register_user(*, organization_slug: str, first_name: str, last_name: str, email: str, password: str, public_host: str = '') -> tuple[bool, str]:
     email = email.strip().lower()
     first_name = first_name.strip()
     last_name = last_name.strip()
@@ -203,7 +209,7 @@ def register_user(*, organization_slug: str, first_name: str, last_name: str, em
         user_id = int(cur.lastrowid)
         token = _new_token(conn, user_id, 'verify_email', 60 * 60 * 24)
         conn.commit()
-    verify_url = public_url(f'/verify-email/{quote(token)}')
+    verify_url = public_url(f'/verify-email/{quote(token)}', public_host)
     messaging.send_email(
         'Verify your Mad Mallard Platform account',
         f'Hello {first_name},\n\nVerify your account:\n{verify_url}\n\nThis link expires in 24 hours.',
@@ -273,15 +279,24 @@ def current_user(session_token: str) -> sqlite3.Row | None:
         return row
 
 
-def request_password_reset(email: str) -> None:
+def request_password_reset(email: str, organization_slug: str = '', public_host: str = '') -> None:
     email = email.strip().lower()
+    organization_slug = organization_slug.strip().lower()
+    if not organization_slug:
+        return
     with db() as conn:
-        user = conn.execute('SELECT * FROM auth_users WHERE lower(email) = lower(?) AND is_active = 1', (email,)).fetchone()
+        user = conn.execute(
+            '''SELECT u.* FROM auth_users u
+               JOIN auth_organizations o ON o.id = u.organization_id
+               WHERE lower(u.email) = lower(?) AND u.is_active = 1
+                 AND o.slug = ? AND o.status = 'active' ''',
+            (email, organization_slug),
+        ).fetchone()
         if not user:
             return
         token = _new_token(conn, int(user['id']), 'reset_password', 60 * 60)
         conn.commit()
-    reset_url = public_url(f'/reset-password/{quote(token)}')
+    reset_url = public_url(f'/reset-password/{quote(token)}', public_host)
     messaging.send_email(
         'Reset your Mad Mallard Platform password',
         f'Reset your password:\n{reset_url}\n\nThis link expires in one hour.',
