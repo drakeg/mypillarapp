@@ -17,6 +17,7 @@ import messaging
 import form_config
 import tenant_auth
 import request_context
+import tenant_conversations
 
 ROOT = Path('/app').resolve()
 INDEX = ROOT / 'index.html'
@@ -664,7 +665,10 @@ class Handler(BaseHTTPRequestHandler):
             return json_response(self, 400, {'ok': False, 'error': 'Name, email, and message are required.'})
         subject = service or 'Project request'
         body = f"Service: {service}\nTimeline: {timeline}\nBudget: {budget}\n\n{message}"
-        convo = messaging.create_conversation(kind='project_request', name=name, email=email, company=company, subject=subject, body=body, tags=[service] if service else [], lead={'service': service, 'timeline': timeline, 'budget': budget, 'message': message})
+        context = self.request_context()
+        if not context:
+            return json_response(self, 404, {'ok': False, 'error': 'Unknown tenant.'})
+        convo = tenant_conversations.create_conversation(tenant_slug=context.tenant.slug, kind='project_request', name=name, email=email, company=company, subject=subject, body=body, tags=[service] if service else [], lead={'service': service, 'timeline': timeline, 'budget': budget, 'message': message})
         messaging.notify_new_conversation(convo, body)
         messaging.notify_visitor_link(convo)
         return json_response(self, 200, {'ok': True, 'message': 'Thanks. Your request was saved.', 'conversation_url': f'/chat/{convo["token"]}'})
@@ -675,7 +679,10 @@ class Handler(BaseHTTPRequestHandler):
         body = str(payload.get('body', '')).strip()
         if not body:
             return json_response(self, 400, {'ok': False, 'error': 'Please enter a message.'})
-        convo = messaging.create_conversation(kind='chat', name=name, email=email, subject='Website chat', body=body, tags=['chat'])
+        context = self.request_context()
+        if not context:
+            return json_response(self, 404, {'ok': False, 'error': 'Unknown tenant.'})
+        convo = tenant_conversations.create_conversation(tenant_slug=context.tenant.slug, kind='chat', name=name, email=email, subject='Website chat', body=body, tags=['chat'])
         messaging.notify_new_conversation(convo, body)
         messaging.notify_visitor_link(convo)
         return json_response(self, 200, {'ok': True, 'url': f'/chat/{convo["token"]}', 'full_url': messaging.public_url(f'/chat/{convo["token"]}')})
@@ -685,7 +692,10 @@ class Handler(BaseHTTPRequestHandler):
         sender = str(payload.get('sender', 'Visitor')).strip() or 'Visitor'
         if not body:
             return json_response(self, 400, {'ok': False, 'error': 'Message is required.'})
-        convo = messaging.add_message(token, body=body, sender=sender, sender_type='visitor')
+        context = self.request_context()
+        if not context:
+            return json_response(self, 404, {'ok': False, 'error': 'Unknown tenant.'})
+        convo = tenant_conversations.add_message(context.tenant.slug, token, body=body, sender=sender, sender_type='visitor')
         if not convo:
             return json_response(self, 404, {'ok': False, 'error': 'Conversation not found.'})
         messaging.notify_admin_reply(convo, sender, body)
