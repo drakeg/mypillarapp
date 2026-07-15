@@ -14,6 +14,7 @@ import sqlite3
 import time
 
 import messaging
+import tenant_conversations
 
 DATA_DIR = Path(os.environ.get('MADMALLARD_DATA_DIR', '/data'))
 DB_PATH = DATA_DIR / 'madmallard.sqlite3'
@@ -322,20 +323,26 @@ def page(title: str, content: str) -> str:
 
 def _customer_activity(user: sqlite3.Row) -> tuple[dict[str, int], list[sqlite3.Row]]:
     email = str(user['email']).strip().lower()
+    tenant_slug = str(user['organization_slug']).strip().lower()
+    tenant_conversations.ensure_schema()
     with db() as conn:
         counts_row = conn.execute(
-            '''SELECT COUNT(*) AS total,
+            """SELECT COUNT(*) AS total,
                       SUM(CASE WHEN status NOT IN ('closed', 'spam') THEN 1 ELSE 0 END) AS open_count,
                       SUM(CASE WHEN kind = 'project_request' THEN 1 ELSE 0 END) AS request_count,
                       SUM(CASE WHEN kind = 'chat' THEN 1 ELSE 0 END) AS conversation_count
-               FROM conversations WHERE lower(COALESCE(email, '')) = ?''',
-            (email,),
+               FROM conversations
+               WHERE organization_slug = ?
+                 AND lower(COALESCE(email, '')) = ?""",
+            (tenant_slug, email),
         ).fetchone()
         recent = conn.execute(
-            '''SELECT token, kind, subject, status, updated_at
-               FROM conversations WHERE lower(COALESCE(email, '')) = ?
-               ORDER BY updated_at DESC LIMIT 8''',
-            (email,),
+            """SELECT token, kind, subject, status, updated_at
+               FROM conversations
+               WHERE organization_slug = ?
+                 AND lower(COALESCE(email, '')) = ?
+               ORDER BY updated_at DESC LIMIT 8""",
+            (tenant_slug, email),
         ).fetchall()
     return {
         'total': int(counts_row['total'] or 0),
@@ -349,33 +356,24 @@ def _customer_history(
     user: sqlite3.Row,
     kind: str | None = None,
 ) -> list[sqlite3.Row]:
-    email = str(user['email']).strip().lower()
-    sql = """SELECT token, kind, subject, status, priority, created_at, updated_at
-             FROM conversations
-             WHERE lower(COALESCE(email, '')) = ?"""
-    params: list[object] = [email]
-    if kind:
-        sql += ' AND kind = ?'
-        params.append(kind)
-    sql += ' ORDER BY updated_at DESC'
-    with db() as conn:
-        return conn.execute(sql, params).fetchall()
+    return tenant_conversations.list_customer_conversations(
+        str(user['organization_slug']),
+        str(user['email']),
+        kind,
+    )
 
 
 def _customer_conversation(
     user: sqlite3.Row,
     token: str,
 ) -> tuple[sqlite3.Row | None, list[sqlite3.Row]]:
-    email = str(user['email']).strip().lower()
+    conversation = tenant_conversations.get_conversation(
+        str(user['organization_slug']),
+        token,
+    )
+    if not conversation or str(conversation['email'] or '').strip().lower() != str(user['email']).strip().lower():
+        return None, []
     with db() as conn:
-        conversation = conn.execute(
-            """SELECT *
-               FROM conversations
-               WHERE token = ? AND lower(COALESCE(email, '')) = ?""",
-            (token, email),
-        ).fetchone()
-        if not conversation:
-            return None, []
         messages = conn.execute(
             """SELECT *
                FROM messages
@@ -384,7 +382,6 @@ def _customer_conversation(
             (conversation['id'],),
         ).fetchall()
     return conversation, messages
-
 
 def _fmt_timestamp(value: object) -> str:
     try:
