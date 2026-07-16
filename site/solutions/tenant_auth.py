@@ -75,7 +75,7 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
             created_at INTEGER NOT NULL,
             updated_at INTEGER NOT NULL,
             organization_id INTEGER NOT NULL,
-            email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+            email TEXT NOT NULL COLLATE NOCASE,
             first_name TEXT NOT NULL DEFAULT '',
             last_name TEXT NOT NULL DEFAULT '',
             password_hash TEXT NOT NULL,
@@ -109,10 +109,36 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
             FOREIGN KEY(user_id) REFERENCES auth_users(id) ON DELETE CASCADE
         )
     ''')
+    _migrate_auth_users_email_scope(conn)
+    conn.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_users_org_email ON auth_users(organization_id, email COLLATE NOCASE)')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_auth_tokens_lookup ON auth_tokens(token_hash, purpose, expires_at)')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_auth_sessions_lookup ON auth_sessions(token_hash, expires_at)')
     seed_organizations(conn)
     conn.commit()
+
+
+def _migrate_auth_users_email_scope(conn: sqlite3.Connection) -> None:
+    indexes = conn.execute("PRAGMA index_list(auth_users)").fetchall()
+    for index in indexes:
+        if not index['unique']:
+            continue
+        columns = conn.execute(f"PRAGMA index_info({index['name']})").fetchall()
+        if [column['name'] for column in columns] != ['email']:
+            continue
+        conn.execute('PRAGMA foreign_keys = OFF')
+        conn.execute('ALTER TABLE auth_users RENAME TO auth_users_legacy')
+        conn.execute("""CREATE TABLE auth_users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL,
+            organization_id INTEGER NOT NULL, email TEXT NOT NULL COLLATE NOCASE,
+            first_name TEXT NOT NULL DEFAULT '', last_name TEXT NOT NULL DEFAULT '', password_hash TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'viewer', is_active INTEGER NOT NULL DEFAULT 0,
+            email_verified_at INTEGER, last_login_at INTEGER,
+            FOREIGN KEY(organization_id) REFERENCES auth_organizations(id))""")
+        conn.execute("""INSERT INTO auth_users SELECT id, created_at, updated_at, organization_id, email, first_name,
+            last_name, password_hash, role, is_active, email_verified_at, last_login_at FROM auth_users_legacy""")
+        conn.execute('DROP TABLE auth_users_legacy')
+        conn.execute('PRAGMA foreign_keys = ON')
+        break
 
 
 def seed_organizations(conn: sqlite3.Connection) -> None:
@@ -196,7 +222,7 @@ def register_user(*, organization_slug: str, first_name: str, last_name: str, em
         org = conn.execute("SELECT * FROM auth_organizations WHERE slug = ? AND status = 'active'", (organization_slug,)).fetchone()
         if not org:
             return False, 'Select a valid organization.'
-        existing = conn.execute('SELECT id FROM auth_users WHERE lower(email) = lower(?)', (email,)).fetchone()
+        existing = conn.execute('SELECT id FROM auth_users WHERE organization_id = ? AND lower(email) = lower(?)', (org['id'], email)).fetchone()
         if existing:
             return False, 'An account already exists for that email address.'
         ts = now()
@@ -237,10 +263,10 @@ def verify_email(token: str) -> tuple[bool, str, str]:
         return True, 'Your email has been verified.', session
 
 
-def login_user(email: str, password: str) -> tuple[bool, str, str]:
+def login_user(email: str, password: str, organization_slug: str = 'solutions') -> tuple[bool, str, str]:
     email = email.strip().lower()
     with db() as conn:
-        user = conn.execute('SELECT * FROM auth_users WHERE lower(email) = lower(?)', (email,)).fetchone()
+        user = conn.execute('''SELECT u.* FROM auth_users u JOIN auth_organizations o ON o.id = u.organization_id WHERE o.slug = ? AND lower(u.email) = lower(?)''', (organization_slug, email)).fetchone()
         if not user or not verify_password(password, user['password_hash']):
             return False, 'Invalid email or password.', ''
         if not user['is_active']:
@@ -484,7 +510,7 @@ def update_profile(user_id: int, first_name: str, last_name: str, email: str) ->
     if not email or '@' not in email:
         return False, 'Enter a valid email address.'
     with db() as conn:
-        duplicate = conn.execute('SELECT id FROM auth_users WHERE lower(email)=lower(?) AND id<>?', (email, user_id)).fetchone()
+        duplicate = conn.execute('''SELECT other.id FROM auth_users other JOIN auth_users current ON current.id = ? WHERE other.organization_id = current.organization_id AND lower(other.email)=lower(?) AND other.id<>current.id''', (user_id, email)).fetchone()
         if duplicate:
             return False, 'Another account already uses that email address.'
         conn.execute('UPDATE auth_users SET first_name=?, last_name=?, email=?, updated_at=? WHERE id=?', (first_name,last_name,email,now(),user_id))
