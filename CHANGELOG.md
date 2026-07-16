@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Customer account email uniqueness and login resolution are now scoped to the active tenant.
 - Tenant-specific verification and password-reset links with tenant-scoped reset lookup.
 
 - Customer dashboard, request history, and conversation detail are isolated by the authenticated tenant.

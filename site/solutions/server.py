@@ -521,6 +521,7 @@ class Handler(BaseHTTPRequestHandler):
             ok, message, session = tenant_auth.login_user(
                 str(payload.get('email', '')),
                 str(payload.get('password', '')),
+                context.tenant.slug,
             )
             if ok:
                 user = tenant_auth.current_user(session)
