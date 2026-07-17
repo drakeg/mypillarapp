@@ -58,15 +58,15 @@ class Sprint2TenantLifecycleTests(unittest.TestCase):
             user_id = int(cursor.lastrowid)
             conn.execute(
                 '''INSERT INTO auth_sessions(
-                       created_at, updated_at, user_id, token_hash, expires_at
-                   ) VALUES (?, ?, ?, 'session-hash', ?)''',
-                (timestamp, timestamp, user_id, timestamp + 3600),
+                       user_id, token_hash, created_at, expires_at, last_seen_at
+                   ) VALUES (?, 'session-hash', ?, ?, ?)''',
+                (user_id, timestamp, timestamp + 3600, timestamp),
             )
             conn.execute(
                 '''INSERT INTO auth_tokens(
-                       created_at, updated_at, user_id, purpose, token_hash, expires_at
-                   ) VALUES (?, ?, ?, 'reset_password', 'token-hash', ?)''',
-                (timestamp, timestamp, user_id, timestamp + 3600),
+                       user_id, purpose, token_hash, created_at, expires_at
+                   ) VALUES (?, 'reset_password', 'token-hash', ?, ?)''',
+                (user_id, timestamp, timestamp + 3600),
             )
             conn.commit()
 
@@ -109,7 +109,10 @@ class Sprint2TenantLifecycleTests(unittest.TestCase):
     def test_primary_tenant_cannot_be_suspended_or_archived(self):
         self.assertFalse(tenant_lifecycle.suspend_tenant('solutions')[0])
         self.assertFalse(tenant_lifecycle.archive_tenant('solutions')[0])
-        self.assertEqual(tenant_context.resolve_tenant(tenant_auth.PRIMARY_DOMAIN).slug, 'solutions')
+        self.assertEqual(
+            tenant_context.resolve_tenant(tenant_auth.PRIMARY_DOMAIN).slug,
+            'solutions',
+        )
 
     def test_invalid_and_duplicate_transitions_are_rejected(self):
         self.assertFalse(
