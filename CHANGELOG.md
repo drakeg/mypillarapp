@@ -8,6 +8,8 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Tenant-scoped branding configuration with validated names, colors, logos, taglines, and support email.
+
 - Tenant organization creation, metadata updates, active/inactive lifecycle controls, and conflict-safe primary-domain management.
 - Customer account email uniqueness and login resolution are now scoped to the active tenant.
 - Tenant-specific verification and password-reset links with tenant-scoped reset lookup.
