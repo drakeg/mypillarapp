@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict
+import json
 import re
 from urllib.parse import urlsplit
 
@@ -35,6 +36,44 @@ def _valid_email(value: str) -> bool:
         return True
     local, separator, domain = value.partition('@')
     return bool(local and separator and domain and '.' in domain)
+
+
+def branding_values(
+    *,
+    site_name: str,
+    tagline: str = '',
+    logo_url: str = '',
+    primary_color: str = '#1f6f5f',
+    secondary_color: str = '#f4b942',
+    support_email: str = '',
+) -> dict[str, str]:
+    return {
+        'site_name': (site_name or '').strip(),
+        'tagline': (tagline or '').strip(),
+        'logo_url': (logo_url or '').strip(),
+        'primary_color': (primary_color or '').strip(),
+        'secondary_color': (secondary_color or '').strip(),
+        'support_email': (support_email or '').strip().lower(),
+    }
+
+
+def validate_branding(**kwargs) -> tuple[bool, str]:
+    values = branding_values(**kwargs)
+    if not values['site_name']:
+        return False, 'Site name is required.'
+    if not _HEX_COLOR.fullmatch(values['primary_color']):
+        return False, 'Primary color must be a six-digit hex color.'
+    if not _HEX_COLOR.fullmatch(values['secondary_color']):
+        return False, 'Secondary color must be a six-digit hex color.'
+    if not _valid_url(values['logo_url']):
+        return False, 'Logo URL must use http or https.'
+    if not _valid_email(values['support_email']):
+        return False, 'Support email is invalid.'
+    return True, ''
+
+
+def serialize_branding(values: dict[str, str]) -> str:
+    return json.dumps(values, separators=(',', ':'), sort_keys=True)
 
 
 def _defaults(organization_slug: str) -> TenantBranding | None:
@@ -83,25 +122,17 @@ def update_branding(
     if not tenant:
         return False, 'Tenant not found.'
 
-    values = {
-        'site_name': (site_name or '').strip(),
-        'tagline': (tagline or '').strip(),
-        'logo_url': (logo_url or '').strip(),
-        'primary_color': (primary_color or '').strip(),
-        'secondary_color': (secondary_color or '').strip(),
-        'support_email': (support_email or '').strip().lower(),
-    }
-
-    if not values['site_name']:
-        return False, 'Site name is required.'
-    if not _HEX_COLOR.fullmatch(values['primary_color']):
-        return False, 'Primary color must be a six-digit hex color.'
-    if not _HEX_COLOR.fullmatch(values['secondary_color']):
-        return False, 'Secondary color must be a six-digit hex color.'
-    if not _valid_url(values['logo_url']):
-        return False, 'Logo URL must use http or https.'
-    if not _valid_email(values['support_email']):
-        return False, 'Support email is invalid.'
+    values = branding_values(
+        site_name=site_name,
+        tagline=tagline,
+        logo_url=logo_url,
+        primary_color=primary_color,
+        secondary_color=secondary_color,
+        support_email=support_email,
+    )
+    valid, message = validate_branding(**values)
+    if not valid:
+        return False, message
 
     if not tenant_context.set_setting(organization_slug, 'branding', values):
         return False, 'Branding could not be saved.'

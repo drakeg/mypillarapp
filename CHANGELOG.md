@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Atomic tenant onboarding for organization, primary domain, owner account, branding, and verification email creation.
 - Tenant-scoped branding configuration with validated names, colors, logos, taglines, and support email.
 
 - Tenant organization creation, metadata updates, active/inactive lifecycle controls, and conflict-safe primary-domain management.
