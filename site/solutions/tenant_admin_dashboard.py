@@ -6,6 +6,7 @@ import html
 import tenant_auth
 import tenant_branding
 import tenant_context
+import tenant_conversations
 import tenant_lifecycle
 import tenant_organizations
 
@@ -25,6 +26,7 @@ class TenantAdminSummary:
 
 def list_tenant_summaries() -> list[TenantAdminSummary]:
     tenant_context.ensure_schema()
+    tenant_conversations.ensure_schema()
     organizations = tenant_organizations.list_organizations(include_inactive=True)
     summaries: list[TenantAdminSummary] = []
 
