@@ -18,6 +18,7 @@ import form_config
 import tenant_auth
 import request_context
 import tenant_conversations
+import tenant_admin_dashboard
 
 ROOT = Path('/app').resolve()
 INDEX = ROOT / 'index.html'
@@ -283,6 +284,7 @@ def admin_nav(active: str = '') -> str:
         ('/admin/requests', 'requests', 'Service Requests'),
         ('/admin/leads', 'leads', 'Leads'),
         ('/admin/crm', 'crm', 'CRM'),
+        ('/admin/tenants', 'tenants', 'Tenants'),
         ('/admin/sites', 'sites', 'Sites'),
         ('/admin/settings', 'settings', 'Settings'),
     ]
@@ -465,6 +467,10 @@ class Handler(BaseHTTPRequestHandler):
             if not require_admin(self, query):
                 return
             return self.render_admin_crm(query)
+        if path == '/admin/tenants':
+            if not require_admin(self, query):
+                return
+            return self.render_admin_tenants()
         if path == '/admin/sites/new':
             if not require_admin(self, query):
                 return
@@ -605,6 +611,17 @@ class Handler(BaseHTTPRequestHandler):
                 return
             token = parsed.path.split('/')[3]
             return self.handle_admin_update(token, payload)
+        if parsed.path == '/api/admin/tenants/status':
+            query = parse_qs(parsed.query)
+            if not require_admin(self, query):
+                return
+            slug = str(payload.get('slug', '')).strip()
+            action = str(payload.get('action', '')).strip()
+            ok, message, result = tenant_admin_dashboard.change_status(slug, action)
+            return json_response(self, 200 if ok else 400, {
+                'ok': ok, 'message': message,
+                'status': result.current_status if result else '',
+            })
         if parsed.path == '/api/admin/sites/save':
             query = parse_qs(parsed.query)
             if not require_admin(self, query):
@@ -617,6 +634,14 @@ class Handler(BaseHTTPRequestHandler):
             return self.handle_admin_site_delete(payload)
 
         self.send_error(404)
+
+    def render_admin_tenants(self):
+        content = admin_page_header(
+            'Platform', 'Tenant administration',
+            'Review tenant status, domains, branding, users, and activity.'
+        ) + tenant_admin_dashboard.render_tenant_dashboard()
+        script = """<script>document.querySelectorAll('[data-tenant-action]').forEach(button => {button.addEventListener('click', async () => {const action = button.dataset.tenantAction; const slug = button.dataset.tenant; if (!confirm(`${action} ${slug}?`)) return; const response = await fetch('/api/admin/tenants/status', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({slug, action})}); const result = await response.json(); if (!response.ok) {alert(result.message || 'Tenant update failed.'); return;} window.location.reload();});});</script>"""
+        return html_response(self, 200, admin_layout('Tenants', 'tenants', content + script))
 
     def handle_admin_site_save(self, payload: dict):
         site_id = str(payload.get('id', '')).strip()
