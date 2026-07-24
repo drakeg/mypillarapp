@@ -8,6 +8,8 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Tenant administration dashboard with tenant status, domain, branding, user, conversation, and project-request summaries.
+
 - Reversible tenant suspension and archival controls that disable domains and revoke active authentication state while preserving tenant data.
 - Atomic tenant onboarding for organization, primary domain, owner account, branding, and verification email creation.
 - Tenant-scoped branding configuration with validated names, colors, logos, taglines, and support email.
