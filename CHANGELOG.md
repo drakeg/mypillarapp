@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- End-to-end Sprint 2 hardening coverage for onboarding atomicity, domain resolution, branding, tenant lifecycle transitions, primary-tenant protection, and administration totals.
 - Tenant administration dashboard with tenant status, domain, branding, user, conversation, and project-request summaries.
 
 - Reversible tenant suspension and archival controls that disable domains and revoke active authentication state while preserving tenant data.
