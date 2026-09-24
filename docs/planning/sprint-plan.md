@@ -59,9 +59,9 @@ See [Sprint 3 Plan — Site Builder](sprint-3-plan.md).
 
 ### Current step
 
-S3-T02 — Domain-to-site association.
+S3-T03 — Site branding and theme model.
 
-This step attaches tenant domains to explicit Site Builder site records while preserving the Sprint 2 tenant-resolution API and existing public request handling.
+This step adds site-scoped branding/theme settings with compatibility inheritance from the existing Sprint 2 tenant-branding model. Public rendering remains unchanged until the later Site Builder rendering step.
 
 ### Protected baselines
 
