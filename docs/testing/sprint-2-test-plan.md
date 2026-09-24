@@ -7,7 +7,8 @@ Sprint 2 establishes the multi-tenant foundation while preserving the Sprint 1 s
 ## Automated commands
 
 - `make test-sprint2` runs all `tests/test_sprint2_*.py` regression modules.
-- `make test` runs the complete Sprint 1 + Sprint 2 regression suite and remains the required application merge gate.
+- `make test` runs the complete Sprint 1 + Sprint 2 regression suite and is executed by the GitHub Actions smoke job.
+- `make test-sprint2` is also executed by the smoke job as an explicit Sprint 2 evidence gate.
 - Terraform validation remains required through the existing GitHub Actions validate job.
 
 ## Acceptance matrix
