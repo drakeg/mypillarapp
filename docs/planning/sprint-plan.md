@@ -59,9 +59,9 @@ See [Sprint 3 Plan — Site Builder](sprint-3-plan.md).
 
 ### Current step
 
-S3-T01 — Tenant-owned site persistence.
+S3-T02 — Domain-to-site association.
 
-This step introduces the real organization-to-site persistence boundary while intentionally leaving the existing public rendering and managed-sites UI unchanged.
+This step attaches tenant domains to explicit Site Builder site records while preserving the Sprint 2 tenant-resolution API and existing public request handling.
 
 ### Protected baselines
 
