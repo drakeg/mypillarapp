@@ -54,7 +54,7 @@ class Sprint2RequestContextTests(unittest.TestCase):
 
     def test_matching_tenant_session_is_authenticated(self):
         user = {'organization_slug': 'solutions', 'email': 'owner@example.test'}
-        with patch.object(tenant_auth, 'current_user', return_value=user):
+        with patch.object(tenant_auth, 'current_user_for_tenant', return_value=user):
             context = request_context.build_request_context(
                 {'Host': 'pillar.madmallards.com'},
                 'session-token',
@@ -75,7 +75,7 @@ class Sprint2RequestContextTests(unittest.TestCase):
         self.assertIsNone(context.user)
 
     def test_missing_session_does_not_call_authentication(self):
-        with patch.object(tenant_auth, 'current_user') as current_user:
+        with patch.object(tenant_auth, 'current_user_for_tenant') as current_user:
             context = request_context.build_request_context({'Host': 'pillar.madmallards.com'})
         current_user.assert_not_called()
         self.assertIsNotNone(context)
