@@ -4,7 +4,7 @@ Mad Mallard Platform is a low-cost, self-hosted business operating platform incu
 
 ## Current status
 
-Sprint 1 — Single-Business MVP is the active implementation baseline.
+Sprint 2 — Multi-Tenant Foundation is the active implementation baseline. Sprint 1 remains the protected compatibility baseline.
 
 The current system includes:
 
@@ -18,7 +18,11 @@ The current system includes:
 - Terraform-managed infrastructure;
 - S3 remote Terraform state;
 - AWS SES notifications;
-- AWS Systems Manager Parameter Store for bootstrap admin secrets.
+- AWS Systems Manager Parameter Store for bootstrap admin secrets;
+- tenant domain resolution and request isolation;
+- tenant-scoped customer identity, conversations, and authentication links;
+- tenant organization, branding, onboarding, lifecycle, and administration services;
+- membership-based tenant RBAC foundation.
 
 ## Start here
 
