@@ -28,3 +28,9 @@ jobs:
             test -d "$HOME"
             test -w "$HOME"
           '
+      - name: Verify Docker Compose env port configuration
+        run: |
+          cp .env.example .env
+          APP_PORT=18080 docker compose config > /tmp/compose-config.yml
+          grep -q 'published: "18080"' /tmp/compose-config.yml
+          grep -q 'target: 8000' /tmp/compose-config.yml
