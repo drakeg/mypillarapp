@@ -18,7 +18,7 @@
 - optional emergency token for controlled use;
 - no customer cookie grants admin access.
 
-## Sprint 2 authorization model
+## Current Sprint 2 authorization model
 
 ```text
 User
@@ -35,5 +35,9 @@ Platform Role
 - permissions are scoped to an organization;
 - one user can have multiple memberships;
 - platform administration is explicit and separate;
-- authorization is checked on every tenant-scoped operation;
+- tenant login requires an active organization membership;
+- authenticated tenant request context requires an active organization membership;
+- the effective tenant role is read from the membership, not the legacy user role;
+- revoked or missing memberships are denied;
+- the bootstrap platform admin remains a separate authentication boundary;
 - tenant identifiers are derived from trusted server context, not blindly accepted from clients.
