@@ -13,6 +13,10 @@ Before every implementation:
 2. proceed silently when it matches;
 3. stop and report only when it does not match.
 
+## Engineering standards
+
+All implementation follows [Coding Standards](coding-standards.md) and all planned Sprint work follows [Sprint Standards](sprint-standards.md).
+
 ## Change rules
 
 - Targeted changes only for the active Sprint step.
