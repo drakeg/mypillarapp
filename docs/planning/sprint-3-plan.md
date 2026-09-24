@@ -86,6 +86,16 @@ Acceptance:
 
 Add ordered, tenant/site-scoped navigation items with safe internal/external links.
 
+Acceptance:
+- navigation items belong to exactly one site;
+- items are ordered by explicit non-negative position with stable insertion-order tie breaking;
+- visibility can be toggled without deleting the item;
+- internal root-relative links are allowed;
+- external links are restricted to http/https;
+- protocol-relative, javascript, and unsupported-scheme targets are rejected;
+- reads, updates, and deletes cannot cross site or organization boundaries;
+- archived sites cannot be modified.
+
 ### S3-T05 — Page/content model
 
 Add site-scoped pages, slugs, publication status, ordering, and safe content fields.
