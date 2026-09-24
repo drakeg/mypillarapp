@@ -59,9 +59,9 @@ See [Sprint 3 Plan — Site Builder](sprint-3-plan.md).
 
 ### Current step
 
-S3-T05 — Page/content model.
+S3-T06 — Services and public forms.
 
-This step adds site-scoped page records with validated slugs, draft/published/archived lifecycle, ordering, and tenant/site isolation. Rendering and editing UI remain deferred to later Sprint 3 steps.
+This step adds site-owned service and form-definition persistence while intentionally preserving the existing live request-intake configuration and endpoints.
 
 ### Protected baselines
 
