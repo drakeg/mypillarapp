@@ -17,44 +17,52 @@ Development uses goal-oriented Sprints. Each Sprint has locked scope, requiremen
 
 ## Sprint 1 status
 
-Sprint 1 is the active baseline.
+Sprint 1 — Single-Business MVP is complete as the protected compatibility baseline.
+
+Its public site, customer intake, messaging, customer authentication, dashboard/profile, bootstrap admin, SES/SSM integration, deployment, and regression behavior remain protected while Sprint 2 evolves the platform.
+
+## Sprint 2 status
+
+Sprint 2 — Multi-Tenant Foundation is the active implementation baseline.
 
 ### Objective
 
-Provide a complete single-business operating loop for Mad Mallard Solutions.
+Support multiple businesses safely in one deployment while preserving the stable Sprint 1 customer and admin journeys.
 
-### In scope
+### Completed foundation
 
-- public business site;
-- contact and service requests;
-- async conversations;
-- optional response feedback;
-- customer registration and authentication;
-- email verification and password reset;
-- customer dashboard and profile;
-- separate admin authentication and dashboard;
-- SES notification path;
-- SSM-backed bootstrap admin secrets;
-- Terraform/Docker/Caddy deployment;
-- testing, runbooks, and release documentation.
+- S2-T01 through S2-T03: tenant persistence, host resolution, and request context;
+- S2-T04 through S2-T07: tenant-scoped conversations, public request flow, customer isolation, and auth links;
+- S2-T08 through S2-T10: tenant-scoped identities, organization management, and branding;
+- S2-T11 through S2-T13: onboarding, lifecycle management, and tenant administration dashboard.
+
+### Current step
+
+S2-T14 — Membership-based tenant authorization / RBAC foundation.
+
+The current step introduces explicit roles and organization memberships, migrates existing per-user roles into memberships, supports one user holding memberships in multiple organizations, and preserves existing authentication behavior until a later targeted step switches authorization checks to memberships.
+
+### Sprint 2 remaining scope
+
+- membership-aware authorization enforcement;
+- platform super-admin boundaries;
+- completion of multi-tenant migration and regression evidence;
+- Sprint 2 release/rollback documentation and closure.
 
 ### Out of scope
 
-- multiple organizations;
-- organization memberships;
-- hostname-based tenant resolution;
 - site builder;
 - expanded CRM;
-- projects and tickets;
+- projects and tickets beyond current request flows;
 - creator tools;
 - AI;
 - billing.
 
 ### Exit criteria
 
-1. Customer journey works end to end.
-2. Admin journey works end to end.
-3. Deployment is reproducible.
-4. No protected subsystem regressed.
-5. Sprint 1 test plan passes.
-6. Sprint 2 does not begin until Sprint 1 is formally closed.
+1. Tenant resolution and data isolation work end to end.
+2. Users can hold organization-specific roles without cross-tenant leakage.
+3. Platform-level administration remains separated from tenant authorization.
+4. Existing Sprint 1 customer/admin behavior does not regress.
+5. Sprint 2 regression plan passes.
+6. Sprint 3 does not begin until Sprint 2 is formally closed.
