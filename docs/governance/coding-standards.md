@@ -108,3 +108,12 @@ Before merge:
 6. documentation and changelog are current;
 7. deployment/migration/rollback effects are understood;
 8. no unrelated cleanup is included.
+
+
+## Docker configuration convention
+
+- Docker Compose solutions must expose user-configurable host ports through environment variables loaded from a local `.env` file.
+- Commit a safe `.env.example` documenting every Docker-related variable required for local startup.
+- Never commit the real `.env`; it remains ignored.
+- Prefer changing the host-side published port while keeping the container's internal service port stable unless the application itself requires an internal-port override.
+- CI should validate that Compose resolves the documented environment variables correctly.
