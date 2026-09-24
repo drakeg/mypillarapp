@@ -109,6 +109,12 @@ def onboard_tenant(
             ),
         )
         owner_id = int(user_cursor.lastrowid)
+        tenant_auth._upsert_membership(
+            conn,
+            owner_id,
+            organization_id,
+            'owner',
+        )
         token = tenant_auth._new_token(
             conn,
             owner_id,

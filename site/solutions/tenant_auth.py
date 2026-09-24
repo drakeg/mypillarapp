@@ -110,10 +110,35 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
         )
     ''')
     _migrate_auth_users_email_scope(conn)
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS auth_roles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            slug TEXT NOT NULL UNIQUE,
+            name TEXT NOT NULL
+        )
+    ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS auth_memberships (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at INTEGER NOT NULL,
+            updated_at INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            organization_id INTEGER NOT NULL,
+            role_id INTEGER NOT NULL,
+            status TEXT NOT NULL DEFAULT 'active',
+            UNIQUE(user_id, organization_id),
+            FOREIGN KEY(user_id) REFERENCES auth_users(id) ON DELETE CASCADE,
+            FOREIGN KEY(organization_id) REFERENCES auth_organizations(id) ON DELETE CASCADE,
+            FOREIGN KEY(role_id) REFERENCES auth_roles(id)
+        )
+    ''')
     conn.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_auth_users_org_email ON auth_users(organization_id, email COLLATE NOCASE)')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_auth_tokens_lookup ON auth_tokens(token_hash, purpose, expires_at)')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_auth_sessions_lookup ON auth_sessions(token_hash, expires_at)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_auth_memberships_user ON auth_memberships(user_id, status)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_auth_memberships_org ON auth_memberships(organization_id, status)')
     seed_organizations(conn)
+    seed_roles_and_memberships(conn)
     conn.commit()
 
 
@@ -155,6 +180,61 @@ def seed_organizations(conn: sqlite3.Connection) -> None:
                ON CONFLICT(slug) DO UPDATE SET name = excluded.name, updated_at = excluded.updated_at''',
             (ts, ts, slug, name),
         )
+
+
+def seed_roles_and_memberships(conn: sqlite3.Connection) -> None:
+    for slug, name in (
+        ('owner', 'Owner'),
+        ('admin', 'Administrator'),
+        ('staff', 'Staff'),
+        ('viewer', 'Viewer'),
+    ):
+        conn.execute(
+            '''INSERT INTO auth_roles(slug, name)
+               VALUES (?, ?)
+               ON CONFLICT(slug) DO UPDATE SET name = excluded.name''',
+            (slug, name),
+        )
+
+    timestamp = now()
+    conn.execute(
+        '''INSERT OR IGNORE INTO auth_memberships(
+               created_at, updated_at, user_id, organization_id, role_id, status
+           )
+           SELECT ?, ?, u.id, u.organization_id, r.id, 'active'
+           FROM auth_users u
+           JOIN auth_roles r ON r.slug = CASE
+               WHEN u.role IN ('owner', 'admin', 'staff', 'viewer') THEN u.role
+               ELSE 'viewer'
+           END''',
+        (timestamp, timestamp),
+    )
+
+
+def _upsert_membership(
+    conn: sqlite3.Connection,
+    user_id: int,
+    organization_id: int,
+    role: str,
+) -> None:
+    normalized_role = (role or '').strip().lower()
+    role_row = conn.execute(
+        'SELECT id FROM auth_roles WHERE slug = ?',
+        (normalized_role,),
+    ).fetchone()
+    if not role_row:
+        raise ValueError(f'Unknown membership role: {normalized_role}')
+    timestamp = now()
+    conn.execute(
+        '''INSERT INTO auth_memberships(
+               created_at, updated_at, user_id, organization_id, role_id, status
+           ) VALUES (?, ?, ?, ?, ?, 'active')
+           ON CONFLICT(user_id, organization_id) DO UPDATE SET
+               role_id = excluded.role_id,
+               status = 'active',
+               updated_at = excluded.updated_at''',
+        (timestamp, timestamp, user_id, organization_id, role_row['id']),
+    )
 
 
 def list_organizations() -> list[sqlite3.Row]:
@@ -233,6 +313,7 @@ def register_user(*, organization_slug: str, first_name: str, last_name: str, em
             (ts, ts, org['id'], email, first_name, last_name, hash_password(password), role),
         )
         user_id = int(cur.lastrowid)
+        _upsert_membership(conn, user_id, int(org['id']), role)
         token = _new_token(conn, user_id, 'verify_email', 60 * 60 * 24)
         conn.commit()
     verify_url = public_url(f'/verify-email/{quote(token)}', public_host)

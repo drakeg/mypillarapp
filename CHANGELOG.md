@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Membership-based tenant authorization foundation with explicit roles, organization memberships, legacy-role migration, cross-tenant membership assignment, and revocation support.
 - Tenant administration dashboard with tenant status, domain, branding, user, conversation, and project-request summaries.
 
 - Reversible tenant suspension and archival controls that disable domains and revoke active authentication state while preserving tenant data.
