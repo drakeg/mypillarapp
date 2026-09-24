@@ -530,8 +530,11 @@ class Handler(BaseHTTPRequestHandler):
                 context.tenant.slug,
             )
             if ok:
-                user = tenant_auth.current_user(session)
-                if request_context.user_belongs_to_tenant(user, context.tenant):
+                user = tenant_auth.current_user_for_tenant(
+                    session,
+                    context.tenant.slug,
+                )
+                if user:
                     return redirect(
                         self,
                         '/dashboard',
