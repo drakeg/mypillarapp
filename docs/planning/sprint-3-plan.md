@@ -72,6 +72,16 @@ Acceptance:
 
 Move Site Builder visual configuration into site-scoped settings with validated theme/brand values.
 
+Acceptance:
+- branding is stored per site rather than only per organization;
+- each `main` site inherits existing Sprint 2 tenant branding until a Site Builder override is saved;
+- secondary sites default to their own site name and standard brand defaults;
+- same-tenant sites and same-slug cross-tenant sites remain isolated;
+- themes are restricted to approved presets;
+- colors, logo URLs, and support email values are validated;
+- archived or cross-tenant sites cannot be updated;
+- saving Site Builder branding does not mutate the legacy tenant-branding record.
+
 ### S3-T04 — Navigation model
 
 Add ordered, tenant/site-scoped navigation items with safe internal/external links.
