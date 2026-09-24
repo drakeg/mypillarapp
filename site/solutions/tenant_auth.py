@@ -346,15 +346,39 @@ def verify_email(token: str) -> tuple[bool, str, str]:
 
 def login_user(email: str, password: str, organization_slug: str = 'solutions') -> tuple[bool, str, str]:
     email = email.strip().lower()
+    organization_slug = organization_slug.strip().lower()
     with db() as conn:
-        user = conn.execute('''SELECT u.* FROM auth_users u JOIN auth_organizations o ON o.id = u.organization_id WHERE o.slug = ? AND lower(u.email) = lower(?)''', (organization_slug, email)).fetchone()
-        if not user or not verify_password(password, user['password_hash']):
+        candidates = conn.execute(
+            '''SELECT u.*
+               FROM auth_users u
+               JOIN auth_memberships m
+                 ON m.user_id = u.id
+                AND m.status = 'active'
+               JOIN auth_organizations o
+                 ON o.id = m.organization_id
+                AND o.status = 'active'
+               WHERE o.slug = ?
+                 AND lower(u.email) = lower(?)''',
+            (organization_slug, email),
+        ).fetchall()
+        user = next(
+            (
+                candidate
+                for candidate in candidates
+                if verify_password(password, candidate['password_hash'])
+            ),
+            None,
+        )
+        if not user:
             return False, 'Invalid email or password.', ''
         if not user['is_active']:
             return False, 'Verify your email before signing in.', ''
         session = _new_session(conn, int(user['id']))
         ts = now()
-        conn.execute('UPDATE auth_users SET last_login_at = ?, updated_at = ? WHERE id = ?', (ts, ts, user['id']))
+        conn.execute(
+            'UPDATE auth_users SET last_login_at = ?, updated_at = ? WHERE id = ?',
+            (ts, ts, user['id']),
+        )
         conn.commit()
         return True, '', session
 
