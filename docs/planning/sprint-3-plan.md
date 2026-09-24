@@ -115,6 +115,16 @@ Acceptance:
 
 Represent services and form configuration as site-owned content without breaking existing request intake.
 
+Acceptance:
+- services are site-owned, ordered, and support draft/published/archived lifecycle;
+- service slugs are unique within a site but may repeat across sites;
+- public forms are site-owned and support draft/published/archived lifecycle;
+- form fields are validated against an approved field-type set and unique field names;
+- select fields require unique non-empty options;
+- services/forms cannot be read or updated across tenant/site boundaries;
+- archived services/forms/sites cannot be modified;
+- the existing static project-request configuration and live intake endpoints remain unchanged until the later rendering/migration steps.
+
 ### S3-T07 — Media foundation
 
 Add site-scoped media metadata/references and safe ownership rules. Binary-storage changes require separate cost/deployment review.
