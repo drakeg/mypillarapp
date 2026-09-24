@@ -31,11 +31,13 @@ The current system includes:
 3. [Approved Roadmap](docs/planning/product-roadmap.md)
 4. [Sprint Plan](docs/planning/sprint-plan.md)
 5. [Development Workflow](docs/governance/development-workflow.md)
-6. [System Architecture](docs/architecture/system-architecture.md)
-7. [AWS Architecture](docs/aws/aws-architecture.md)
-8. [Test Strategy](docs/testing/test-strategy.md)
-9. [Operations Runbook](docs/operations/operations-runbook.md)
-10. [ADR Index](docs/adr/README.md)
+6. [Coding Standards](docs/governance/coding-standards.md)
+7. [Sprint Standards](docs/governance/sprint-standards.md)
+8. [System Architecture](docs/architecture/system-architecture.md)
+9. [AWS Architecture](docs/aws/aws-architecture.md)
+10. [Test Strategy](docs/testing/test-strategy.md)
+11. [Operations Runbook](docs/operations/operations-runbook.md)
+12. [ADR Index](docs/adr/README.md)
 
 ## Source of truth
 
