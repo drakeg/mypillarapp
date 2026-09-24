@@ -55,8 +55,10 @@ def build_request_context(
     if not tenant:
         return None
 
-    user = tenant_auth.current_user(session_token) if session_token else None
-    if user and not user_belongs_to_tenant(user, tenant):
-        user = None
+    user = (
+        tenant_auth.current_user_for_tenant(session_token, tenant.slug)
+        if session_token
+        else None
+    )
 
     return RequestContext(tenant=tenant, host=request_host(headers), user=user)
