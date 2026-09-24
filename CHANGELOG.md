@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Docker Compose host binding and published port configuration through a documented `.env.example`.
 - Site-scoped page/content records with validated slugs, publication lifecycle, ordering, archival, and cross-site/cross-tenant isolation.
 - Ordered site-scoped navigation with visibility controls, safe internal/external targets, archive protection, and cross-tenant/site isolation.
 - Site-scoped branding and validated theme presets with inheritance from existing tenant branding and cross-site/cross-tenant isolation.
