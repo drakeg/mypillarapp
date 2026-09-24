@@ -38,6 +38,7 @@ Platform Role
 - platform administration is explicit and separate;
 - tenant login requires an active organization membership;
 - authenticated tenant request context requires an active organization membership;
+- request handlers consume the resolved tenant context rather than re-reading a legacy home-organization session;
 - the effective tenant role is read from the membership, not the legacy user role;
 - revoked or missing memberships are denied;
 - the bootstrap platform admin is an explicit `platform_super_admin` boundary;
