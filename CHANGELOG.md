@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Sprint 3 Site Builder plan and tenant-owned site persistence foundation with organization-scoped isolation and archival tests.
 - Formal Sprint 2 closure record with exact CI evidence, rollback baseline, deployment-status limitations, and Sprint 3 handoff.
 - Explicit reusable coding and Sprint governance standards for implementation scope, testing, CI evidence, documentation, and closure.
 - GitHub Actions regression gating for both the complete application suite and focused Sprint 2 suite.
