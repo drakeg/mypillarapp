@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import re
+import sqlite3
 
 import tenant_auth
 import tenant_sites
@@ -142,12 +143,10 @@ def create_page(
                     timestamp,
                 ),
             )
-        except Exception as exc:
-            if 'UNIQUE constraint failed' in str(exc):
-                raise ValueError(
-                    'A page with that slug already exists for this site.'
-                ) from exc
-            raise
+        except sqlite3.IntegrityError as exc:
+            raise ValueError(
+                'A page with that slug already exists for this site.'
+            ) from exc
         conn.commit()
         row = _select_page(conn, site.id, int(cursor.lastrowid))
     return _page_from_row(row)
