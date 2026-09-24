@@ -100,6 +100,17 @@ Acceptance:
 
 Add site-scoped pages, slugs, publication status, ordering, and safe content fields.
 
+Acceptance:
+- each page belongs to exactly one site;
+- page slugs are unique within a site but may repeat across different sites;
+- page states are limited to draft, published, and archived;
+- page listings are ordered by explicit non-negative position with stable insertion-order tie breaking;
+- public-style listings can return published pages only;
+- archived pages remain stored but are hidden from default listings and cannot be modified;
+- archived sites cannot receive or modify pages;
+- reads and updates cannot cross site or organization boundaries;
+- page content is stored as data and is not interpreted as executable markup by this model layer.
+
 ### S3-T06 — Services and public forms
 
 Represent services and form configuration as site-owned content without breaking existing request intake.
