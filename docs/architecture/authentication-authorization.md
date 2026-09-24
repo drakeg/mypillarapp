@@ -14,9 +14,10 @@
 
 - separate bootstrap admin identity;
 - username, password hash, and session secret loaded from SSM;
-- separate signed admin cookie;
-- optional emergency token for controlled use;
-- no customer cookie grants admin access.
+- separate signed admin cookie carrying the explicit `platform_super_admin` scope;
+- optional emergency token for controlled platform recovery;
+- tenant lifecycle, managed sites, and platform settings require platform-super-admin authorization;
+- no customer or tenant-membership cookie grants platform access.
 
 ## Current Sprint 2 authorization model
 
@@ -39,5 +40,6 @@ Platform Role
 - authenticated tenant request context requires an active organization membership;
 - the effective tenant role is read from the membership, not the legacy user role;
 - revoked or missing memberships are denied;
-- the bootstrap platform admin remains a separate authentication boundary;
+- the bootstrap platform admin is an explicit `platform_super_admin` boundary;
+- tenant membership roles never imply platform administration;
 - tenant identifiers are derived from trusted server context, not blindly accepted from clients.
