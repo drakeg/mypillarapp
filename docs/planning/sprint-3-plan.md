@@ -60,6 +60,14 @@ Acceptance:
 
 Attach tenant domains to explicit site records while preserving current hostname resolution and preventing cross-tenant domain assignment.
 
+Acceptance:
+- existing domains migrate to each organization’s `main` site;
+- domain registration defaults to `main` but may target another non-archived site in the same organization;
+- a domain cannot be reassigned to a different organization;
+- a domain cannot target a site owned by another organization;
+- archived sites cannot receive new domains and do not resolve as public sites;
+- the existing `resolve_tenant(host)` contract remains compatible.
+
 ### S3-T03 — Site branding and theme model
 
 Move Site Builder visual configuration into site-scoped settings with validated theme/brand values.

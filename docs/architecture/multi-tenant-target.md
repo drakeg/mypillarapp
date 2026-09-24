@@ -18,6 +18,8 @@ erDiagram
 
 - platform/account routes use the product host;
 - public business routes resolve a site by normalized request hostname;
+- each active domain is associated with a site owned by the same organization;
+- tenant-level hostname resolution remains available for authentication/request compatibility;
 - tenant context is established before database queries;
 - every tenant-owned record carries an organization/site key;
 - tests verify cross-tenant access fails.
