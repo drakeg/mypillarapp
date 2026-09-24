@@ -346,15 +346,39 @@ def verify_email(token: str) -> tuple[bool, str, str]:
 
 def login_user(email: str, password: str, organization_slug: str = 'solutions') -> tuple[bool, str, str]:
     email = email.strip().lower()
+    organization_slug = organization_slug.strip().lower()
     with db() as conn:
-        user = conn.execute('''SELECT u.* FROM auth_users u JOIN auth_organizations o ON o.id = u.organization_id WHERE o.slug = ? AND lower(u.email) = lower(?)''', (organization_slug, email)).fetchone()
-        if not user or not verify_password(password, user['password_hash']):
+        candidates = conn.execute(
+            '''SELECT u.*
+               FROM auth_users u
+               JOIN auth_memberships m
+                 ON m.user_id = u.id
+                AND m.status = 'active'
+               JOIN auth_organizations o
+                 ON o.id = m.organization_id
+                AND o.status = 'active'
+               WHERE o.slug = ?
+                 AND lower(u.email) = lower(?)''',
+            (organization_slug, email),
+        ).fetchall()
+        user = next(
+            (
+                candidate
+                for candidate in candidates
+                if verify_password(password, candidate['password_hash'])
+            ),
+            None,
+        )
+        if not user:
             return False, 'Invalid email or password.', ''
         if not user['is_active']:
             return False, 'Verify your email before signing in.', ''
         session = _new_session(conn, int(user['id']))
         ts = now()
-        conn.execute('UPDATE auth_users SET last_login_at = ?, updated_at = ? WHERE id = ?', (ts, ts, user['id']))
+        conn.execute(
+            'UPDATE auth_users SET last_login_at = ?, updated_at = ? WHERE id = ?',
+            (ts, ts, user['id']),
+        )
         conn.commit()
         return True, '', session
 
@@ -382,6 +406,51 @@ def current_user(session_token: str) -> sqlite3.Row | None:
         ).fetchone()
         if row:
             conn.execute('UPDATE auth_sessions SET last_seen_at = ? WHERE token_hash = ?', (ts, _token_hash(session_token)))
+            conn.commit()
+        return row
+
+
+def current_user_for_tenant(
+    session_token: str,
+    organization_slug: str,
+) -> sqlite3.Row | None:
+    if not session_token:
+        return None
+    slug = (organization_slug or '').strip().lower()
+    if not slug:
+        return None
+
+    ts = now()
+    token_hash = _token_hash(session_token)
+    with db() as conn:
+        row = conn.execute(
+            '''SELECT u.id, u.created_at, u.updated_at, u.organization_id,
+                      u.email, u.first_name, u.last_name, u.password_hash,
+                      r.slug AS role, u.is_active, u.email_verified_at,
+                      u.last_login_at,
+                      o.slug AS organization_slug,
+                      o.name AS organization_name
+               FROM auth_sessions s
+               JOIN auth_users u ON u.id = s.user_id
+               JOIN auth_memberships m
+                 ON m.user_id = u.id
+                AND m.status = 'active'
+               JOIN auth_organizations o
+                 ON o.id = m.organization_id
+                AND o.status = 'active'
+               JOIN auth_roles r ON r.id = m.role_id
+               WHERE s.token_hash = ?
+                 AND s.expires_at >= ?
+                 AND u.is_active = 1
+                 AND o.slug = ?
+               LIMIT 1''',
+            (token_hash, ts, slug),
+        ).fetchone()
+        if row:
+            conn.execute(
+                'UPDATE auth_sessions SET last_seen_at = ? WHERE token_hash = ?',
+                (ts, token_hash),
+            )
             conn.commit()
         return row
 

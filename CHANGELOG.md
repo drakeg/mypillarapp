@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Tenant login and request-context authorization now require active organization memberships and project the effective tenant role from the membership.
 - Membership-based tenant authorization foundation with explicit roles, organization memberships, legacy-role migration, cross-tenant membership assignment, and revocation support.
 - Tenant administration dashboard with tenant status, domain, branding, user, conversation, and project-request summaries.
 

@@ -34,17 +34,17 @@ Support multiple businesses safely in one deployment while preserving the stable
 - S2-T01 through S2-T03: tenant persistence, host resolution, and request context;
 - S2-T04 through S2-T07: tenant-scoped conversations, public request flow, customer isolation, and auth links;
 - S2-T08 through S2-T10: tenant-scoped identities, organization management, and branding;
-- S2-T11 through S2-T13: onboarding, lifecycle management, and tenant administration dashboard.
+- S2-T11 through S2-T13: onboarding, lifecycle management, and tenant administration dashboard;
+- S2-T14: membership-based tenant authorization / RBAC foundation.
 
 ### Current step
 
-S2-T14 — Membership-based tenant authorization / RBAC foundation.
+S2-T15 — Membership-aware authorization enforcement.
 
-The current step introduces explicit roles and organization memberships, migrates existing per-user roles into memberships, supports one user holding memberships in multiple organizations, and preserves existing authentication behavior until a later targeted step switches authorization checks to memberships.
+The current step makes active organization membership the authorization source for tenant login and authenticated request context. Effective tenant roles are projected from memberships, revoked or missing memberships deny tenant access, and the separate bootstrap platform admin path remains unchanged.
 
 ### Sprint 2 remaining scope
 
-- membership-aware authorization enforcement;
 - platform super-admin boundaries;
 - completion of multi-tenant migration and regression evidence;
 - Sprint 2 release/rollback documentation and closure.
