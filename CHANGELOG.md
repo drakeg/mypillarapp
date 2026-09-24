@@ -53,6 +53,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Fixed
 
+- Removed the remaining request-handler uses of legacy tenant session resolution so conversation detail and profile refresh stay bound to the resolved tenant membership.
 - Closed every tenant-auth SQLite connection when its context exits.
 
 ### Current implementation baseline
