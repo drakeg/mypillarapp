@@ -48,3 +48,27 @@ The repository is authoritative for product scope, architecture, sprint requirem
 ## Scope rule
 
 Only the active Sprint step may change implementation. Unrelated cleanup, protected admin changes, and infrastructure changes are prohibited unless explicitly required by that step.
+
+
+## Local Docker Compose
+
+Copy the example environment file and choose the host port you want to publish:
+
+```bash
+cp .env.example .env
+```
+
+Example `.env`:
+
+```dotenv
+APP_BIND_ADDRESS=127.0.0.1
+APP_PORT=8080
+```
+
+Then start the stack:
+
+```bash
+docker compose up --build
+```
+
+The application still listens on port `8000` inside the container; `APP_PORT` controls only the host-side published port. With the example above, open `http://127.0.0.1:8080`.
