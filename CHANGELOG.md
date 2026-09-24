@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- GitHub Actions regression gating for both the complete application suite and focused Sprint 2 suite.
 - Sprint 2 multi-tenant regression evidence plan and focused `make test-sprint2` verification target.
 - Explicit platform super-admin session scope and route guards for tenant lifecycle, managed-site, and platform-settings administration.
 - Tenant login and request-context authorization now require active organization memberships and project the effective tenant role from the membership.
