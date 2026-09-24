@@ -37,18 +37,18 @@ Support multiple businesses safely in one deployment while preserving the stable
 - S2-T11 through S2-T13: onboarding, lifecycle management, and tenant administration dashboard;
 - S2-T14: membership-based tenant authorization / RBAC foundation;
 - S2-T15: membership-aware tenant authorization enforcement;
-- S2-T16: explicit platform super-admin authorization boundary.
+- S2-T16: explicit platform super-admin authorization boundary;
+- S2-T17: removal of remaining legacy tenant-session reads.
 
 ### Current step
 
-S2-T17 — Remove remaining legacy tenant-session reads.
+S2-T18 — Sprint 2 regression evidence.
 
-The current step completes request-handler migration to tenant-aware session resolution. Authenticated conversation detail and profile refresh now use the resolved tenant membership context instead of the legacy home-organization session view, with a regression guard preventing direct legacy session resolution from returning to server request handling.
+The current step defines the Sprint 2 acceptance matrix, adds a focused regression command, and records the evidence required to close the multi-tenant foundation without confusing CI success with production deployment verification.
 
 ### Sprint 2 remaining scope
 
-- Sprint 2 regression evidence and test-plan completion;
-- Sprint 2 release/rollback documentation and closure.
+- Sprint 2 release/rollback closure.
 
 ### Out of scope
 
