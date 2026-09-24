@@ -5,6 +5,7 @@ import json
 from urllib.parse import urlsplit
 
 import tenant_auth
+import tenant_sites
 
 
 @dataclass(frozen=True)
@@ -28,20 +29,33 @@ def normalize_host(value: str) -> str:
 
 
 def ensure_schema() -> None:
+    tenant_sites.ensure_schema()
     with tenant_auth.db() as conn:
         conn.execute('''
             CREATE TABLE IF NOT EXISTS tenant_domains (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 organization_id INTEGER NOT NULL,
+                site_id INTEGER,
                 domain TEXT NOT NULL UNIQUE COLLATE NOCASE,
                 is_primary INTEGER NOT NULL DEFAULT 0,
                 is_active INTEGER NOT NULL DEFAULT 1,
                 created_at INTEGER NOT NULL,
                 updated_at INTEGER NOT NULL,
                 FOREIGN KEY(organization_id) REFERENCES auth_organizations(id)
-                    ON DELETE CASCADE
+                    ON DELETE CASCADE,
+                FOREIGN KEY(site_id) REFERENCES site_builder_sites(id)
+                    ON DELETE RESTRICT
             )
         ''')
+        columns = {
+            row['name']
+            for row in conn.execute('PRAGMA table_info(tenant_domains)').fetchall()
+        }
+        if 'site_id' not in columns:
+            conn.execute(
+                'ALTER TABLE tenant_domains ADD COLUMN site_id INTEGER '
+                'REFERENCES site_builder_sites(id)'
+            )
         conn.execute('''
             CREATE TABLE IF NOT EXISTS tenant_settings (
                 organization_id INTEGER NOT NULL,
@@ -58,6 +72,7 @@ def ensure_schema() -> None:
             'ON tenant_domains(domain, is_active)'
         )
         _seed_primary_domain(conn)
+        _attach_unassigned_domains_to_main_sites(conn)
         conn.commit()
 
 
@@ -70,18 +85,45 @@ def _seed_primary_domain(conn) -> None:
     ).fetchone()
     if not organization:
         return
+    site = conn.execute(
+        "SELECT id FROM site_builder_sites "
+        "WHERE organization_id = ? AND slug = 'main' LIMIT 1",
+        (organization['id'],),
+    ).fetchone()
     timestamp = tenant_auth.now()
     conn.execute(
         '''INSERT INTO tenant_domains(
-               organization_id, domain, is_primary, is_active,
+               organization_id, site_id, domain, is_primary, is_active,
                created_at, updated_at
-           ) VALUES (?, ?, 1, 1, ?, ?)
+           ) VALUES (?, ?, ?, 1, 1, ?, ?)
            ON CONFLICT(domain) DO UPDATE SET
-               organization_id = excluded.organization_id,
+               site_id = COALESCE(tenant_domains.site_id, excluded.site_id),
                is_primary = 1,
                is_active = 1,
                updated_at = excluded.updated_at''',
-        (organization['id'], domain, timestamp, timestamp),
+        (
+            organization['id'],
+            site['id'] if site else None,
+            domain,
+            timestamp,
+            timestamp,
+        ),
+    )
+
+
+def _attach_unassigned_domains_to_main_sites(conn) -> None:
+    conn.execute(
+        '''
+        UPDATE tenant_domains
+        SET site_id = (
+            SELECT s.id
+            FROM site_builder_sites s
+            WHERE s.organization_id = tenant_domains.organization_id
+              AND s.slug = 'main'
+            LIMIT 1
+        )
+        WHERE site_id IS NULL
+        '''
     )
 
 
@@ -128,6 +170,7 @@ def register_domain(
     domain: str,
     *,
     primary: bool = False,
+    site_slug: str = 'main',
 ) -> bool:
     normalized = normalize_host(domain)
     if not normalized:
@@ -140,6 +183,24 @@ def register_domain(
         ).fetchone()
         if not organization:
             return False
+
+        site = conn.execute(
+            '''SELECT id
+               FROM site_builder_sites
+               WHERE organization_id = ? AND slug = ? AND status != 'archived'
+               LIMIT 1''',
+            (organization['id'], (site_slug or '').strip().lower()),
+        ).fetchone()
+        if not site:
+            return False
+
+        existing = conn.execute(
+            'SELECT organization_id FROM tenant_domains WHERE lower(domain) = lower(?)',
+            (normalized,),
+        ).fetchone()
+        if existing and int(existing['organization_id']) != int(organization['id']):
+            return False
+
         timestamp = tenant_auth.now()
         if primary:
             conn.execute(
@@ -149,16 +210,17 @@ def register_domain(
             )
         conn.execute(
             '''INSERT INTO tenant_domains(
-                   organization_id, domain, is_primary, is_active,
+                   organization_id, site_id, domain, is_primary, is_active,
                    created_at, updated_at
-               ) VALUES (?, ?, ?, 1, ?, ?)
+               ) VALUES (?, ?, ?, ?, 1, ?, ?)
                ON CONFLICT(domain) DO UPDATE SET
-                   organization_id = excluded.organization_id,
+                   site_id = excluded.site_id,
                    is_primary = excluded.is_primary,
                    is_active = 1,
                    updated_at = excluded.updated_at''',
             (
                 organization['id'],
+                site['id'],
                 normalized,
                 1 if primary else 0,
                 timestamp,
@@ -167,6 +229,39 @@ def register_domain(
         )
         conn.commit()
     return True
+
+
+def resolve_site(host: str) -> tenant_sites.Site | None:
+    domain = normalize_host(host)
+    if not domain:
+        return None
+    ensure_schema()
+    with tenant_auth.db() as conn:
+        row = conn.execute(
+            '''SELECT s.*, o.slug AS organization_slug
+               FROM tenant_domains d
+               JOIN auth_organizations o ON o.id = d.organization_id
+               JOIN site_builder_sites s ON s.id = d.site_id
+               WHERE lower(d.domain) = lower(?)
+                 AND d.is_active = 1
+                 AND o.status = 'active'
+                 AND s.status != 'archived'
+                 AND s.organization_id = d.organization_id
+               LIMIT 1''',
+            (domain,),
+        ).fetchone()
+    if not row:
+        return None
+    return tenant_sites.Site(
+        id=int(row['id']),
+        organization_id=int(row['organization_id']),
+        organization_slug=str(row['organization_slug']),
+        slug=str(row['slug']),
+        name=str(row['name']),
+        status=str(row['status']),
+        created_at=int(row['created_at']),
+        updated_at=int(row['updated_at']),
+    )
 
 
 def set_setting(organization_slug: str, key: str, value: object) -> bool:
