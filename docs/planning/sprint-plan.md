@@ -59,9 +59,9 @@ See [Sprint 3 Plan — Site Builder](sprint-3-plan.md).
 
 ### Current step
 
-S3-T03 — Site branding and theme model.
+S3-T04 — Navigation model.
 
-This step adds site-scoped branding/theme settings with compatibility inheritance from the existing Sprint 2 tenant-branding model. Public rendering remains unchanged until the later Site Builder rendering step.
+This step adds ordered, site-scoped navigation records with safe internal/external targets and strict tenant/site ownership. Admin UI and public rendering remain deferred to their later Sprint 3 steps.
 
 ### Protected baselines
 
