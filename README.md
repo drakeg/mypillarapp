@@ -4,7 +4,7 @@ Mad Mallard Platform is a low-cost, self-hosted business operating platform incu
 
 ## Current status
 
-Sprint 2 — Multi-Tenant Foundation is the active implementation baseline. Sprint 1 remains the protected compatibility baseline.
+Sprint 3 — Site Builder is the active planning/implementation baseline. Sprint 2 — Multi-Tenant Foundation is complete and protected alongside the Sprint 1 compatibility baseline.
 
 The current system includes:
 
@@ -22,7 +22,9 @@ The current system includes:
 - tenant domain resolution and request isolation;
 - tenant-scoped customer identity, conversations, and authentication links;
 - tenant organization, branding, onboarding, lifecycle, and administration services;
-- membership-based tenant RBAC foundation.
+- membership-based tenant RBAC and authorization;
+- a separate platform-super-admin boundary;
+- enforced Sprint 1 + Sprint 2 regression gates.
 
 ## Start here
 

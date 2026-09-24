@@ -23,47 +23,45 @@ Its public site, customer intake, messaging, customer authentication, dashboard/
 
 ## Sprint 2 status
 
-Sprint 2 — Multi-Tenant Foundation is the active implementation baseline.
+Sprint 2 — Multi-Tenant Foundation is complete as the protected multi-tenant baseline.
 
-### Objective
+### Objective achieved
 
-Support multiple businesses safely in one deployment while preserving the stable Sprint 1 customer and admin journeys.
+The platform now supports tenant/domain resolution, tenant-scoped customer data and authentication, organization memberships and roles, tenant lifecycle/administration, and a separate platform-super-admin boundary while preserving Sprint 1 compatibility.
 
-### Completed foundation
+### Completed implementation
 
 - S2-T01 through S2-T03: tenant persistence, host resolution, and request context;
 - S2-T04 through S2-T07: tenant-scoped conversations, public request flow, customer isolation, and auth links;
 - S2-T08 through S2-T10: tenant-scoped identities, organization management, and branding;
 - S2-T11 through S2-T13: onboarding, lifecycle management, and tenant administration dashboard;
-- S2-T14: membership-based tenant authorization / RBAC foundation;
-- S2-T15: membership-aware tenant authorization enforcement;
-- S2-T16: explicit platform super-admin authorization boundary;
-- S2-T17: removal of remaining legacy tenant-session reads.
+- S2-T14 through S2-T17: membership RBAC, membership-aware authorization, platform-super-admin boundary, and legacy session-read migration;
+- S2-T18 through S2-T19: regression evidence and enforced CI closure gates;
+- S2-T20: formal closure evidence and handoff to Sprint 3.
 
-### Current step
+### Closure evidence
 
-S2-T19 — Sprint 2 closure CI gate.
+See [Sprint 2 Closure Record](../09-release/sprint-2-closure.md).
 
-The current step makes the documented regression evidence enforceable in GitHub Actions by running both the complete application regression suite and the focused Sprint 2 suite in the smoke workflow before Sprint 2 can be closed.
+Repository/CI acceptance is complete. Production deployment/manual smoke evidence remains deployment-time work and must not be inferred from CI.
 
-### Sprint 2 remaining scope
+## Sprint 3 status
 
-- Sprint 2 release/rollback closure after the strengthened CI gate is green.
+Sprint 3 — Site Builder is the active planning/implementation Sprint.
 
-### Out of scope
+### Objective
 
-- site builder;
-- expanded CRM;
-- projects and tickets beyond current request flows;
-- creator tools;
-- AI;
-- billing.
+Allow each organization to configure a distinct public site while preserving the Sprint 1 customer/admin baseline and Sprint 2 tenant-isolation guarantees.
 
-### Exit criteria
+### Initial scope
 
-1. Tenant resolution and data isolation work end to end.
-2. Users can hold organization-specific roles without cross-tenant leakage.
-3. Platform-level administration remains separated from tenant authorization.
-4. Existing Sprint 1 customer/admin behavior does not regress.
-5. Sprint 2 regression plan passes.
-6. Sprint 3 does not begin until Sprint 2 is formally closed.
+Per the approved roadmap, Sprint 3 covers branding, themes, navigation, pages, services, forms, media, and domain configuration.
+
+### Entry rule
+
+Sprint 3 implementation begins with a locked Sprint 3 task/specification. No Site Builder implementation should bypass the existing coding, Sprint, testing, security, documentation, or regression standards.
+
+### Protected baselines
+
+- Sprint 1 customer/admin journeys remain protected.
+- Sprint 2 tenant resolution, tenant data isolation, membership authorization, and platform-admin separation remain protected.
