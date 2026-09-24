@@ -59,9 +59,9 @@ See [Sprint 3 Plan — Site Builder](sprint-3-plan.md).
 
 ### Current step
 
-S3-T04 — Navigation model.
+S3-T05 — Page/content model.
 
-This step adds ordered, site-scoped navigation records with safe internal/external targets and strict tenant/site ownership. Admin UI and public rendering remain deferred to their later Sprint 3 steps.
+This step adds site-scoped page records with validated slugs, draft/published/archived lifecycle, ordering, and tenant/site isolation. Rendering and editing UI remain deferred to later Sprint 3 steps.
 
 ### Protected baselines
 
