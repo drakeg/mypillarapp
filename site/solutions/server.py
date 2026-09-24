@@ -470,7 +470,7 @@ class Handler(BaseHTTPRequestHandler):
                 return redirect(self, '/login')
             return html_response(self, 200, tenant_auth.render_customer_history(user, 'project_request'))
         if path.startswith('/account/conversations/'):
-            user = tenant_auth.current_user(get_cookie(self, tenant_auth.SESSION_COOKIE))
+            user = context.user if context else None
             if not user:
                 return redirect(self, '/login')
             token = path.rstrip('/').split('/')[-1]
@@ -625,7 +625,10 @@ class Handler(BaseHTTPRequestHandler):
                 str(payload.get('last_name', '')),
                 str(payload.get('email', '')),
             )
-            refreshed = tenant_auth.current_user(session_token) or user
+            refreshed = tenant_auth.current_user_for_tenant(
+                session_token,
+                context.tenant.slug,
+            ) or user
             return html_response(self, 200 if ok else 400, tenant_auth.render_profile(refreshed, message, not ok))
 
         if parsed.path == '/admin/login':
