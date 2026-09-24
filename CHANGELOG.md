@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Ordered site-scoped navigation with visibility controls, safe internal/external targets, archive protection, and cross-tenant/site isolation.
 - Site-scoped branding and validated theme presets with inheritance from existing tenant branding and cross-site/cross-tenant isolation.
 - Domain-to-site association for Site Builder hosts, including migration of existing domains to each tenant’s main site and cross-tenant assignment protection.
 - Sprint 3 Site Builder plan and tenant-owned site persistence foundation with organization-scoped isolation and archival tests.
