@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Site-scoped page/content records with validated slugs, publication lifecycle, ordering, archival, and cross-site/cross-tenant isolation.
 - Ordered site-scoped navigation with visibility controls, safe internal/external targets, archive protection, and cross-tenant/site isolation.
 - Site-scoped branding and validated theme presets with inheritance from existing tenant branding and cross-site/cross-tenant isolation.
 - Domain-to-site association for Site Builder hosts, including migration of existing domains to each tenant’s main site and cross-tenant assignment protection.
