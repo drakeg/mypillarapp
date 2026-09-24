@@ -82,6 +82,52 @@ class Sprint2MembershipAuthorizationTests(unittest.TestCase):
         self.assertEqual(user['organization_slug'], 'solutions')
         self.assertEqual(user['role'], 'staff')
 
+    def test_cross_tenant_membership_allows_tenant_login(self):
+        user_id, _ = self.create_session()
+        self.assertTrue(
+            tenant_memberships.grant_membership(
+                user_id,
+                'personal-training',
+                'viewer',
+            )[0]
+        )
+        ok, message, token = tenant_auth.login_user(
+            'casey@example.test',
+            'VerySecurePass123!',
+            'personal-training',
+        )
+        self.assertTrue(ok, message)
+        self.assertTrue(token)
+        user = tenant_auth.current_user_for_tenant(
+            token,
+            'personal-training',
+        )
+        self.assertIsNotNone(user)
+        self.assertEqual(user['organization_slug'], 'personal-training')
+
+    def test_revoked_membership_blocks_tenant_login(self):
+        user_id, _ = self.create_session()
+        self.assertTrue(
+            tenant_memberships.grant_membership(
+                user_id,
+                'personal-training',
+                'viewer',
+            )[0]
+        )
+        self.assertTrue(
+            tenant_memberships.revoke_membership(
+                user_id,
+                'personal-training',
+            )[0]
+        )
+        ok, _, token = tenant_auth.login_user(
+            'casey@example.test',
+            'VerySecurePass123!',
+            'personal-training',
+        )
+        self.assertFalse(ok)
+        self.assertEqual(token, '')
+
     def test_cross_tenant_membership_authorizes_same_session(self):
         user_id, token = self.create_session()
         self.assertTrue(
