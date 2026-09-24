@@ -53,13 +53,15 @@ Sprint 3 — Site Builder is the active planning/implementation Sprint.
 
 Allow each organization to configure a distinct public site while preserving the Sprint 1 customer/admin baseline and Sprint 2 tenant-isolation guarantees.
 
-### Initial scope
+### Locked plan
 
-Per the approved roadmap, Sprint 3 covers branding, themes, navigation, pages, services, forms, media, and domain configuration.
+See [Sprint 3 Plan — Site Builder](sprint-3-plan.md).
 
-### Entry rule
+### Current step
 
-Sprint 3 implementation begins with a locked Sprint 3 task/specification. No Site Builder implementation should bypass the existing coding, Sprint, testing, security, documentation, or regression standards.
+S3-T01 — Tenant-owned site persistence.
+
+This step introduces the real organization-to-site persistence boundary while intentionally leaving the existing public rendering and managed-sites UI unchanged.
 
 ### Protected baselines
 
