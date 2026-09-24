@@ -35,17 +35,17 @@ Support multiple businesses safely in one deployment while preserving the stable
 - S2-T04 through S2-T07: tenant-scoped conversations, public request flow, customer isolation, and auth links;
 - S2-T08 through S2-T10: tenant-scoped identities, organization management, and branding;
 - S2-T11 through S2-T13: onboarding, lifecycle management, and tenant administration dashboard;
-- S2-T14: membership-based tenant authorization / RBAC foundation.
+- S2-T14: membership-based tenant authorization / RBAC foundation;
+- S2-T15: membership-aware tenant authorization enforcement.
 
 ### Current step
 
-S2-T15 — Membership-aware authorization enforcement.
+S2-T16 — Platform super-admin boundary.
 
-The current step makes active organization membership the authorization source for tenant login and authenticated request context. Effective tenant roles are projected from memberships, revoked or missing memberships deny tenant access, and the separate bootstrap platform admin path remains unchanged.
+The current step makes the bootstrap administrator an explicit platform-scoped identity. Tenant lifecycle, managed-site configuration, and platform settings require the platform super-admin scope, while organization membership roles remain tenant-scoped and cannot grant platform control.
 
 ### Sprint 2 remaining scope
 
-- platform super-admin boundaries;
 - completion of multi-tenant migration and regression evidence;
 - Sprint 2 release/rollback documentation and closure.
 
