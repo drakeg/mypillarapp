@@ -386,6 +386,51 @@ def current_user(session_token: str) -> sqlite3.Row | None:
         return row
 
 
+def current_user_for_tenant(
+    session_token: str,
+    organization_slug: str,
+) -> sqlite3.Row | None:
+    if not session_token:
+        return None
+    slug = (organization_slug or '').strip().lower()
+    if not slug:
+        return None
+
+    ts = now()
+    token_hash = _token_hash(session_token)
+    with db() as conn:
+        row = conn.execute(
+            '''SELECT u.id, u.created_at, u.updated_at, u.organization_id,
+                      u.email, u.first_name, u.last_name, u.password_hash,
+                      r.slug AS role, u.is_active, u.email_verified_at,
+                      u.last_login_at,
+                      o.slug AS organization_slug,
+                      o.name AS organization_name
+               FROM auth_sessions s
+               JOIN auth_users u ON u.id = s.user_id
+               JOIN auth_memberships m
+                 ON m.user_id = u.id
+                AND m.status = 'active'
+               JOIN auth_organizations o
+                 ON o.id = m.organization_id
+                AND o.status = 'active'
+               JOIN auth_roles r ON r.id = m.role_id
+               WHERE s.token_hash = ?
+                 AND s.expires_at >= ?
+                 AND u.is_active = 1
+                 AND o.slug = ?
+               LIMIT 1''',
+            (token_hash, ts, slug),
+        ).fetchone()
+        if row:
+            conn.execute(
+                'UPDATE auth_sessions SET last_seen_at = ? WHERE token_hash = ?',
+                (ts, token_hash),
+            )
+            conn.commit()
+        return row
+
+
 def request_password_reset(email: str, organization_slug: str = '', public_host: str = '') -> None:
     email = email.strip().lower()
     organization_slug = organization_slug.strip().lower()
