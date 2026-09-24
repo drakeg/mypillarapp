@@ -42,13 +42,13 @@ Support multiple businesses safely in one deployment while preserving the stable
 
 ### Current step
 
-S2-T18 — Sprint 2 regression evidence.
+S2-T19 — Sprint 2 closure CI gate.
 
-The current step defines the Sprint 2 acceptance matrix, adds a focused regression command, and records the evidence required to close the multi-tenant foundation without confusing CI success with production deployment verification.
+The current step makes the documented regression evidence enforceable in GitHub Actions by running both the complete application regression suite and the focused Sprint 2 suite in the smoke workflow before Sprint 2 can be closed.
 
 ### Sprint 2 remaining scope
 
-- Sprint 2 release/rollback closure.
+- Sprint 2 release/rollback closure after the strengthened CI gate is green.
 
 ### Out of scope
 

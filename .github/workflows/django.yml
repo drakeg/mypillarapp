@@ -14,3 +14,7 @@ jobs:
       - run: pip install -r app/requirements.txt
       - run: python manage.py check
         working-directory: app
+      - name: Run full regression suite
+        run: make test
+      - name: Run focused Sprint 2 regression suite
+        run: make test-sprint2

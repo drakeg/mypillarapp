@@ -52,8 +52,13 @@ class Sprint2ServerRequestContextTests(unittest.TestCase):
 
     def test_login_checks_authenticated_user_tenant(self):
         source = (SOLUTIONS / 'server.py').read_text(encoding='utf-8')
-        self.assertIn('request_context.user_belongs_to_tenant(user, context.tenant)', source)
+        self.assertIn('tenant_auth.current_user_for_tenant(', source)
+        self.assertIn('context.tenant.slug', source)
         self.assertIn('tenant_auth.logout_session(session)', source)
+        self.assertNotIn(
+            'request_context.user_belongs_to_tenant(user, context.tenant)',
+            source,
+        )
 
 
 if __name__ == '__main__':
