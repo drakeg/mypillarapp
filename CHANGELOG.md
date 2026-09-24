@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Domain-to-site association for Site Builder hosts, including migration of existing domains to each tenant’s main site and cross-tenant assignment protection.
 - Sprint 3 Site Builder plan and tenant-owned site persistence foundation with organization-scoped isolation and archival tests.
 - Formal Sprint 2 closure record with exact CI evidence, rollback baseline, deployment-status limitations, and Sprint 3 handoff.
 - Explicit reusable coding and Sprint governance standards for implementation scope, testing, CI evidence, documentation, and closure.
