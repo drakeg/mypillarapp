@@ -41,6 +41,7 @@ ADMIN_USERNAME = (os.environ.get('MADMALLARD_ADMIN_USERNAME') or ADMIN_CONFIG.ge
 ADMIN_PASSWORD_HASH = (os.environ.get('MADMALLARD_ADMIN_PASSWORD_HASH') or ADMIN_CONFIG.get('admin_password_hash') or '').strip()
 ADMIN_SESSION_SECRET = (os.environ.get('MADMALLARD_ADMIN_SESSION_SECRET') or ADMIN_CONFIG.get('admin_session_secret') or '').strip()
 PRIMARY_DOMAIN = os.environ.get('MADMALLARD_PRIMARY_DOMAIN', 'pillar.madmallards.com')
+PLATFORM_ADMIN_SCOPE = 'platform_super_admin'
 
 FORM_CONFIG = {
     'services': form_config.select_options('service'),
@@ -202,10 +203,14 @@ def verify_password(password: str, encoded_hash: str) -> bool:
     return False
 
 
-def make_admin_session(username: str) -> str:
+def make_admin_session(
+    username: str,
+    scope: str = PLATFORM_ADMIN_SCOPE,
+) -> str:
     secret = ADMIN_SESSION_SECRET or ADMIN_TOKEN
     payload = {
         'u': username,
+        'scope': scope,
         'exp': int(time.time()) + 60 * 60 * 24 * 30,
         'n': secrets.token_hex(8),
     }
@@ -214,7 +219,10 @@ def make_admin_session(username: str) -> str:
     return f'{encoded}.{sig}'
 
 
-def verify_admin_session(cookie_value: str) -> bool:
+def verify_admin_session(
+    cookie_value: str,
+    required_scope: str = '',
+) -> bool:
     secret = ADMIN_SESSION_SECRET or ADMIN_TOKEN
     if not secret or not cookie_value or '.' not in cookie_value:
         return False
@@ -230,6 +238,8 @@ def verify_admin_session(cookie_value: str) -> bool:
         return False
     if int(payload.get('exp', 0)) < int(time.time()):
         return False
+    if required_scope and payload.get('scope') != required_scope:
+        return False
     return True
 
 
@@ -244,11 +254,45 @@ def admin_is_authenticated(handler: BaseHTTPRequestHandler, query: dict | None =
     return bool(ADMIN_TOKEN and supplied and secrets.compare_digest(supplied, ADMIN_TOKEN))
 
 
+def platform_admin_is_authenticated(
+    handler: BaseHTTPRequestHandler,
+    query: dict | None = None,
+) -> bool:
+    if not admin_auth_configured():
+        return False
+    cookie_session = get_cookie(handler, 'mms_admin_session')
+    if verify_admin_session(cookie_session, PLATFORM_ADMIN_SCOPE):
+        return True
+    supplied = query.get('token', [''])[0] if query else ''
+    return bool(
+        ADMIN_TOKEN
+        and supplied
+        and secrets.compare_digest(supplied, ADMIN_TOKEN)
+    )
+
+
 def require_admin(handler: BaseHTTPRequestHandler, query: dict | None = None) -> bool:
     if not admin_auth_configured():
         html_response(handler, 403, '<h1>Admin disabled</h1><p>Set admin_username, admin_password_hash, and admin_session_secret in Terraform to enable the inbox.</p>')
         return False
     if not admin_is_authenticated(handler, query):
+        redirect(handler, '/admin/login')
+        return False
+    return True
+
+
+def require_platform_admin(
+    handler: BaseHTTPRequestHandler,
+    query: dict | None = None,
+) -> bool:
+    if not admin_auth_configured():
+        html_response(
+            handler,
+            403,
+            '<h1>Platform admin disabled</h1><p>Configure the bootstrap platform administrator to manage tenants and platform settings.</p>',
+        )
+        return False
+    if not platform_admin_is_authenticated(handler, query):
         redirect(handler, '/admin/login')
         return False
     return True
@@ -468,23 +512,23 @@ class Handler(BaseHTTPRequestHandler):
                 return
             return self.render_admin_crm(query)
         if path == '/admin/tenants':
-            if not require_admin(self, query):
+            if not require_platform_admin(self, query):
                 return
             return self.render_admin_tenants()
         if path == '/admin/sites/new':
-            if not require_admin(self, query):
+            if not require_platform_admin(self, query):
                 return
             return self.render_admin_site_form()
         if path.startswith('/admin/sites/') and path.endswith('/edit'):
-            if not require_admin(self, query):
+            if not require_platform_admin(self, query):
                 return
             return self.render_admin_site_form(path.strip('/').split('/')[2])
         if path == '/admin/sites':
-            if not require_admin(self, query):
+            if not require_platform_admin(self, query):
                 return
             return self.render_admin_sites()
         if path == '/admin/settings':
-            if not require_admin(self, query):
+            if not require_platform_admin(self, query):
                 return
             return self.render_admin_settings()
         if path.startswith('/admin/conversations/'):
@@ -616,7 +660,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.handle_admin_update(token, payload)
         if parsed.path == '/api/admin/tenants/status':
             query = parse_qs(parsed.query)
-            if not require_admin(self, query):
+            if not require_platform_admin(self, query):
                 return
             slug = str(payload.get('slug', '')).strip()
             action = str(payload.get('action', '')).strip()
@@ -627,12 +671,12 @@ class Handler(BaseHTTPRequestHandler):
             })
         if parsed.path == '/api/admin/sites/save':
             query = parse_qs(parsed.query)
-            if not require_admin(self, query):
+            if not require_platform_admin(self, query):
                 return
             return self.handle_admin_site_save(payload)
         if parsed.path == '/api/admin/sites/delete':
             query = parse_qs(parsed.query)
-            if not require_admin(self, query):
+            if not require_platform_admin(self, query):
                 return
             return self.handle_admin_site_delete(payload)
 
