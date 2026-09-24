@@ -1,5 +1,15 @@
 # Contributing
 
+## Required standards
+
+Before contributing, read:
+
+- [Coding Standards](docs/governance/coding-standards.md)
+- [Sprint Standards](docs/governance/sprint-standards.md)
+- [Development Workflow](docs/governance/development-workflow.md)
+- [Definition of Ready](docs/governance/definition-of-ready.md)
+- [Definition of Done](docs/governance/definition-of-done.md)
+
 ## Working agreement
 
 - `main` is the stable source of truth.
