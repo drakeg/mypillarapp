@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Membership-based Site Builder authorization with owner/admin full administration, staff content administration, viewer denial, and strict tenant isolation.
 - Site-scoped media references with safe source validation, lifecycle controls, and cross-site/cross-tenant isolation.
 - Docker Compose host binding and published port configuration through a documented `.env.example`.
 - Site-owned services and validated public-form definitions with publication lifecycle and cross-site/cross-tenant isolation.

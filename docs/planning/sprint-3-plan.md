@@ -145,6 +145,17 @@ Acceptance:
 
 Expose Site Builder management through organization membership roles while preserving the separate platform-super-admin boundary.
 
+Acceptance:
+- Site Builder authorization is derived only from active organization memberships;
+- owner and admin roles may administer site settings, domains, and all Site Builder content;
+- staff may administer branding, navigation, pages, services, forms, and media but not site lifecycle/settings or domains;
+- viewer has no Site Builder administration access;
+- authorization never crosses organization boundaries;
+- revoked memberships immediately lose Site Builder access;
+- archived sites cannot be administered;
+- unknown capabilities fail closed;
+- tenant Site Builder roles do not grant or imply platform-super-admin access.
+
 ### S3-T09 — Public site rendering
 
 Resolve and render public site configuration from the hostname/site model with a compatibility path for Mad Mallard Solutions.
