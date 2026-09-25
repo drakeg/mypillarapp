@@ -59,9 +59,9 @@ See [Sprint 3 Plan — Site Builder](sprint-3-plan.md).
 
 ### Current step
 
-S3-T06 — Services and public forms.
+S3-T07 — Media foundation.
 
-This step adds site-owned service and form-definition persistence while intentionally preserving the existing live request-intake configuration and endpoints.
+This step adds site-owned media metadata/reference persistence with safe source validation and no binary-storage or infrastructure changes.
 
 ### Protected baselines
 
