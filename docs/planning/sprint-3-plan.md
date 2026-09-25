@@ -129,6 +129,18 @@ Acceptance:
 
 Add site-scoped media metadata/references and safe ownership rules. Binary-storage changes require separate cost/deployment review.
 
+Acceptance:
+- media references belong to exactly one site;
+- slugs are unique within a site but may repeat across sites;
+- supported kinds are image, video, audio, and document;
+- sources are limited to root-relative paths or http/https URLs;
+- protocol-relative and unsupported-scheme sources are rejected;
+- optional MIME metadata uses type/subtype format;
+- media supports draft/published/archived lifecycle and published/kind filtering;
+- reads and updates cannot cross site or organization boundaries;
+- archived media and archived sites cannot be modified;
+- this step stores metadata/references only and introduces no binary upload/storage backend or paid infrastructure.
+
 ### S3-T08 — Tenant-authorized Site Builder administration
 
 Expose Site Builder management through organization membership roles while preserving the separate platform-super-admin boundary.
