@@ -59,9 +59,9 @@ See [Sprint 3 Plan — Site Builder](sprint-3-plan.md).
 
 ### Current step
 
-S3-T07 — Media foundation.
+S3-T08 — Tenant-authorized Site Builder administration.
 
-This step adds site-owned media metadata/reference persistence with safe source validation and no binary-storage or infrastructure changes.
+This step binds Site Builder administration to active organization memberships with least-privilege owner/admin/staff capabilities while preserving the separate platform-super-admin boundary.
 
 ### Protected baselines
 
