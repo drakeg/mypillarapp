@@ -59,9 +59,9 @@ See [Sprint 3 Plan — Site Builder](sprint-3-plan.md).
 
 ### Current step
 
-S3-T08 — Tenant-authorized Site Builder administration.
+S3-T09 — Public site rendering.
 
-This step binds Site Builder administration to active organization memberships with least-privilege owner/admin/staff capabilities while preserving the separate platform-super-admin boundary.
+This step resolves published Site Builder sites by hostname and renders published navigation, pages, services, and form definitions while preserving the existing Solutions static site as the compatibility fallback.
 
 ### Protected baselines
 
