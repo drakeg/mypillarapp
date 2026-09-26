@@ -172,7 +172,17 @@ Acceptance:
 
 ### S3-T10 — Existing Solutions migration
 
-Migrate the current Solutions public site into the Site Builder model without changing protected public/customer behavior.
+Stage the current Solutions public-site content in the Site Builder model without changing protected public/customer behavior.
+
+Acceptance:
+- an explicit, repeatable migration stages the current Solutions main homepage copy, platform copy, three services, project-request field definitions, navigation, and logo references;
+- seeded records remain draft and migration does not publish the Solutions main site;
+- existing Site Builder records and owner edits are not overwritten; repeat runs create no duplicates;
+- content is never seeded into other tenants;
+- the legacy project-request endpoint, async chat, account navigation, and customer/admin routes remain authoritative and unchanged;
+- the existing static Solutions homepage remains the HTTP compatibility path, even after seeding;
+- cutover to the Site Builder renderer requires separate parity tests for intake/chat/account behavior, manual smoke evidence, and an explicit release decision;
+- no binary uploads, new infrastructure, or recurring costs are introduced.
 
 ### S3-T11 — Sprint 3 regression and closure
 
