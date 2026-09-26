@@ -160,6 +160,16 @@ Acceptance:
 
 Resolve and render public site configuration from the hostname/site model with a compatibility path for Mad Mallard Solutions.
 
+Acceptance:
+- public rendering resolves the target Site Builder site from the request hostname;
+- only published sites render Site Builder content publicly;
+- published pages, services, forms, and visible navigation are rendered from the resolved site only;
+- draft and archived content is not exposed publicly;
+- page content is HTML-escaped rather than interpreted as executable markup;
+- unknown Site Builder paths return 404 instead of falling through to another tenant/site;
+- public form definitions render without enabling submission behavior until the later migration step;
+- the existing Solutions main site remains on the protected static compatibility path until S3-T10.
+
 ### S3-T10 — Existing Solutions migration
 
 Migrate the current Solutions public site into the Site Builder model without changing protected public/customer behavior.
