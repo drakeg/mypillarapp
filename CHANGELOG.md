@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Explicit idempotent Solutions content migration that stages draft Site Builder records without changing the existing live homepage, intake, chat, or account flows.
 - Hostname-aware public Site Builder rendering for published sites with escaped content, published-only resources, and protected Solutions compatibility fallback.
 - Membership-based Site Builder authorization with owner/admin full administration, staff content administration, viewer denial, and strict tenant isolation.
 - Site-scoped media references with safe source validation, lifecycle controls, and cross-site/cross-tenant isolation.
