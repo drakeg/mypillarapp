@@ -59,9 +59,9 @@ See [Sprint 3 Plan — Site Builder](sprint-3-plan.md).
 
 ### Current step
 
-S3-T09 — Public site rendering.
+S3-T10 — Existing Solutions migration.
 
-This step resolves published Site Builder sites by hostname and renders published navigation, pages, services, and form definitions while preserving the existing Solutions static site as the compatibility fallback.
+This step stages the existing Solutions homepage content as draft Site Builder records while keeping the static live homepage and its intake/chat/customer journeys unchanged. Cutover remains separately gated by parity and manual smoke evidence.
 
 ### Protected baselines
 
