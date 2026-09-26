@@ -19,6 +19,7 @@ import tenant_auth
 import request_context
 import tenant_conversations
 import tenant_admin_dashboard
+import public_site_renderer
 
 ROOT = Path('/app').resolve()
 INDEX = ROOT / 'index.html'
@@ -539,7 +540,16 @@ class Handler(BaseHTTPRequestHandler):
         file_path = self._resolve_path()
         if file_path and file_path.exists():
             if file_path == INDEX:
-                body = file_path.read_text(encoding='utf-8').replace('<!--ACCOUNT_NAV-->', public_account_nav(self))
+                rendered = public_site_renderer.render_public_path(
+                    context.host if context else '',
+                    path,
+                )
+                if rendered is not None:
+                    return html_response(self, rendered.status, rendered.body)
+                body = file_path.read_text(encoding='utf-8').replace(
+                    '<!--ACCOUNT_NAV-->',
+                    public_account_nav(self),
+                )
                 return html_response(self, 200, body)
             return self._send_file(file_path)
         self.send_error(404)

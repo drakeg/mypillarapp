@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Hostname-aware public Site Builder rendering for published sites with escaped content, published-only resources, and protected Solutions compatibility fallback.
 - Membership-based Site Builder authorization with owner/admin full administration, staff content administration, viewer denial, and strict tenant isolation.
 - Site-scoped media references with safe source validation, lifecycle controls, and cross-site/cross-tenant isolation.
 - Docker Compose host binding and published port configuration through a documented `.env.example`.
