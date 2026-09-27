@@ -59,9 +59,9 @@ See [Sprint 3 Plan — Site Builder](sprint-3-plan.md).
 
 ### Current step
 
-S3-T10 — Existing Solutions migration.
+S3-T11 — Sprint 3 regression and closure.
 
-This step stages the existing Solutions homepage content as draft Site Builder records while keeping the static live homepage and its intake/chat/customer journeys unchanged. Cutover remains separately gated by parity and manual smoke evidence.
+This step enforces the focused Sprint 3 CI gate and records the Site Builder acceptance, rollback, known-limitations, and deployment-evidence boundary required for formal closure.
 
 ### Protected baselines
 
