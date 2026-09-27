@@ -67,3 +67,10 @@ This step enforces the focused Sprint 3 CI gate and records the Site Builder acc
 
 - Sprint 1 customer/admin journeys remain protected.
 - Sprint 2 tenant resolution, tenant data isolation, membership authorization, and platform-admin separation remain protected.
+
+
+### Sprint 3 closure evidence
+
+See [Sprint 3 Closure Record](../09-release/sprint-3-closure.md).
+
+Repository/CI closure requires the S3-T11 pull request to merge with the full application, focused Sprint 2, focused Sprint 3, container, Compose, and Terraform gates green. Production/manual smoke evidence and the separate Solutions Site Builder cutover remain deployment-time work.
