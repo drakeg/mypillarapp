@@ -18,6 +18,8 @@ jobs:
         run: make test
       - name: Run focused Sprint 2 regression suite
         run: make test-sprint2
+      - name: Run focused Sprint 3 regression suite
+        run: make test-sprint3
       - name: Build application container
         run: docker build -t mypillarapp-ci app
       - name: Verify non-root container runtime home
