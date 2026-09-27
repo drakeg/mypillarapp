@@ -1,6 +1,6 @@
 # Sprint 3 Plan — Site Builder
 
-- Status: Closure candidate
+- Status: Closed
 - Epic: EP-006 — Site Builder
 - Protected baselines: Sprint 1 Single-Business MVP and Sprint 2 Multi-Tenant Foundation
 
