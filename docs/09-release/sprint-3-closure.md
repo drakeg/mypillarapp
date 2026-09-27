@@ -1,11 +1,12 @@
 # Sprint 3 Closure Record
 
 - Sprint: Sprint 3 — Site Builder
-- Status: Closure candidate; becomes closed at repository/CI level when S3-T11 is merged with required checks green
-- Implementation release candidate before closure gate: `d7b20269a1af7d2f8c7df8b05c0edbcec6083c18`
+- Status: Closed at repository/CI level
+- Sprint 3 repository/CI release candidate: `79549d38741a167198146c601c0fdb32b039dbdb`
+- Implementation candidate before closure gate: `d7b20269a1af7d2f8c7df8b05c0edbcec6083c18`
 - Pre-Sprint-3 rollback baseline: `ace0e41f62989272f005f896d0468f83d2e29b8b`
 - Sprint 3 implementation PRs: #30, #31, #32, #33, #35, #36, #38, #39, #40, #41
-- Closure gate: S3-T11
+- Closure gate: S3-T11 / PR #42
 
 ## Objective
 
@@ -46,7 +47,7 @@ S3-T11 strengthens the application workflow so it explicitly runs:
 6. non-root runtime-home verification;
 7. Docker Compose `.env` host-port resolution verification.
 
-The S3-T11 pull request must not be merged unless the updated `smoke` and Terraform `validate` checks are green. The merge commit then becomes the Sprint 3 repository/CI release candidate.
+PR #42 merged as `79549d38741a167198146c601c0fdb32b039dbdb` with the updated application `smoke` and Terraform `validate` checks both successful. That merge commit is the Sprint 3 repository/CI release candidate.
 
 ## Compatibility decision
 
@@ -125,6 +126,6 @@ The Site Builder public form renderer currently presents published form definiti
 
 ## Exit decision
 
-When S3-T11 merges with the explicit Sprint 3 CI gate green, Sprint 3 repository implementation and CI acceptance criteria are satisfied.
+Sprint 3 repository implementation and CI acceptance criteria are satisfied at `79549d38741a167198146c601c0fdb32b039dbdb`.
 
 Production deployment/manual smoke evidence and the separate Solutions cutover gate remain intentionally outstanding and must not be inferred from repository closure.
