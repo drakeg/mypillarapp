@@ -47,30 +47,38 @@ Repository/CI acceptance is complete. Production deployment/manual smoke evidenc
 
 ## Sprint 3 status
 
-Sprint 3 — Site Builder is the active planning/implementation Sprint.
+Sprint 3 — Site Builder is complete at the repository/CI level.
+
+### Objective achieved
+
+The platform now supports tenant-owned sites, domain-to-site resolution, site branding, navigation, pages, services/forms, media references, membership-authorized Site Builder administration, public rendering for published non-Solutions sites, and a non-destructive staged Solutions migration.
+
+### Closure evidence
+
+See [Sprint 3 Closure Record](../09-release/sprint-3-closure.md).
+
+Repository/CI acceptance is complete at `79549d38741a167198146c601c0fdb32b039dbdb`. Production/manual smoke evidence and the separate Solutions Site Builder cutover remain deployment-time work.
+
+## Sprint 4 status
+
+Sprint 4 — CRM is the active planning/implementation Sprint.
 
 ### Objective
 
-Allow each organization to configure a distinct public site while preserving the Sprint 1 customer/admin baseline and Sprint 2 tenant-isolation guarantees.
+Manage tenant-scoped contacts, companies, opportunities, tasks, notes/timelines, and quote foundations while preserving protected customer, messaging, Site Builder, and platform-admin behavior.
 
 ### Locked plan
 
-See [Sprint 3 Plan — Site Builder](sprint-3-plan.md).
+See [Sprint 4 Plan — CRM](sprint-4-plan.md).
 
 ### Current step
 
-S3-T11 — Sprint 3 regression and closure.
+S4-T01 — CRM tenant boundary and legacy audit.
 
-This step enforces the focused Sprint 3 CI gate and records the Site Builder acceptance, rollback, known-limitations, and deployment-evidence boundary required for formal closure.
+This step defines the canonical tenant-safe CRM persistence boundary and audits the existing `platform_core.py` CRM helpers before new CRM features build on them.
 
 ### Protected baselines
 
 - Sprint 1 customer/admin journeys remain protected.
-- Sprint 2 tenant resolution, tenant data isolation, membership authorization, and platform-admin separation remain protected.
-
-
-### Sprint 3 closure evidence
-
-See [Sprint 3 Closure Record](../09-release/sprint-3-closure.md).
-
-Repository/CI closure requires the S3-T11 pull request to merge with the full application, focused Sprint 2, focused Sprint 3, container, Compose, and Terraform gates green. Production/manual smoke evidence and the separate Solutions Site Builder cutover remain deployment-time work.
+- Sprint 2 tenant resolution, data isolation, membership authorization, and platform-admin separation remain protected.
+- Sprint 3 Site Builder/domain/rendering behavior remains protected.
