@@ -1,6 +1,6 @@
 # Sprint 3 Plan — Site Builder
 
-- Status: Active
+- Status: Closure candidate
 - Epic: EP-006 — Site Builder
 - Protected baselines: Sprint 1 Single-Business MVP and Sprint 2 Multi-Tenant Foundation
 
@@ -187,6 +187,14 @@ Acceptance:
 ### S3-T11 — Sprint 3 regression and closure
 
 Complete the Site Builder acceptance matrix, release/rollback evidence, and formal Sprint closure.
+
+Acceptance:
+- CI explicitly executes the focused `make test-sprint3` suite in addition to the full regression suite and protected Sprint 2 suite;
+- Sprint 3 implementation evidence identifies the exact release-candidate and pre-Sprint-3 rollback commits;
+- the closure record maps S3-T01 through S3-T10 to repository behavior and regression coverage;
+- deployment/manual-smoke evidence is clearly separated from repository/CI evidence;
+- the Solutions Site Builder content remains staged rather than cut over until its documented parity/manual-smoke gate is satisfied;
+- known limitations and deferred scope are recorded before Sprint 3 is marked closed.
 
 ## Testing requirements
 
