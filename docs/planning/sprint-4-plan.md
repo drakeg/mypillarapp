@@ -1,0 +1,94 @@
+# Sprint 4 Plan — CRM
+
+- Status: Active
+- Epic: CRM
+- Protected baselines: Sprint 1 Single-Business MVP, Sprint 2 Multi-Tenant Foundation, Sprint 3 Site Builder
+
+## Objective
+
+Provide a tenant-safe CRM for contacts, companies, opportunities, tasks, notes, timelines, and quote foundations without weakening the existing customer, messaging, Site Builder, or platform-admin boundaries.
+
+## Entry criteria
+
+- Sprint 3 is closed at repository/CI level.
+- Full application, Sprint 2, and Sprint 3 regression gates are green.
+- Tenant membership authorization and organization scoping are established.
+- Existing legacy CRM helpers in `platform_core.py` are treated as compatibility code pending migration, not as the target architecture.
+
+## Locked scope
+
+Sprint 4 covers:
+- tenant-owned companies;
+- tenant-owned contacts;
+- opportunities/pipeline;
+- CRM tasks;
+- notes and activity timeline;
+- relationships between contacts, companies, opportunities, and conversations where appropriate;
+- quote/estimate foundations only;
+- membership-authorized CRM administration;
+- migration/compatibility for existing CRM rows;
+- focused Sprint 4 regression and closure evidence.
+
+## Explicit non-scope
+
+- project/ticket/file delivery workflows;
+- invoicing/payment collection;
+- subscriptions/billing;
+- creator commerce;
+- AI assistance;
+- destructive CRM migration;
+- weakening Site Builder or platform-super-admin boundaries.
+
+## Task sequence
+
+### S4-T01 — CRM tenant boundary and legacy audit
+Define canonical CRM persistence around `auth_organizations`, audit existing `platform_core.py` CRM tables/helpers, and prevent new cross-tenant behavior.
+
+### S4-T02 — Companies
+Add tenant-owned company records with lifecycle, validation, search/listing, and isolation.
+
+### S4-T03 — Contacts
+Add tenant-owned contacts with optional company association, normalized email/phone fields, lifecycle, and isolation.
+
+### S4-T04 — Opportunities
+Add tenant-owned opportunities with stage, value, expected close metadata, company/contact links, and pipeline ordering.
+
+### S4-T05 — CRM tasks
+Add tenant-owned tasks linked optionally to contacts, companies, or opportunities with due date/status/priority.
+
+### S4-T06 — Notes and activity timeline
+Add append-oriented notes/activity records with actor, timestamp, related CRM entity, and tenant scoping.
+
+### S4-T07 — Conversation/intake linkage
+Allow existing tenant conversations/project requests to be linked to CRM records without duplicating or moving protected conversation data.
+
+### S4-T08 — Quote foundations
+Add quote/estimate draft records and line-item foundations without payment or invoice behavior.
+
+### S4-T09 — CRM authorization and administration
+Expose CRM management through active organization memberships, preserving platform-super-admin separation and least privilege.
+
+### S4-T10 — Legacy CRM migration/compatibility
+Migrate or adapt existing `platform_core.py` CRM rows non-destructively into the canonical tenant-safe model.
+
+### S4-T11 — Sprint 4 regression and closure
+Enforce `make test-sprint4`, record acceptance/rollback evidence, and formally close Sprint 4.
+
+## Testing requirements
+
+- `make test` remains the complete application regression gate.
+- `make test-sprint2` and `make test-sprint3` remain protected focused gates.
+- Sprint 4 adds `make test-sprint4`.
+- Every tenant-owned CRM mutation/read path requires positive and negative cross-tenant tests.
+- Migration tests must prove idempotence and non-destructive compatibility.
+- CI success is not production/manual-smoke evidence.
+
+## Exit criteria
+
+1. Companies, contacts, opportunities, tasks, notes/timeline, and quote foundations are tenant-scoped.
+2. CRM relationships cannot cross organization boundaries.
+3. Active membership roles control CRM administration without granting platform administration.
+4. Existing intake/conversation behavior remains protected.
+5. Legacy CRM compatibility is documented and non-destructive.
+6. Full protected regression evidence is green.
+7. Release/rollback evidence and known limitations are recorded.
