@@ -48,8 +48,8 @@ class Sprint4CrmTenantBoundaryTests(unittest.TestCase):
                 "INSERT INTO crm_v2_companies(id, organization_id) "
                 "SELECT 1, id FROM auth_organizations WHERE slug='solutions'"
             )
-            solutions_id = crm_tenancy.organization_id('solutions')
-            other_id = crm_tenancy.organization_id('adventures')
+            solutions_id = int(conn.execute("SELECT id FROM auth_organizations WHERE slug='solutions'").fetchone()[0])
+            other_id = int(conn.execute("SELECT id FROM auth_organizations WHERE slug='adventures'").fetchone()[0])
             crm_tenancy.ensure_same_organization(
                 conn, organization_id=solutions_id,
                 table='crm_v2_companies', record_id=1,
