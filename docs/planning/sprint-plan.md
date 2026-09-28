@@ -75,7 +75,7 @@ See [Sprint 4 Plan — CRM](sprint-4-plan.md).
 
 S4-T01 — CRM tenant boundary and legacy audit.
 
-This step defines the canonical tenant-safe CRM persistence boundary and audits the existing `platform_core.py` CRM helpers before new CRM features build on them.
+This step establishes fail-closed canonical organization-ID/relationship checks and a read-only audit of the legacy `platform_core.py` CRM tables before new CRM features build on them.
 
 ### Protected baselines
 

@@ -44,6 +44,14 @@ Sprint 4 covers:
 ### S4-T01 — CRM tenant boundary and legacy audit
 Define canonical CRM persistence around `auth_organizations`, audit existing `platform_core.py` CRM tables/helpers, and prevent new cross-tenant behavior.
 
+Acceptance:
+- new CRM ownership uses canonical active organization IDs, not unconstrained text slugs;
+- relationship lookups fail closed on missing or foreign records and unrecognized table names;
+- a read-only legacy audit detects unknown organizations, cross-tenant associations, and orphan links;
+- legacy CRM data, helpers, and the conversation-derived admin CRM view remain untouched;
+- positive/negative tests cover tenant boundaries and the legacy audit;
+- audit findings and the non-destructive migration contract are documented in [S4-T01 Legacy CRM Audit](../09-release/sprint-4-crm-legacy-audit.md).
+
 ### S4-T02 — Companies
 Add tenant-owned company records with lifecycle, validation, search/listing, and isolation.
 
