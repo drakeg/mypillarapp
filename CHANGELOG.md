@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Tenant-owned canonical CRM companies with validated lifecycle, URL validation, organization-scoped search, archival, and cross-tenant isolation.
 - Canonical CRM tenant-ownership helpers and read-only legacy relationship audit with Sprint 4 isolation regression tests.
 - Formal Sprint 3 repository/CI closure at merge commit `79549d38741a167198146c601c0fdb32b039dbdb` and locked Sprint 4 tenant-safe CRM plan.
 - Explicit CI gating for the focused Sprint 3 Site Builder regression suite and formal Sprint 3 closure evidence.
