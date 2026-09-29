@@ -73,9 +73,9 @@ See [Sprint 4 Plan — CRM](sprint-4-plan.md).
 
 ### Current step
 
-S4-T01 — CRM tenant boundary and legacy audit.
+S4-T02 — Companies.
 
-This step establishes fail-closed canonical organization-ID/relationship checks and a read-only audit of the legacy `platform_core.py` CRM tables before new CRM features build on them.
+This step adds canonical tenant-owned company persistence with validation, lifecycle, search, and strict organization isolation while leaving legacy CRM rows untouched.
 
 ### Protected baselines
 
