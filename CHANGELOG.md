@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Tenant-owned CRM opportunities with same-tenant company/contact links, validated pipeline stages, integer-cent values, close dates, ordering, and archival.
 - Tenant-owned canonical CRM contacts with normalized email/phone fields, same-tenant company relationships, scoped search, archival, and cross-tenant isolation.
 - Tenant-owned canonical CRM companies with validated lifecycle, URL validation, organization-scoped search, archival, and cross-tenant isolation.
 - Canonical CRM tenant-ownership helpers and read-only legacy relationship audit with Sprint 4 isolation regression tests.
