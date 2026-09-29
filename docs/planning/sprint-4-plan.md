@@ -55,6 +55,17 @@ Acceptance:
 ### S4-T02 — Companies
 Add tenant-owned company records with lifecycle, validation, search/listing, and isolation.
 
+Acceptance:
+- canonical company rows store `organization_id` referencing the tenant organization;
+- company reads, updates, listings, search, filters, and archival are organization-scoped;
+- company status is limited to prospect, customer, vendor, or archived;
+- names are required and bounded; optional websites are limited to http/https;
+- search matches name, website, industry, and notes while treating SQL wildcard characters literally;
+- archived companies remain stored, are hidden from default listings, and cannot be modified;
+- inactive/suspended organizations cannot use the canonical company model;
+- identical company names may exist in different tenants without leakage;
+- the legacy `crm_companies` table remains untouched for S4-T10 migration.
+
 ### S4-T03 — Contacts
 Add tenant-owned contacts with optional company association, normalized email/phone fields, lifecycle, and isolation.
 
