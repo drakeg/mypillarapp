@@ -84,6 +84,18 @@ Acceptance:
 ### S4-T04 — Opportunities
 Add tenant-owned opportunities with stage, value, expected close metadata, company/contact links, and pipeline ordering.
 
+Acceptance:
+- canonical opportunities store `organization_id` and optional same-tenant company/contact links;
+- foreign company/contact links and foreign relationship filters fail closed;
+- when both company and a company-bound contact are supplied, the relationship must be consistent;
+- stages are limited to new, qualified, proposal, negotiation, won, or lost;
+- monetary values are non-negative integer cents with validated three-letter currency codes;
+- expected close dates use ISO `YYYY-MM-DD`;
+- explicit non-negative pipeline position provides stable ordering within a stage;
+- opportunity reads, filters, updates, and archival are organization-scoped;
+- archived opportunities remain stored, are hidden by default, and cannot be modified;
+- inactive/suspended organizations cannot use the canonical opportunity model.
+
 ### S4-T05 — CRM tasks
 Add tenant-owned tasks linked optionally to contacts, companies, or opportunities with due date/status/priority.
 
