@@ -73,9 +73,9 @@ See [Sprint 4 Plan — CRM](sprint-4-plan.md).
 
 ### Current step
 
-S4-T03 — Contacts.
+S4-T04 — Opportunities.
 
-This step adds canonical tenant-owned contacts with normalized identity fields, optional same-tenant company linkage, lifecycle/search support, and strict organization isolation.
+This step adds tenant-owned pipeline opportunities with validated stages, monetary/close metadata, ordered pipeline placement, and strict same-tenant company/contact relationships.
 
 ### Protected baselines
 
