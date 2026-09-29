@@ -73,9 +73,9 @@ See [Sprint 4 Plan — CRM](sprint-4-plan.md).
 
 ### Current step
 
-S4-T02 — Companies.
+S4-T03 — Contacts.
 
-This step adds canonical tenant-owned company persistence with validation, lifecycle, search, and strict organization isolation while leaving legacy CRM rows untouched.
+This step adds canonical tenant-owned contacts with normalized identity fields, optional same-tenant company linkage, lifecycle/search support, and strict organization isolation.
 
 ### Protected baselines
 

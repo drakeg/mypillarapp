@@ -69,6 +69,18 @@ Acceptance:
 ### S4-T03 — Contacts
 Add tenant-owned contacts with optional company association, normalized email/phone fields, lifecycle, and isolation.
 
+Acceptance:
+- canonical contact rows store `organization_id` and optional canonical company linkage;
+- company relationships must belong to the same organization and foreign-company links fail closed;
+- contact reads, updates, listings, search, filters, and archival are organization-scoped;
+- names are required/bounded, emails are normalized lowercase, and phones normalize to an optional leading plus with 7–15 digits;
+- contact lifecycle is limited to lead, prospect, customer, vendor, or archived;
+- archived contacts remain stored, are hidden from default listings, and cannot be modified;
+- search covers contact identity/details and company name while treating SQL wildcards literally;
+- company filtering cannot be used to probe another tenant;
+- inactive/suspended organizations cannot use the canonical contact model;
+- the legacy `crm_contacts` table remains untouched for S4-T10 migration.
+
 ### S4-T04 — Opportunities
 Add tenant-owned opportunities with stage, value, expected close metadata, company/contact links, and pipeline ordering.
 
