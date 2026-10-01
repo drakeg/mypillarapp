@@ -73,9 +73,9 @@ See [Sprint 4 Plan — CRM](sprint-4-plan.md).
 
 ### Current step
 
-S4-T04 — Opportunities.
+S4-T05 — CRM tasks.
 
-This step adds tenant-owned pipeline opportunities with validated stages, monetary/close metadata, ordered pipeline placement, and strict same-tenant company/contact relationships.
+This step adds tenant-owned CRM work items with due dates, status/priority, and strict relationship consistency across companies, contacts, and opportunities.
 
 ### Protected baselines
 

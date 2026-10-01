@@ -99,6 +99,17 @@ Acceptance:
 ### S4-T05 — CRM tasks
 Add tenant-owned tasks linked optionally to contacts, companies, or opportunities with due date/status/priority.
 
+Acceptance:
+- canonical CRM tasks store `organization_id` with optional same-tenant company, contact, and opportunity links;
+- foreign relationship links and foreign relationship filters fail closed;
+- when linked records carry their own relationships, inconsistent company/contact/opportunity combinations are rejected;
+- task statuses are limited to open, in_progress, done, canceled, or archived;
+- priorities are limited to low, normal, high, or urgent;
+- optional due dates use ISO `YYYY-MM-DD` and dated tasks sort before undated tasks;
+- task reads, filters, updates, and archival are organization-scoped;
+- archived tasks remain stored, are hidden by default, and cannot be modified;
+- inactive/suspended organizations cannot use the canonical CRM task model.
+
 ### S4-T06 — Notes and activity timeline
 Add append-oriented notes/activity records with actor, timestamp, related CRM entity, and tenant scoping.
 
