@@ -73,9 +73,9 @@ See [Sprint 4 Plan — CRM](sprint-4-plan.md).
 
 ### Current step
 
-S4-T06 — Notes and activity timeline.
+S4-T07 — Conversation/intake linkage.
 
-This step adds append-only tenant-scoped CRM notes/activity with actor/timestamp metadata and safe links to companies, contacts, opportunities, and tasks.
+This step links existing tenant conversations and project requests to canonical CRM records without moving, duplicating, or re-owning protected conversation data.
 
 ### Protected baselines
 
