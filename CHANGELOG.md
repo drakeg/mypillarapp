@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Append-only tenant-scoped CRM notes/activity timeline with safe entity links, filtered newest-first reads, and cross-tenant protection.
 - Tenant-owned CRM tasks with due dates, status/priority lifecycle, consistent company/contact/opportunity relationships, scoped filtering, and archival.
 - Tenant-owned CRM opportunities with same-tenant company/contact links, validated pipeline stages, integer-cent values, close dates, ordering, and archival.
 - Tenant-owned canonical CRM contacts with normalized email/phone fields, same-tenant company relationships, scoped search, archival, and cross-tenant isolation.

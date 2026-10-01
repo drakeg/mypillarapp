@@ -113,6 +113,16 @@ Acceptance:
 ### S4-T06 — Notes and activity timeline
 Add append-oriented notes/activity records with actor, timestamp, related CRM entity, and tenant scoping.
 
+Acceptance:
+- activity rows are tenant-owned and append-only through the model API;
+- supported kinds are note, status, email, call, meeting, and system;
+- actor and body are required and bounded;
+- optional company, contact, opportunity, and task links must belong to the same organization;
+- foreign relationship filters fail closed;
+- timeline reads are organization-scoped, newest-first, and support entity/kind filtering;
+- timeline limits are bounded to prevent unbounded reads;
+- inactive/suspended organizations cannot create or read CRM activities.
+
 ### S4-T07 — Conversation/intake linkage
 Allow existing tenant conversations/project requests to be linked to CRM records without duplicating or moving protected conversation data.
 

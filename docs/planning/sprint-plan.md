@@ -73,9 +73,9 @@ See [Sprint 4 Plan — CRM](sprint-4-plan.md).
 
 ### Current step
 
-S4-T05 — CRM tasks.
+S4-T06 — Notes and activity timeline.
 
-This step adds tenant-owned CRM work items with due dates, status/priority, and strict relationship consistency across companies, contacts, and opportunities.
+This step adds append-only tenant-scoped CRM notes/activity with actor/timestamp metadata and safe links to companies, contacts, opportunities, and tasks.
 
 ### Protected baselines
 
