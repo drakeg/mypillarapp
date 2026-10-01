@@ -51,7 +51,7 @@ def ensure_same_organization(
     Only explicitly registered canonical CRM tables are permitted; callers
     must not pass arbitrary SQL table identifiers.
     """
-    allowed = frozenset({'crm_v2_companies', 'crm_v2_contacts', 'crm_v2_opportunities'})
+    allowed = frozenset({'crm_v2_companies', 'crm_v2_contacts', 'crm_v2_opportunities', 'crm_v2_tasks'})
     if table not in allowed:
         raise ValueError('Unsupported CRM relationship target.')
     if record_id is None:
