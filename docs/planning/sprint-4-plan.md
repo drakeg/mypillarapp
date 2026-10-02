@@ -126,6 +126,17 @@ Acceptance:
 ### S4-T07 — Conversation/intake linkage
 Allow existing tenant conversations/project requests to be linked to CRM records without duplicating or moving protected conversation data.
 
+Acceptance:
+- links reference the existing tenant conversation token and preserve the conversation kind;
+- a conversation may link to optional same-tenant company, contact, and opportunity records;
+- foreign conversation tokens and foreign CRM relationships fail closed;
+- company/contact/opportunity relationship combinations must remain internally consistent;
+- re-linking the same tenant conversation updates one link record rather than creating duplicates;
+- listing and relationship filters are organization-scoped;
+- unlinking removes only the CRM reference and never deletes or mutates the underlying conversation/messages;
+- existing project-request/chat endpoints and tenant conversation ownership remain authoritative and unchanged;
+- inactive/suspended organizations cannot manage CRM conversation links.
+
 ### S4-T08 — Quote foundations
 Add quote/estimate draft records and line-item foundations without payment or invoice behavior.
 
