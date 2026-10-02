@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import sqlite3
 
-import crm_contacts
+import crm_opportunities
 import crm_tenancy
 import tenant_auth
 import tenant_conversations
@@ -24,7 +24,7 @@ class ConversationLink:
 
 
 def ensure_schema() -> None:
-    crm_contacts.ensure_schema()
+    crm_opportunities.ensure_schema()
     with tenant_auth.db() as conn:
         conn.execute(
             '''
