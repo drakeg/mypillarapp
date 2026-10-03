@@ -73,9 +73,9 @@ See [Sprint 4 Plan — CRM](sprint-4-plan.md).
 
 ### Current step
 
-S4-T07 — Conversation/intake linkage.
+S4-T08 — Quote foundations.
 
-This step links existing tenant conversations and project requests to canonical CRM records without moving, duplicating, or re-owning protected conversation data.
+This step adds tenant-owned quote/estimate drafts and ordered line items with deterministic integer-cent totals, without introducing invoicing, payments, or billing behavior.
 
 ### Protected baselines
 
