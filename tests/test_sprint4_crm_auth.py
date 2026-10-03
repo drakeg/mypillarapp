@@ -117,6 +117,16 @@ class Sprint4CrmAuthorizationTests(unittest.TestCase):
         with self.assertRaises(PermissionError):
             crm_admin.summary_for(self.user_id, 'solutions')
 
+    def test_suspended_organization_loses_crm_access(self):
+        self.set_role('admin')
+        with tenant_auth.db() as conn:
+            conn.execute(
+                "UPDATE auth_organizations SET status='suspended' WHERE slug='solutions'"
+            )
+            conn.commit()
+        self.assertIsNone(crm_auth.access_for(self.user_id, 'solutions'))
+        self.assertFalse(crm_auth.can(self.user_id, 'solutions', 'view'))
+
     def test_unknown_capability_fails_closed(self):
         self.set_role('owner')
         self.assertFalse(crm_auth.can(self.user_id, 'solutions', 'billing'))
