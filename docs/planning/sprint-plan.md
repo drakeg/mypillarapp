@@ -73,9 +73,9 @@ See [Sprint 4 Plan — CRM](sprint-4-plan.md).
 
 ### Current step
 
-S4-T10 — Legacy CRM migration/compatibility.
+S4-T11 — Sprint 4 regression and closure.
 
-This step adds an explicit, audit-gated, non-destructive and idempotent migration from legacy platform CRM companies/contacts/leads into canonical tenant-safe CRM records.
+This step enforces the focused Sprint 4 CI gate and records repository/CI acceptance, rollback boundaries, compatibility decisions, and deployment limitations.
 
 ### Protected baselines
 
