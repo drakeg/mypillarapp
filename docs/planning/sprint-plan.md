@@ -73,9 +73,9 @@ See [Sprint 4 Plan — CRM](sprint-4-plan.md).
 
 ### Current step
 
-S4-T08 — Quote foundations.
+S4-T09 — CRM authorization and administration.
 
-This step adds tenant-owned quote/estimate drafts and ordered line items with deterministic integer-cent totals, without introducing invoicing, payments, or billing behavior.
+This step adds active-membership CRM authorization and an administration service facade with owner/admin/staff/viewer least-privilege boundaries, separate from platform administration.
 
 ### Protected baselines
 
