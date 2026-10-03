@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Audit-gated, non-destructive legacy CRM migration with persistent legacy-to-canonical mappings, idempotent reruns, relationship preservation, and legacy lead compatibility notes.
 - Membership-based CRM authorization and administration facade with read-only viewers, staff record management, owner/admin administration, inactive-tenant denial, and platform-admin separation.
 - Tenant-owned CRM quote/estimate foundations with same-tenant CRM relationships, ordered line items, integer-cent totals, validation, and non-billing lifecycle.
 - Non-destructive tenant-safe links from existing conversations/project requests to canonical CRM companies, contacts, and opportunities.
