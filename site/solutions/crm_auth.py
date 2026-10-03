@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import crm_tenancy
 import tenant_memberships
 
 
@@ -32,7 +33,17 @@ class CrmAccess:
     can_administer: bool
 
 
+def _organization_is_active(organization_slug: str) -> bool:
+    try:
+        crm_tenancy.organization_id(organization_slug)
+        return True
+    except ValueError:
+        return False
+
+
 def access_for(user_id: int, organization_slug: str) -> CrmAccess | None:
+    if not _organization_is_active(organization_slug):
+        return None
     membership = tenant_memberships.get_membership(user_id, organization_slug)
     if not membership or membership.status != 'active':
         return None
@@ -50,6 +61,8 @@ def access_for(user_id: int, organization_slug: str) -> CrmAccess | None:
 
 def can(user_id: int, organization_slug: str, capability: str) -> bool:
     allowed = CAPABILITIES.get((capability or '').strip().lower())
+    if not _organization_is_active(organization_slug):
+        return False
     if not allowed:
         return False
     membership = tenant_memberships.get_membership(user_id, organization_slug)
