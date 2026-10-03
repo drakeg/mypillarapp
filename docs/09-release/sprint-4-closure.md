@@ -1,11 +1,12 @@
 # Sprint 4 Closure Record
 
 - Sprint: Sprint 4 — CRM
-- Status: Closure gate in progress
+- Status: Closed at repository/CI level
+- Sprint 4 repository/CI release candidate: `9f18418dcde6dcb4b1f6c40e1d071baeed6515c3`
 - Sprint 4 implementation candidate before closure gate: `179ceac3c45d0a418aa732e23511fcff79267144`
 - Pre-Sprint-4 rollback baseline: `79549d38741a167198146c601c0fdb32b039dbdb`
 - Sprint 4 implementation PRs: #44, #45, #46, #47, #48, #49, #50, #51, #52, #53
-- Closure gate: S4-T11 / PR pending
+- Closure gate: S4-T11 / PR #54
 
 ## Objective
 
@@ -47,7 +48,12 @@ S4-T11 strengthens the application workflow so it explicitly runs:
 7. non-root runtime-home verification;
 8. Docker Compose `.env` host-port resolution verification.
 
-The exact final Sprint 4 repository/CI release-candidate merge SHA and its closure-run IDs must be recorded after S4-T11 merges. CI success must not be represented as production verification.
+`9f18418dcde6dcb4b1f6c40e1d071baeed6515c3` is the final Sprint 4 repository/CI release candidate. Its closure checks passed:
+
+- application `smoke`: success — Actions run `37093520599`, job `111118672670`;
+- Terraform `validate`: success — Actions run `37093520541`, job `111118672538`.
+
+CI success must not be represented as production verification.
 
 ## Compatibility decisions
 
@@ -105,4 +111,6 @@ The following remain outside Sprint 4:
 
 ## Exit decision
 
-Sprint 4 implementation scope is complete at the pre-closure implementation candidate. Final repository/CI closure requires the S4-T11 merge commit itself to pass the updated `smoke` workflow and Terraform `validate`; those exact final identifiers will be recorded immediately after merge.
+Sprint 4 repository implementation and CI acceptance criteria are satisfied at `9f18418dcde6dcb4b1f6c40e1d071baeed6515c3`.
+
+Production deployment/manual smoke evidence remains intentionally outstanding and must not be inferred from repository closure.
