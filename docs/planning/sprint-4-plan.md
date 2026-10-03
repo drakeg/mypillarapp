@@ -170,6 +170,17 @@ Acceptance:
 ### S4-T10 — Legacy CRM migration/compatibility
 Migrate or adapt existing `platform_core.py` CRM rows non-destructively into the canonical tenant-safe model.
 
+Acceptance:
+- the S4-T01 legacy audit is a hard precondition and any unknown organization, orphan relationship, or cross-tenant relationship blocks migration before canonical rows are copied;
+- migration is additive and never deletes or rewrites legacy company, contact, or lead rows;
+- legacy companies map to canonical companies and legacy contacts preserve same-tenant company relationships;
+- legacy leads map to canonical opportunities with explicit stage mapping;
+- free-form legacy lead value/source/priority data is preserved in migration notes rather than guessed into structured monetary fields;
+- legacy-to-canonical IDs are recorded in a dedicated mapping table so repeated runs are idempotent;
+- canonical owner edits are never overwritten by subsequent migration runs;
+- inactive/suspended legacy organizations cannot be migration targets;
+- migration remains an explicit operation and does not auto-run during application startup.
+
 ### S4-T11 — Sprint 4 regression and closure
 Enforce `make test-sprint4`, record acceptance/rollback evidence, and formally close Sprint 4.
 

@@ -73,9 +73,9 @@ See [Sprint 4 Plan — CRM](sprint-4-plan.md).
 
 ### Current step
 
-S4-T09 — CRM authorization and administration.
+S4-T10 — Legacy CRM migration/compatibility.
 
-This step adds active-membership CRM authorization and an administration service facade with owner/admin/staff/viewer least-privilege boundaries, separate from platform administration.
+This step adds an explicit, audit-gated, non-destructive and idempotent migration from legacy platform CRM companies/contacts/leads into canonical tenant-safe CRM records.
 
 ### Protected baselines
 
