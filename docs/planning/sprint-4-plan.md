@@ -140,6 +140,19 @@ Acceptance:
 ### S4-T08 — Quote foundations
 Add quote/estimate draft records and line-item foundations without payment or invoice behavior.
 
+Acceptance:
+- canonical quotes store `organization_id` with optional same-tenant company, contact, and opportunity relationships;
+- foreign relationships and internally inconsistent company/contact/opportunity combinations fail closed;
+- quote lifecycle is limited to draft, sent, accepted, declined, or archived;
+- quotes use validated three-letter currency codes and optional ISO `YYYY-MM-DD` validity dates;
+- line items use required descriptions, positive integer quantities, non-negative integer-cent unit prices, and explicit non-negative ordering;
+- quote subtotal and line totals are derived deterministically from integer cents rather than floating point;
+- only draft quotes accept new line items;
+- archived quotes cannot be modified;
+- cross-tenant quote reads and line writes do not leak data;
+- inactive/suspended organizations cannot use quote foundations;
+- no invoice, payment, subscription, tax-engine, or payment-provider behavior is introduced.
+
 ### S4-T09 — CRM authorization and administration
 Expose CRM management through active organization memberships, preserving platform-super-admin separation and least privilege.
 

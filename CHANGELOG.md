@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Tenant-owned CRM quote/estimate foundations with same-tenant CRM relationships, ordered line items, integer-cent totals, validation, and non-billing lifecycle.
 - Non-destructive tenant-safe links from existing conversations/project requests to canonical CRM companies, contacts, and opportunities.
 - Append-only tenant-scoped CRM notes/activity timeline with safe entity links, filtered newest-first reads, and cross-tenant protection.
 - Tenant-owned CRM tasks with due dates, status/priority lifecycle, consistent company/contact/opportunity relationships, scoped filtering, and archival.
