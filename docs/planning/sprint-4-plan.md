@@ -156,6 +156,17 @@ Acceptance:
 ### S4-T09 — CRM authorization and administration
 Expose CRM management through active organization memberships, preserving platform-super-admin separation and least privilege.
 
+Acceptance:
+- CRM access is derived only from active tenant memberships in active organizations;
+- owner/admin roles may view, manage, and administer CRM capabilities;
+- staff may view and manage CRM records but cannot perform CRM administration;
+- viewer membership is read-only;
+- revoked memberships and suspended/inactive organizations lose CRM access immediately;
+- unknown capabilities fail closed;
+- the administration facade enforces authorization before invoking canonical CRM models;
+- cross-tenant membership does not grant access to another organization's CRM;
+- bootstrap/platform-super-admin identity does not implicitly grant tenant CRM access.
+
 ### S4-T10 — Legacy CRM migration/compatibility
 Migrate or adapt existing `platform_core.py` CRM rows non-destructively into the canonical tenant-safe model.
 
