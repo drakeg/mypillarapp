@@ -61,24 +61,39 @@ Repository/CI acceptance is complete at `79549d38741a167198146c601c0fdb32b039dbd
 
 ## Sprint 4 status
 
-Sprint 4 — CRM is the active planning/implementation Sprint.
+Sprint 4 — CRM is complete at the repository/CI level.
+
+### Objective achieved
+
+The platform now has tenant-safe canonical companies, contacts, opportunities, CRM tasks, append-only activities, non-destructive conversation linkage, quote foundations, membership-derived CRM authorization, and audit-gated legacy CRM migration compatibility.
+
+### Closure evidence
+
+See [Sprint 4 Closure Record](../09-release/sprint-4-closure.md).
+
+Repository/CI acceptance is complete at `9f18418dcde6dcb4b1f6c40e1d071baeed6515c3`. Production/manual smoke evidence remains deployment-time work.
+
+## Sprint 5 status
+
+Sprint 5 — Customer Portal is the active planning/implementation Sprint.
 
 ### Objective
 
-Manage tenant-scoped contacts, companies, opportunities, tasks, notes/timelines, and quote foundations while preserving protected customer, messaging, Site Builder, and platform-admin behavior.
+Support ongoing tenant-safe service delivery through projects, tickets, file references, notifications, richer messaging, and unified customer history while preserving customer-authentication and prior Sprint boundaries.
 
 ### Locked plan
 
-See [Sprint 4 Plan — CRM](sprint-4-plan.md).
+See [Sprint 5 Plan — Customer Portal](sprint-5-plan.md).
 
 ### Current step
 
-S4-T11 — Sprint 4 regression and closure.
+S5-T01 — Portal tenant/customer boundary audit.
 
-This step enforces the focused Sprint 4 CI gate and records repository/CI acceptance, rollback boundaries, compatibility decisions, and deployment limitations.
+This step defines canonical portal ownership and authorization boundaries and audits existing customer dashboard, request-history, conversation-history, and any legacy project/ticket behavior before new portal persistence is introduced.
 
 ### Protected baselines
 
-- Sprint 1 customer/admin journeys remain protected.
-- Sprint 2 tenant resolution, data isolation, membership authorization, and platform-admin separation remain protected.
+- Sprint 1 public intake, customer authentication, dashboard/profile/history, messaging, and admin journeys remain protected.
+- Sprint 2 tenant resolution, customer isolation, memberships, and platform-admin separation remain protected.
 - Sprint 3 Site Builder/domain/rendering behavior remains protected.
+- Sprint 4 CRM ownership, relationships, authorization, migration compatibility, and focused regression gate remain protected.
