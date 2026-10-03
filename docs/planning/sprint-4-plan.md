@@ -184,6 +184,14 @@ Acceptance:
 ### S4-T11 — Sprint 4 regression and closure
 Enforce `make test-sprint4`, record acceptance/rollback evidence, and formally close Sprint 4.
 
+Acceptance:
+- Make exposes a focused `test-sprint4` target for all `test_sprint4_*.py` regression modules;
+- the application `smoke` workflow explicitly runs full, Sprint 2, Sprint 3, and Sprint 4 suites;
+- the closure record maps S4-T01 through S4-T11 to regression evidence;
+- the implementation candidate and pre-Sprint-4 rollback baseline are recorded exactly;
+- final merge SHA and closure run/job IDs are captured after the closure gate merges;
+- CI evidence remains explicitly distinct from production/manual smoke evidence.
+
 ## Testing requirements
 
 - `make test` remains the complete application regression gate.
