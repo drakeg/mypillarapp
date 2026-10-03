@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Final Sprint 4 repository/CI closure at `9f18418dcde6dcb4b1f6c40e1d071baeed6515c3` and locked Sprint 5 Customer Portal plan covering projects, tickets, file references, notifications, richer messaging, and unified customer history.
 - Focused `make test-sprint4` regression gate in GitHub Actions plus formal Sprint 4 repository/CI closure evidence and rollback documentation.
 - Audit-gated, non-destructive legacy CRM migration with persistent legacy-to-canonical mappings, idempotent reruns, relationship preservation, and legacy lead compatibility notes.
 - Membership-based CRM authorization and administration facade with read-only viewers, staff record management, owner/admin administration, inactive-tenant denial, and platform-admin separation.
