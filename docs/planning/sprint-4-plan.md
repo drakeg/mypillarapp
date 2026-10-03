@@ -1,6 +1,6 @@
 # Sprint 4 Plan — CRM
 
-- Status: Active
+- Status: Closed at repository/CI level
 - Epic: CRM
 - Protected baselines: Sprint 1 Single-Business MVP, Sprint 2 Multi-Tenant Foundation, Sprint 3 Site Builder
 
