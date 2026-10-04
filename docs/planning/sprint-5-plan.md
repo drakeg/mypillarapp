@@ -46,11 +46,13 @@ Define the canonical ownership and authorization boundary for portal records and
 
 Acceptance:
 - new portal records use canonical organization ownership;
-- customer-facing reads are bound to the authenticated tenant/customer identity;
-- staff/admin portal actions require active tenant membership where applicable;
-- cross-tenant project/ticket/file/history lookups fail closed;
-- existing protected customer and conversation behavior remains unchanged;
-- audit findings and migration constraints are documented.
+- authenticated customer scope requires an active user, active organization, active membership, and normalized customer email;
+- compatibility history reads remain bound to both resolved tenant and customer email;
+- foreign-tenant and other-customer conversation tokens fail closed;
+- existing protected customer dashboard, requests, conversations, and detail routes remain unchanged;
+- the legacy-history audit detects missing customer email and unknown organization slugs before history is treated as portal-safe;
+- no project/ticket persistence is introduced in this boundary step;
+- audit findings and migration constraints are documented in [S5-T01 Customer Portal Boundary Audit](../09-release/sprint-5-portal-boundary-audit.md).
 
 ### S5-T02 — Service projects
 Add tenant-owned service projects with customer association, lifecycle, status, summary, dates, and CRM linkage where appropriate.
