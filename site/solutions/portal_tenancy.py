@@ -49,10 +49,10 @@ def customer_scope(user: sqlite3.Row) -> CustomerScope:
         row = conn.execute(
             """SELECT o.id
                FROM auth_users u
-               JOIN auth_memberships m
-                 ON m.user_id=u.id AND m.organization_id=o.id
                JOIN auth_organizations o
                  ON o.id=u.organization_id
+               JOIN auth_memberships m
+                 ON m.user_id=u.id AND m.organization_id=o.id
                WHERE u.id=? AND o.slug=? AND o.status='active'
                  AND u.is_active=1
                  AND m.status='active'
