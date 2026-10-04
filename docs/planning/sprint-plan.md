@@ -89,7 +89,7 @@ See [Sprint 5 Plan — Customer Portal](sprint-5-plan.md).
 
 S5-T01 — Portal tenant/customer boundary audit.
 
-This step defines canonical portal ownership and authorization boundaries and audits existing customer dashboard, request-history, conversation-history, and any legacy project/ticket behavior before new portal persistence is introduced.
+This step establishes active tenant/customer service scope around the existing conversation-backed dashboard/history, adds a read-only compatibility audit, and confirms that no canonical project/ticket persistence exists yet.
 
 ### Protected baselines
 
