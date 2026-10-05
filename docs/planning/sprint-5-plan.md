@@ -58,12 +58,16 @@ Acceptance:
 Add tenant-owned service projects with customer association, lifecycle, status, summary, dates, and CRM linkage where appropriate.
 
 Acceptance:
-- projects are organization-scoped;
-- customer association cannot cross tenants;
-- optional CRM company/contact/opportunity links must remain same-tenant;
-- lifecycle/status validation is explicit;
-- archived projects remain stored and protected;
-- positive and negative cross-tenant tests cover reads and mutations.
+- canonical projects store `organization_id` referencing the active tenant;
+- project customers are active users with active membership in the same organization, and their normalized email is retained as a compatibility snapshot;
+- optional CRM company/contact/opportunity links must remain in the same organization and internally consistent;
+- project title is required/bounded and summary is bounded;
+- statuses are limited to planned, active, on_hold, completed, canceled, or archived;
+- optional start/due dates use ISO `YYYY-MM-DD`, and due date cannot precede start date;
+- project reads, customer filters, updates, and archival are organization-scoped;
+- archived projects remain stored, are hidden by default, and cannot be modified;
+- inactive customers, revoked customer memberships, and inactive/suspended organizations fail closed;
+- positive and negative cross-tenant/customer tests cover reads and mutations.
 
 ### S5-T03 — Tickets and work requests
 Add tenant-owned tickets/work requests that may belong to a project and customer.
