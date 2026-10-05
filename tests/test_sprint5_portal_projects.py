@@ -195,6 +195,20 @@ class Sprint5ServiceProjectTests(unittest.TestCase):
                 due_date='2026-11-01',
             )
 
+    def test_revoked_customer_membership_cannot_be_used(self):
+        with tenant_auth.db() as conn:
+            conn.execute(
+                "UPDATE auth_memberships SET status='revoked' WHERE user_id=?",
+                (self.users['solutions'],),
+            )
+            conn.commit()
+        with self.assertRaises(ValueError):
+            portal_projects.create_project(
+                'solutions',
+                customer_user_id=self.users['solutions'],
+                title='Blocked',
+            )
+
     def test_inactive_customer_or_tenant_cannot_be_used(self):
         with tenant_auth.db() as conn:
             conn.execute(
