@@ -73,11 +73,17 @@ Acceptance:
 Add tenant-owned tickets/work requests that may belong to a project and customer.
 
 Acceptance:
-- tickets are organization-scoped;
-- project/customer relationships are same-tenant;
-- status, priority, subject, description, and timestamps are validated;
-- customer-visible and internal-only state is explicitly distinguished;
-- cross-tenant filters and mutations fail closed.
+- canonical tickets store `organization_id`, customer identity, and optional project linkage;
+- ticket customers must be active users with active membership in the same organization;
+- a linked project must belong to the same organization and the same customer;
+- archived projects cannot accept new tickets;
+- ticket status is limited to open, in_progress, waiting_on_customer, resolved, closed, or archived;
+- priority is limited to low, normal, high, or urgent;
+- subject is required/bounded and description is bounded;
+- visibility is explicitly customer or internal;
+- project/customer/status/priority/visibility filters remain organization-scoped and foreign filters fail closed;
+- archived tickets remain stored, are hidden by default, and cannot be modified;
+- revoked customer membership and inactive/suspended organizations fail closed.
 
 ### S5-T04 — Portal file metadata foundation
 Add project/ticket/customer file references and visibility metadata without introducing unsafe filesystem paths.
