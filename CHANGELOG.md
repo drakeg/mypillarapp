@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Tenant-owned customer tickets/work requests with same-customer project linkage, explicit status/priority, customer-vs-internal visibility, archival, and cross-tenant isolation.
 - Tenant-owned customer service projects with active-customer membership checks, explicit lifecycle/dates, same-tenant CRM relationships, archival, and cross-tenant isolation.
 - Sprint 5 portal customer-scope boundary and read-only legacy-history audit that fail closed across tenant/customer identities without changing existing dashboard or conversation behavior.
 - Final Sprint 4 repository/CI closure at `9f18418dcde6dcb4b1f6c40e1d071baeed6515c3` and locked Sprint 5 Customer Portal plan covering projects, tickets, file references, notifications, richer messaging, and unified customer history.
