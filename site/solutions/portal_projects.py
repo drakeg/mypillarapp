@@ -137,6 +137,10 @@ def _validate_customer(
         '''
         SELECT lower(u.email) AS email
         FROM auth_users u
+        JOIN auth_memberships m
+          ON m.user_id=u.id
+         AND m.organization_id=u.organization_id
+         AND m.status='active'
         WHERE u.id=? AND u.organization_id=? AND u.is_active=1
         ''',
         (customer_user_id, organization_id),
