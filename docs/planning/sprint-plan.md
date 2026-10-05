@@ -87,9 +87,9 @@ See [Sprint 5 Plan — Customer Portal](sprint-5-plan.md).
 
 ### Current step
 
-S5-T01 — Portal tenant/customer boundary audit.
+S5-T02 — Service projects.
 
-This step establishes active tenant/customer service scope around the existing conversation-backed dashboard/history, adds a read-only compatibility audit, and confirms that no canonical project/ticket persistence exists yet.
+This step adds canonical tenant-owned service projects bound to active customer membership, with lifecycle/dates and optional same-tenant CRM company/contact/opportunity relationships.
 
 ### Protected baselines
 
