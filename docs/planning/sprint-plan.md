@@ -87,9 +87,9 @@ See [Sprint 5 Plan — Customer Portal](sprint-5-plan.md).
 
 ### Current step
 
-S5-T03 — Tickets and work requests.
+S5-T04 — Portal file metadata foundation.
 
-This step adds tenant-owned customer tickets with optional same-customer project linkage, explicit status/priority, and customer-visible versus internal-only state.
+This step adds tenant-owned customer file metadata with same-customer project/ticket linkage, explicit customer/internal visibility, and safe HTTPS/storage-key references without arbitrary filesystem paths.
 
 ### Protected baselines
 

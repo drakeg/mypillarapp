@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Tenant-owned portal file metadata with same-customer project/ticket linkage, explicit customer/internal visibility, safe HTTPS/storage-key references, and filesystem-path traversal protection.
 - Tenant-owned customer tickets/work requests with same-customer project linkage, explicit status/priority, customer-vs-internal visibility, archival, and cross-tenant isolation.
 - Tenant-owned customer service projects with active-customer membership checks, explicit lifecycle/dates, same-tenant CRM relationships, archival, and cross-tenant isolation.
 - Sprint 5 portal customer-scope boundary and read-only legacy-history audit that fail closed across tenant/customer identities without changing existing dashboard or conversation behavior.
