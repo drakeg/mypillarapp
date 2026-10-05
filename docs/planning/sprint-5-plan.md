@@ -89,11 +89,17 @@ Acceptance:
 Add project/ticket/customer file references and visibility metadata without introducing unsafe filesystem paths.
 
 Acceptance:
-- file metadata is tenant-owned;
+- file metadata is tenant-owned and stores the customer identity snapshot;
 - file references may link to projects/tickets/customers only within the same tenant;
+- linked projects/tickets must belong to the same customer, and project/ticket combinations must be internally consistent;
 - customer-visible vs internal-only access is explicit;
-- source identifiers/URLs/keys are validated and never interpreted as arbitrary local paths;
-- binary storage implementation may remain external/deferred, but authorization metadata is complete.
+- source types are limited to HTTPS external URLs or opaque storage keys;
+- external URLs must use HTTPS and cannot embed credentials;
+- storage keys cannot be absolute paths, file URLs, traversal paths, empty path segments, or dot segments;
+- file display names cannot contain path separators;
+- tenant/customer/project/ticket/visibility filters fail closed;
+- changing visibility does not rewrite the underlying source reference;
+- binary storage implementation remains external/deferred; this step stores authorization-safe metadata only.
 
 ### S5-T05 — Notification preferences and delivery records
 Add tenant-scoped customer notification preferences plus append-oriented delivery/history records.
