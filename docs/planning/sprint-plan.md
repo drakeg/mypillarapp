@@ -87,9 +87,9 @@ See [Sprint 5 Plan — Customer Portal](sprint-5-plan.md).
 
 ### Current step
 
-S5-T02 — Service projects.
+S5-T03 — Tickets and work requests.
 
-This step adds canonical tenant-owned service projects bound to active customer membership, with lifecycle/dates and optional same-tenant CRM company/contact/opportunity relationships.
+This step adds tenant-owned customer tickets with optional same-customer project linkage, explicit status/priority, and customer-visible versus internal-only state.
 
 ### Protected baselines
 
