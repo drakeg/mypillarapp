@@ -105,11 +105,16 @@ Acceptance:
 Add tenant-scoped customer notification preferences plus append-oriented delivery/history records.
 
 Acceptance:
-- preferences are scoped to customer identity and tenant;
-- supported notification channels/types are explicitly enumerated;
-- delivery records are append-oriented and tenant-owned;
-- opt-out/preference behavior is enforced before portal-triggered notification creation;
-- no cross-tenant notification lookup or mutation is possible.
+- preferences are scoped to active customer identity and tenant;
+- supported channels are explicitly limited to email and in_app;
+- supported types are explicitly limited to project_update, ticket_update, file_available, message, and service_notice;
+- absent preferences default enabled while explicit opt-outs are persisted per channel/type;
+- delivery records are append-oriented, tenant-owned history with queued/sent/failed states;
+- preference checks are enforced before portal-triggered delivery records are created;
+- delivery history reads are customer-scoped, newest-first, filterable by channel/type, and bounded;
+- revoked customer memberships and inactive/suspended organizations fail closed;
+- no cross-tenant customer preference, delivery lookup, or mutation is possible;
+- actual provider delivery remains outside this foundation step.
 
 ### S5-T06 — Richer portal messaging
 Extend protected conversation behavior for ongoing service delivery without duplicating conversation history.
