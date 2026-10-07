@@ -87,9 +87,9 @@ See [Sprint 5 Plan — Customer Portal](sprint-5-plan.md).
 
 ### Current step
 
-S5-T04 — Portal file metadata foundation.
+S5-T05 — Notification preferences and delivery records.
 
-This step adds tenant-owned customer file metadata with same-customer project/ticket linkage, explicit customer/internal visibility, and safe HTTPS/storage-key references without arbitrary filesystem paths.
+This step adds tenant-scoped customer notification preferences and append-oriented delivery history with explicit channels/types, opt-out enforcement, and cross-tenant isolation.
 
 ### Protected baselines
 
