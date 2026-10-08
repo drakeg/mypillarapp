@@ -135,9 +135,16 @@ Acceptance:
 Provide a tenant-safe aggregation of projects, tickets, conversations, file references, notifications, and relevant service history for the authenticated customer.
 
 Acceptance:
-- history aggregation cannot leak records from another tenant or customer;
-- ordering is deterministic and bounded;
-- customer-visible/internal-only distinctions are honored;
+- the service-history layer is read-only aggregation and does not create duplicate source records;
+- customer scope is revalidated against the current active user/membership/tenant before aggregation;
+- projects are customer-scoped and exclude archived records by default;
+- tickets and files include only `visibility='customer'` rows;
+- conversations remain sourced from existing tenant+customer conversation history;
+- notification delivery history remains customer-scoped;
+- records from another tenant or another customer cannot appear;
+- ordering is deterministic newest-first across all source types with a stable tie-breaker;
+- history results are bounded to 1–500 records;
+- revoked customer membership and inactive/suspended organizations fail closed;
 - existing dashboard/history links remain compatible until the new portal surface is authoritative.
 
 ### S5-T08 — Portal authorization and staff operations
