@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Unified read-only customer service history aggregating projects, customer-visible tickets/files, conversations, and notification delivery history with bounded deterministic ordering and tenant/customer isolation.
 - Non-destructive portal conversation linkage to same-customer projects/tickets, customer-safe message reads, active-membership reply enforcement, and internal-message visibility protection.
 - Tenant-scoped customer notification preferences and append-oriented delivery history with explicit channel/type validation, opt-out enforcement, and cross-tenant isolation.
 - Tenant-owned portal file metadata with same-customer project/ticket linkage, explicit customer/internal visibility, safe HTTPS/storage-key references, and filesystem-path traversal protection.
