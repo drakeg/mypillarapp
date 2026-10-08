@@ -305,10 +305,20 @@ def list_links(
     return [_from_link(row) for row in rows]
 
 
+def _validate_scope(scope: portal_tenancy.CustomerScope) -> None:
+    with tenant_auth.db() as conn:
+        email = _validate_customer(
+            conn, scope.organization_id, scope.user_id
+        )
+    if email != scope.email:
+        raise ValueError('Customer scope no longer matches the active customer.')
+
+
 def list_customer_messages(
     scope: portal_tenancy.CustomerScope,
     conversation_token: str,
 ) -> list[sqlite3.Row]:
+    _validate_scope(scope)
     conversation = portal_tenancy.conversation_for_customer(
         scope, conversation_token
     )
@@ -332,6 +342,7 @@ def add_customer_reply(
     body: str,
     sender: str = 'Customer',
 ) -> sqlite3.Row | None:
+    _validate_scope(scope)
     body = (body or '').strip()
     if not body:
         raise ValueError('Message body is required.')
