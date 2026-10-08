@@ -7,6 +7,7 @@ import portal_notifications
 import portal_projects
 import portal_tenancy
 import portal_tickets
+import tenant_auth
 
 
 HISTORY_KINDS = ('project', 'ticket', 'file', 'conversation', 'notification')
@@ -31,7 +32,7 @@ def list_customer_history(
         raise ValueError('Customer history limit must be between 1 and 500.')
 
     # Revalidate the customer against current user/membership/tenant state.
-    with portal_projects.tenant_auth.db() as conn:
+    with tenant_auth.db() as conn:
         email = portal_projects._validate_customer(
             conn, scope.organization_id, scope.user_id
         )
