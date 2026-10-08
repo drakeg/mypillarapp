@@ -87,9 +87,9 @@ See [Sprint 5 Plan — Customer Portal](sprint-5-plan.md).
 
 ### Current step
 
-S5-T06 — Richer portal messaging.
+S5-T07 — Unified customer service history.
 
-This step adds non-destructive project/ticket links to existing tenant conversations plus customer-safe message reads and active-membership customer replies without duplicating conversation history.
+This step adds a bounded read-only customer timeline that aggregates projects, customer-visible tickets/files, existing conversations, and notification history under the authenticated tenant/customer boundary.
 
 ### Protected baselines
 
