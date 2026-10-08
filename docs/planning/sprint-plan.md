@@ -87,9 +87,9 @@ See [Sprint 5 Plan — Customer Portal](sprint-5-plan.md).
 
 ### Current step
 
-S5-T05 — Notification preferences and delivery records.
+S5-T06 — Richer portal messaging.
 
-This step adds tenant-scoped customer notification preferences and append-oriented delivery history with explicit channels/types, opt-out enforcement, and cross-tenant isolation.
+This step adds non-destructive project/ticket links to existing tenant conversations plus customer-safe message reads and active-membership customer replies without duplicating conversation history.
 
 ### Protected baselines
 

@@ -120,11 +120,16 @@ Acceptance:
 Extend protected conversation behavior for ongoing service delivery without duplicating conversation history.
 
 Acceptance:
-- project/ticket relationships may reference existing tenant conversations safely;
-- customer replies remain bound to the correct tenant and authenticated identity;
-- internal-only messages remain invisible to customers;
-- existing chat/project-request flows remain compatible;
-- any richer metadata is additive and non-destructive.
+- portal conversation links reference existing tenant conversation tokens without copying or moving message history;
+- linked conversations, projects, tickets, and customer identities must belong to the same organization;
+- linked projects/tickets must belong to the same customer and project/ticket combinations must remain internally consistent;
+- relinking the same tenant conversation updates one portal link instead of creating duplicates;
+- unlinking removes only portal metadata and never deletes the source conversation/messages;
+- customer message reads include only `internal=0` rows;
+- customer replies require a currently active customer user and membership, even when a previously-created scope object is reused;
+- customer replies are written through the tenant-aware conversation layer and cannot cross tenants or customers;
+- existing chat/project-request/admin conversation behavior remains authoritative and unchanged;
+- richer portal messaging metadata is additive and non-destructive.
 
 ### S5-T07 — Unified customer service history
 Provide a tenant-safe aggregation of projects, tickets, conversations, file references, notifications, and relevant service history for the authenticated customer.
