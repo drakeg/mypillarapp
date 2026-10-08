@@ -262,6 +262,24 @@ class Sprint5PortalMessagingTests(unittest.TestCase):
             )
         )
 
+    def test_stale_scope_fails_after_membership_revocation(self):
+        conversation = self.conversation()
+        scope = self.scope()
+        with tenant_auth.db() as conn:
+            conn.execute(
+                "UPDATE auth_memberships SET status='revoked' WHERE user_id=?",
+                (self.users['solutions'],),
+            )
+            conn.commit()
+        with self.assertRaises(ValueError):
+            portal_messaging.list_customer_messages(
+                scope, conversation['token']
+            )
+        with self.assertRaises(ValueError):
+            portal_messaging.add_customer_reply(
+                scope, conversation['token'], body='Blocked'
+            )
+
     def test_revoked_customer_membership_fails_before_linking(self):
         conversation = self.conversation()
         with tenant_auth.db() as conn:
