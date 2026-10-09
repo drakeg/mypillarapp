@@ -202,7 +202,7 @@ class Sprint5PortalAuthorizationTests(unittest.TestCase):
             project_id=project.id,
             name='visible.pdf',
             source_type='storage_key',
-            source='customers/visible.pdf',
+            source_ref='customers/visible.pdf',
             visibility='customer',
         )
         internal_file = portal_files.create_file(
@@ -211,7 +211,7 @@ class Sprint5PortalAuthorizationTests(unittest.TestCase):
             project_id=project.id,
             name='internal.pdf',
             source_type='storage_key',
-            source='customers/internal.pdf',
+            source_ref='customers/internal.pdf',
             visibility='internal',
         )
 
