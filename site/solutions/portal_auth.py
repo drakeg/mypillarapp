@@ -6,6 +6,7 @@ import portal_files
 import portal_projects
 import portal_tenancy
 import portal_tickets
+import tenant_auth
 import tenant_memberships
 
 
@@ -99,7 +100,7 @@ def revalidate_customer_scope(
 ) -> portal_tenancy.CustomerScope:
     if scope is None:
         raise PermissionError('Customer Portal access denied.')
-    with portal_projects.tenant_auth.db() as conn:
+    with tenant_auth.db() as conn:
         email = portal_projects._validate_customer(
             conn, scope.organization_id, scope.user_id
         )
