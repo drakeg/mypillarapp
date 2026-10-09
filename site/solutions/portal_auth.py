@@ -100,10 +100,13 @@ def revalidate_customer_scope(
 ) -> portal_tenancy.CustomerScope:
     if scope is None:
         raise PermissionError('Customer Portal access denied.')
-    with tenant_auth.db() as conn:
-        email = portal_projects._validate_customer(
-            conn, scope.organization_id, scope.user_id
-        )
+    try:
+        with tenant_auth.db() as conn:
+            email = portal_projects._validate_customer(
+                conn, scope.organization_id, scope.user_id
+            )
+    except ValueError as exc:
+        raise PermissionError('Customer Portal access denied.') from exc
     if email != scope.email:
         raise PermissionError('Customer Portal access denied.')
     if not _organization_is_active(scope.organization_slug):
