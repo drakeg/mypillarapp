@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Customer Portal authorization with revalidated customer ownership/visibility checks, active-membership staff permissions, least-privilege owner/admin/staff/viewer roles, and an authorization-enforcing staff operations facade.
 - Unified read-only customer service history aggregating projects, customer-visible tickets/files, conversations, and notification delivery history with bounded deterministic ordering and tenant/customer isolation.
 - Non-destructive portal conversation linkage to same-customer projects/tickets, customer-safe message reads, active-membership reply enforcement, and internal-message visibility protection.
 - Tenant-scoped customer notification preferences and append-oriented delivery history with explicit channel/type validation, opt-out enforcement, and cross-tenant isolation.
