@@ -152,9 +152,17 @@ Add reusable portal authorization for customer self-service and tenant staff adm
 
 Acceptance:
 - customer access is limited to records owned by that authenticated customer within the resolved tenant;
-- owner/admin/staff tenant memberships may manage portal service records according to least privilege;
-- viewer/platform-admin identities do not gain unintended customer-service mutation rights;
-- revoked memberships and inactive tenants fail closed.
+- customer scope is revalidated against current active user, active membership, and active organization state before record authorization;
+- customer project access requires ownership by the authenticated customer;
+- customer ticket/file access additionally requires customer visibility and never exposes internal-only records;
+- owner/admin/staff tenant memberships may manage portal service records;
+- owner/admin may perform portal-administration capabilities while staff cannot;
+- viewer membership is read-only and cannot mutate portal service records;
+- staff operations are routed through an authorization-enforcing facade before invoking canonical portal models;
+- cross-tenant membership cannot be used to manage another organization's portal records;
+- revoked memberships and inactive/suspended organizations fail closed;
+- bootstrap/platform-admin identity does not implicitly grant tenant portal access;
+- unknown capabilities fail closed.
 
 ### S5-T09 — Customer portal dashboard and detail surfaces
 Expose projects, tickets, file references, notifications, history, and messaging through authenticated customer-facing pages.
