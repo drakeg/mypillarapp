@@ -87,9 +87,9 @@ See [Sprint 5 Plan — Customer Portal](sprint-5-plan.md).
 
 ### Current step
 
-S5-T07 — Unified customer service history.
+S5-T08 — Portal authorization and staff operations.
 
-This step adds a bounded read-only customer timeline that aggregates projects, customer-visible tickets/files, existing conversations, and notification history under the authenticated tenant/customer boundary.
+This step adds reusable customer-record authorization plus active-membership staff permissions and an authorization-enforcing operations facade for projects, tickets, files, notifications, and portal messaging.
 
 ### Protected baselines
 
