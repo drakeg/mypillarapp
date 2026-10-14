@@ -20,6 +20,9 @@ import request_context
 import tenant_conversations
 import tenant_admin_dashboard
 import public_site_renderer
+import portal_messaging
+import portal_tenancy
+import portal_views
 
 ROOT = Path('/app').resolve()
 INDEX = ROOT / 'index.html'
@@ -455,6 +458,78 @@ class Handler(BaseHTTPRequestHandler):
             if not user:
                 return redirect(self, '/login')
             return html_response(self, 200, tenant_auth.render_dashboard(user))
+        if path == '/portal':
+            user = context.user if context else None
+            if not user:
+                return redirect(self, '/login')
+            return html_response(self, 200, portal_views.render_dashboard(user))
+        if path == '/portal/history':
+            user = context.user if context else None
+            if not user:
+                return redirect(self, '/login')
+            return html_response(self, 200, portal_views.render_history(user))
+        if path == '/portal/notifications':
+            user = context.user if context else None
+            if not user:
+                return redirect(self, '/login')
+            return html_response(self, 200, portal_views.render_notifications(user))
+        if path == '/portal/messages':
+            user = context.user if context else None
+            if not user:
+                return redirect(self, '/login')
+            return html_response(self, 200, portal_views.render_messages(user))
+        if path.startswith('/portal/projects/'):
+            user = context.user if context else None
+            if not user:
+                return redirect(self, '/login')
+            try:
+                record_id = int(path.rstrip('/').split('/')[-1])
+            except ValueError:
+                self.send_error(404)
+                return
+            body = portal_views.render_project(user, record_id)
+            if body is None:
+                self.send_error(404)
+                return
+            return html_response(self, 200, body)
+        if path.startswith('/portal/tickets/'):
+            user = context.user if context else None
+            if not user:
+                return redirect(self, '/login')
+            try:
+                record_id = int(path.rstrip('/').split('/')[-1])
+            except ValueError:
+                self.send_error(404)
+                return
+            body = portal_views.render_ticket(user, record_id)
+            if body is None:
+                self.send_error(404)
+                return
+            return html_response(self, 200, body)
+        if path.startswith('/portal/files/'):
+            user = context.user if context else None
+            if not user:
+                return redirect(self, '/login')
+            try:
+                record_id = int(path.rstrip('/').split('/')[-1])
+            except ValueError:
+                self.send_error(404)
+                return
+            body = portal_views.render_file(user, record_id)
+            if body is None:
+                self.send_error(404)
+                return
+            return html_response(self, 200, body)
+        if path.startswith('/portal/messages/'):
+            user = context.user if context else None
+            if not user:
+                return redirect(self, '/login')
+            token = path.rstrip('/').split('/')[-1]
+            body = portal_views.render_conversation(user, token)
+            if body is None:
+                self.send_error(404)
+                return
+            return html_response(self, 200, body)
         if path == '/profile':
             user = context.user if context else None
             if not user:
@@ -649,6 +724,23 @@ class Handler(BaseHTTPRequestHandler):
                 return redirect(self, '/admin', {'Set-Cookie': f'mms_admin_session={session}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000'})
             return html_response(self, 403, '<h1>Invalid username or password</h1><p><a href="/admin/login">Try again</a></p>')
 
+        if parsed.path.startswith('/api/portal/messages/'):
+            user = context.user if context else None
+            if not user:
+                return json_response(self, 401, {'ok': False, 'error': 'Authentication required.'})
+            token = parsed.path.rstrip('/').split('/')[-1]
+            try:
+                scope = portal_tenancy.customer_scope(user)
+                message = portal_messaging.add_customer_reply(
+                    scope,
+                    token,
+                    body=str(payload.get('body', '')),
+                )
+            except (PermissionError, ValueError):
+                return json_response(self, 404, {'ok': False, 'error': 'Conversation unavailable.'})
+            if message is None:
+                return json_response(self, 404, {'ok': False, 'error': 'Conversation unavailable.'})
+            return json_response(self, 200, {'ok': True})
         if parsed.path == '/api/contact':
             return self.handle_project_request(payload)
         if parsed.path == '/api/chat/start':
