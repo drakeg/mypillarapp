@@ -718,8 +718,8 @@ def render_dashboard(user: sqlite3.Row) -> str:
     ) or '<li>No customer activity yet.</li>'
     return page(
         'Dashboard',
-        f'<p><a href="/">← Site</a> · <a href="/profile">Profile</a> · '
-        f'<a href="/logout">Sign out</a></p>'
+        f'<p><a href="/">← Site</a> · <a href="/portal">Customer Portal</a> · '
+        f'<a href="/profile">Profile</a> · <a href="/logout">Sign out</a></p>'
         f'<h1>Welcome, {esc(user["first_name"])}</h1>'
         f'<p>Your account is active for <strong>{esc(user["organization_name"])}</strong>.</p>'
         f'<section class="dashboard-grid">'

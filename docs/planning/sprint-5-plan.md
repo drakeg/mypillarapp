@@ -168,11 +168,18 @@ Acceptance:
 Expose projects, tickets, file references, notifications, history, and messaging through authenticated customer-facing pages.
 
 Acceptance:
-- all routes resolve tenant before portal data access;
-- customer records are isolated by authenticated identity;
-- empty/error states do not disclose foreign record existence;
-- existing login/profile/password flows remain protected;
-- forms and mutations use the authorization layer rather than direct unscoped helpers.
+- all portal routes require the resolved authenticated tenant/customer context before data access;
+- the existing dashboard, request, conversation, profile, login, and password flows remain protected and are not replaced in this step;
+- `/portal` provides customer-scoped project/ticket/file/notification counts plus recent unified service history;
+- project details show only the authenticated customer's project plus customer-visible related tickets/files;
+- ticket details are unavailable for internal-only or other-customer tickets;
+- file details are unavailable for internal-only or other-customer files;
+- managed-storage keys are never exposed to customer HTML, while validated HTTPS external references may be linked;
+- notification and unified-history pages remain customer-scoped;
+- portal message lists/details use the protected tenant conversation source and hide internal messages;
+- portal replies use the portal-specific mutation path backed by revalidated customer scope and `portal_messaging.add_customer_reply`;
+- inaccessible, foreign, malformed, or nonexistent record identifiers use the same not-found behavior and do not disclose record existence;
+- no staff/admin HTML redesign or legacy route cutover occurs in this step.
 
 ### S5-T10 — Existing customer-history compatibility migration
 Adapt or migrate existing request/conversation/dashboard history into the portal model non-destructively where required.

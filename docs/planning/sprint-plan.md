@@ -87,9 +87,9 @@ See [Sprint 5 Plan — Customer Portal](sprint-5-plan.md).
 
 ### Current step
 
-S5-T08 — Portal authorization and staff operations.
+S5-T09 — Customer portal dashboard and detail surfaces.
 
-This step adds reusable customer-record authorization plus active-membership staff permissions and an authorization-enforcing operations facade for projects, tickets, files, notifications, and portal messaging.
+This step adds authenticated customer-facing portal pages for projects, customer-visible tickets/files, notifications, unified history, and protected messaging while preserving existing dashboard/auth/history compatibility routes.
 
 ### Protected baselines
 
