@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Focused `make test-sprint5` regression gate in GitHub Actions plus formal Sprint 5 Customer Portal repository/CI closure evidence and rollback documentation.
 - Audit-gated, non-destructive Customer Portal history compatibility migration that safely links existing tenant conversations to uniquely matched active customers without rewriting legacy history or owner-edited portal associations.
 - Authenticated Customer Portal dashboard and detail surfaces for customer-owned projects, customer-visible tickets/files, notifications, unified history, and portal-scoped messaging/replies without replacing protected legacy customer routes.
 - Customer Portal authorization with revalidated customer ownership/visibility checks, active-membership staff permissions, least-privilege owner/admin/staff/viewer roles, and an authorization-enforcing staff operations facade.
