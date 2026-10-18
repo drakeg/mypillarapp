@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Audit-gated, non-destructive Customer Portal history compatibility migration that safely links existing tenant conversations to uniquely matched active customers without rewriting legacy history or owner-edited portal associations.
 - Authenticated Customer Portal dashboard and detail surfaces for customer-owned projects, customer-visible tickets/files, notifications, unified history, and portal-scoped messaging/replies without replacing protected legacy customer routes.
 - Customer Portal authorization with revalidated customer ownership/visibility checks, active-membership staff permissions, least-privilege owner/admin/staff/viewer roles, and an authorization-enforcing staff operations facade.
 - Unified read-only customer service history aggregating projects, customer-visible tickets/files, conversations, and notification delivery history with bounded deterministic ordering and tenant/customer isolation.
