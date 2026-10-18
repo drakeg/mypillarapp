@@ -185,11 +185,15 @@ Acceptance:
 Adapt or migrate existing request/conversation/dashboard history into the portal model non-destructively where required.
 
 Acceptance:
-- no existing conversation or request history is deleted;
-- migration/adaptation is idempotent;
-- old customer links remain functional or have an explicit compatibility redirect;
-- tenant/customer ownership is preserved;
-- owner edits/new portal records are not overwritten on rerun.
+- the S5-T01 legacy-history audit is a hard precondition before compatibility metadata is created;
+- existing conversation and project-request rows remain authoritative and are never deleted or rewritten;
+- legacy conversations are linked into portal metadata only when exactly one active customer in the same active organization matches the normalized conversation email;
+- unmatched, inactive, revoked, or ambiguous customer identities are left on the existing legacy compatibility path rather than guessed;
+- existing portal conversation links are never overwritten, preserving owner-selected project/ticket associations;
+- repeated migration runs are idempotent and report already-linked records rather than duplicating metadata;
+- existing `/requests`, `/conversations`, and account conversation detail links remain functional without redirects;
+- no legacy history is converted into synthetic projects, tickets, files, or notifications;
+- migration remains explicit and does not auto-run during application startup.
 
 ### S5-T11 — Sprint 5 regression and closure
 Add `make test-sprint5`, enforce the focused CI gate, record rollback evidence, and formally close Sprint 5.

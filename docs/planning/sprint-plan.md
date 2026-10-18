@@ -87,9 +87,9 @@ See [Sprint 5 Plan — Customer Portal](sprint-5-plan.md).
 
 ### Current step
 
-S5-T09 — Customer portal dashboard and detail surfaces.
+S5-T10 — Existing customer-history compatibility migration.
 
-This step adds authenticated customer-facing portal pages for projects, customer-visible tickets/files, notifications, unified history, and protected messaging while preserving existing dashboard/auth/history compatibility routes.
+This step adds explicit audit-gated, non-destructive and idempotent portal conversation metadata for safely matchable existing customer history while preserving all legacy customer routes and source records.
 
 ### Protected baselines
 
