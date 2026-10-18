@@ -171,9 +171,9 @@ class Sprint5PortalCompatibilityMigrationTests(unittest.TestCase):
             conn.execute(
                 """INSERT INTO conversations(
                        created_at,updated_at,token,kind,status,priority,
-                       organization_slug,name,email,phone,subject
+                       organization_slug,name,email,subject
                    ) VALUES(1,1,'bad-token','chat','new','normal',
-                            'solutions','Bad','','','Bad')"""
+                            'solutions','Bad','','Bad')"""
             )
             conn.commit()
         with self.assertRaisesRegex(ValueError, 'not safe to migrate'):
