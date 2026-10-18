@@ -87,9 +87,9 @@ See [Sprint 5 Plan — Customer Portal](sprint-5-plan.md).
 
 ### Current step
 
-S5-T10 — Existing customer-history compatibility migration.
+S5-T11 — Sprint 5 regression and closure.
 
-This step adds explicit audit-gated, non-destructive and idempotent portal conversation metadata for safely matchable existing customer history while preserving all legacy customer routes and source records.
+This step enforces the focused Sprint 5 CI gate and records repository/CI acceptance, rollback boundaries, compatibility decisions, and deployment limitations.
 
 ### Protected baselines
 
