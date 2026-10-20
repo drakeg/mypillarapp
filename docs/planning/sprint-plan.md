@@ -75,25 +75,40 @@ Repository/CI acceptance is complete at `9f18418dcde6dcb4b1f6c40e1d071baeed6515c
 
 ## Sprint 5 status
 
-Sprint 5 — Customer Portal is the active planning/implementation Sprint.
+Sprint 5 — Customer Portal is complete at the repository/CI level.
+
+### Objective achieved
+
+The platform now has tenant-safe customer projects, tickets/work requests, file metadata, notifications, richer messaging, unified customer history, customer/staff portal authorization, authenticated portal surfaces, and audit-gated non-destructive compatibility with existing customer history.
+
+### Closure evidence
+
+See [Sprint 5 Closure Record](../09-release/sprint-5-closure.md).
+
+Repository/CI acceptance is complete at `474fa941cca5f092d748479aeeef8e90bafdbc4c`. Production/manual smoke evidence remains deployment-time work.
+
+## Sprint 6 status
+
+Sprint 6 — Creator and Commerce Tools is the active planning/implementation Sprint.
 
 ### Objective
 
-Support ongoing tenant-safe service delivery through projects, tickets, file references, notifications, richer messaging, and unified customer history while preserving customer-authentication and prior Sprint boundaries.
+Support Mad Mallards Adventures and other creator businesses with tenant-safe creator profiles, link pages, affiliate links, content collections, digital-download metadata, storefront foundations, and first-party analytics without introducing payment processing before Sprint 8.
 
 ### Locked plan
 
-See [Sprint 5 Plan — Customer Portal](sprint-5-plan.md).
+See [Sprint 6 Plan — Creator and Commerce Tools](sprint-6-plan.md).
 
 ### Current step
 
-S5-T11 — Sprint 5 regression and closure.
+S6-T01 — Creator tenant/site boundary and legacy audit.
 
-This step enforces the focused Sprint 5 CI gate and records repository/CI acceptance, rollback boundaries, compatibility decisions, and deployment limitations.
+This step defines canonical creator ownership across organization/site boundaries and audits existing Site Builder, Adventures, affiliate/link, and creator-content configuration before new creator persistence is introduced.
 
 ### Protected baselines
 
-- Sprint 1 public intake, customer authentication, dashboard/profile/history, messaging, and admin journeys remain protected.
-- Sprint 2 tenant resolution, customer isolation, memberships, and platform-admin separation remain protected.
+- Sprint 1 public/customer/admin journeys remain protected.
+- Sprint 2 tenant resolution, isolation, membership authorization, and platform-admin separation remain protected.
 - Sprint 3 Site Builder/domain/rendering behavior remains protected.
-- Sprint 4 CRM ownership, relationships, authorization, migration compatibility, and focused regression gate remain protected.
+- Sprint 4 CRM ownership, relationships, authorization, and migration compatibility remain protected.
+- Sprint 5 Customer Portal ownership, visibility, messaging, authorization, compatibility, and focused regression gate remain protected.
