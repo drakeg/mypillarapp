@@ -1,6 +1,6 @@
 # Sprint 5 Plan — Customer Portal
 
-- Status: Active
+- Status: Closed at repository/CI level
 - Epic: EP-008 — Customer Portal
 - Protected baselines: Sprint 1 Single-Business MVP, Sprint 2 Multi-Tenant Foundation, Sprint 3 Site Builder, Sprint 4 CRM
 - Sprint 4 repository/CI baseline: `9f18418dcde6dcb4b1f6c40e1d071baeed6515c3`
