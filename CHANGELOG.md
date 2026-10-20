@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Sprint 6 creator tenant/site boundary with active-membership authoring, published-domain public scope, and read-only legacy Site Builder URL/ownership audit for safe creator migration.
 - Final Sprint 5 repository/CI closure at `474fa941cca5f092d748479aeeef8e90bafdbc4c` and locked Sprint 6 Creator and Commerce Tools plan covering creator profiles, link pages, affiliate links, content collections, digital-download metadata, storefront foundations, and creator analytics without payment processing.
 - Focused `make test-sprint5` regression gate in GitHub Actions plus formal Sprint 5 Customer Portal repository/CI closure evidence and rollback documentation.
 - Audit-gated, non-destructive Customer Portal history compatibility migration that safely links existing tenant conversations to uniquely matched active customers without rewriting legacy history or owner-edited portal associations.

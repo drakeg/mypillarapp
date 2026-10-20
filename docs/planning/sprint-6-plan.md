@@ -47,13 +47,18 @@ Sprint 6 covers:
 Define canonical ownership for creator records and audit existing Site Builder pages, external links, Adventures content, and any legacy affiliate/storefront configuration.
 
 Acceptance:
-- creator records are owned by canonical organization and site identifiers;
-- public reads require active tenant/site/domain resolution;
-- authoring requires active tenant membership;
-- cross-tenant/site references fail closed;
-- unsafe existing URLs/scripts are identified before migration;
-- audit is read-only and introduces no commerce persistence;
-- migration constraints are documented.
+- creator records are owned through canonical organization and site identifiers;
+- authoring scope requires an active organization, non-archived same-tenant site, and active organization membership;
+- public creator scope requires an active domain resolving to the same active organization and a published site;
+- cross-tenant/site authoring attempts fail closed;
+- the read-only audit inventories sites, published sites, active domains, external navigation links, and external media sources;
+- legacy plain-HTTP external URLs and credential-bearing URLs are explicitly reported as unsafe Sprint 6 migration inputs;
+- domain-to-site organization mismatches are reported;
+- published sites without active domains are reported for operational review;
+- arbitrary Site Builder page bodies are not parsed into creator/affiliate/commerce records;
+- legacy service `price_text` is not treated as structured commerce pricing or payment behavior;
+- no creator, affiliate, product, collection, download, storefront, analytics, or payment persistence is introduced in this boundary step;
+- migration constraints are documented in [S6-T01 Creator Tenant/Site Boundary and Legacy Audit](../09-release/sprint-6-creator-boundary-audit.md).
 
 ### S6-T02 — Creator profile and link-page foundation
 Add tenant/site-owned creator profile metadata and ordered public links.

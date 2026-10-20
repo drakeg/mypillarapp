@@ -103,7 +103,7 @@ See [Sprint 6 Plan — Creator and Commerce Tools](sprint-6-plan.md).
 
 S6-T01 — Creator tenant/site boundary and legacy audit.
 
-This step defines canonical creator ownership across organization/site boundaries and audits existing Site Builder, Adventures, affiliate/link, and creator-content configuration before new creator persistence is introduced.
+This step establishes active-membership authoring and published-domain public boundaries, and audits legacy Site Builder links/media for unsafe URL and ownership conditions before new creator persistence is introduced.
 
 ### Protected baselines
 
