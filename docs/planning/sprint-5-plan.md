@@ -198,6 +198,15 @@ Acceptance:
 ### S5-T11 — Sprint 5 regression and closure
 Add `make test-sprint5`, enforce the focused CI gate, record rollback evidence, and formally close Sprint 5.
 
+Acceptance:
+- Make exposes a focused `test-sprint5` target for all `test_sprint5_*.py` regression modules;
+- the application `smoke` workflow explicitly runs full, Sprint 2, Sprint 3, Sprint 4, and Sprint 5 suites;
+- the closure record maps S5-T01 through S5-T11 to regression evidence;
+- the implementation candidate and pre-Sprint-5 rollback baseline are recorded exactly;
+- maintenance PRs included in the final baseline are distinguished from Sprint 5 implementation scope;
+- final merge SHA and closure run/job IDs are captured after the closure gate merges;
+- CI evidence remains explicitly distinct from production/manual smoke evidence.
+
 ## Testing requirements
 
 - `make test` remains the complete regression gate.
