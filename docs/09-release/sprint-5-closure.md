@@ -1,13 +1,15 @@
 # Sprint 5 Closure Record
 
 - Sprint: Sprint 5 — Customer Portal
-- Status: Closure gate in progress
+- Status: Closed at repository/CI level
+- Sprint 5 repository/CI release candidate: `474fa941cca5f092d748479aeeef8e90bafdbc4c`
 - Sprint 5 implementation candidate before closure gate: `63bcc2850d86661008e2e4f45cbc1302998de881`
 - Pre-Sprint-5 rollback baseline: `9f18418dcde6dcb4b1f6c40e1d071baeed6515c3`
 - Sprint 5 activation PR: #55
 - Sprint 5 implementation PRs: #56, #57, #58, #59, #60, #61, #62, #63, #66, #67
 - Maintenance PRs included in the pre-closure baseline: #64, #65
-- Closure gate: S5-T11 / PR pending
+- Post-closure maintenance PRs included in the final release candidate: #68, #69, #72
+- Closure gate: S5-T11 / PR #71
 
 ## Objective
 
@@ -56,7 +58,17 @@ S5-T11 strengthens the application workflow so it explicitly runs:
 8. non-root runtime-home verification;
 9. Docker Compose `.env` host-port resolution verification.
 
-The exact final Sprint 5 repository/CI release-candidate merge SHA and its closure-run IDs must be recorded after S5-T11 merges. CI success must not be represented as production verification.
+`474fa941cca5f092d748479aeeef8e90bafdbc4c` is the final Sprint 5 repository/CI release candidate. It includes the merged S5-T11 closure gate plus post-closure maintenance updates for Python and GitHub Actions. Its required checks passed:
+
+- application `smoke`: success — Actions run `39357887283`, job `118416845869`;
+- Terraform `validate`: success — Actions run `39357887370`, job `118416846243`.
+
+The S5-T11 merge commit `a7766639481fdd5532319aaa605fb6811531ddcd` independently passed:
+
+- application `smoke`: success — Actions run `39357550823`, job `118415749125`;
+- Terraform `validate`: success — Actions run `39357550824`, job `118415749265`.
+
+CI success must not be represented as production verification.
 
 ## Compatibility decisions
 
@@ -120,4 +132,6 @@ The following remain outside Sprint 5:
 
 ## Exit decision
 
-Sprint 5 implementation scope is complete at the pre-closure baseline. Final repository/CI closure requires the S5-T11 merge commit itself to pass the updated `smoke` workflow and Terraform `validate`; those exact final identifiers will be recorded immediately after merge.
+Sprint 5 repository implementation and CI acceptance criteria are satisfied at `474fa941cca5f092d748479aeeef8e90bafdbc4c`.
+
+Production deployment/manual smoke evidence remains intentionally outstanding and must not be inferred from repository closure.
