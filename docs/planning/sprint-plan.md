@@ -101,9 +101,9 @@ See [Sprint 6 Plan — Creator and Commerce Tools](sprint-6-plan.md).
 
 ### Current step
 
-S6-T01 — Creator tenant/site boundary and legacy audit.
+S6-T02 — Creator profile and link-page foundation.
 
-This step establishes active-membership authoring and published-domain public boundaries, and audits legacy Site Builder links/media for unsafe URL and ownership conditions before new creator persistence is introduced.
+This step adds site-scoped creator profile metadata and ordered safe link records with strict HTTPS/internal-target validation and draft/published/archived lifecycle.
 
 ### Protected baselines
 
