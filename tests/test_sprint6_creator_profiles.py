@@ -76,6 +76,11 @@ class Sprint6CreatorProfileTests(unittest.TestCase):
             'solutions', 'main'
         )
         self.assertEqual('archived', archived.status)
+        with self.assertRaises(ValueError):
+            creator_profiles.upsert_profile(
+                'solutions', 'main',
+                display_name='Resurrected',
+            )
 
     def test_links_support_safe_internal_and_https_targets(self):
         internal = creator_profiles.create_link(
