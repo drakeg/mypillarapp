@@ -171,9 +171,11 @@ def upsert_profile(
 
     with tenant_auth.db() as conn:
         existing = conn.execute(
-            'SELECT created_at FROM creator_profiles WHERE site_id=?',
+            'SELECT created_at, status FROM creator_profiles WHERE site_id=?',
             (site.id,),
         ).fetchone()
+        if existing is not None and existing['status'] == 'archived':
+            raise ValueError('Archived creator profiles cannot be updated.')
         created_at = int(existing['created_at']) if existing else now
         conn.execute(
             '''
