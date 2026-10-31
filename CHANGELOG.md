@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Site-scoped creator content collections with unique per-site slugs, ordered safe internal/HTTPS content items, deterministic ordering, publication lifecycle, archival immutability, and cross-tenant/site isolation.
 - Site-scoped affiliate-link records with credential-free HTTPS destinations, required bounded disclosures, inert network/program/tracking metadata, deterministic ordering, archival immutability, and cross-tenant/site isolation.
 - Site-scoped creator profiles and ordered creator link-page records with strict credential-free HTTPS/root-relative target validation, deterministic ordering, publication lifecycle, archival immutability, and cross-tenant/site isolation.
 - Sprint 6 creator tenant/site boundary with active-membership authoring, published-domain public scope, and read-only legacy Site Builder URL/ownership audit for safe creator migration.
