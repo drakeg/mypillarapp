@@ -100,12 +100,22 @@ Acceptance:
 Add tenant/site-owned collections for videos, articles, travel guides, gear lists, or other creator content.
 
 Acceptance:
-- collection title/slug/description/status/order are validated;
-- collection slugs are unique per site;
-- items are ordered deterministically;
-- item references may be safe internal URLs or validated HTTPS external URLs;
-- draft/archived collections are not public;
-- cross-site/cross-tenant isolation is enforced.
+- collections are canonical site-owned records and inherit tenant ownership through the Site Builder site;
+- collection slugs use normalized lowercase letters/numbers/hyphens and are unique per site;
+- collection title/description/position/status are bounded and validated;
+- lifecycle is draft, published, or archived;
+- archived collections are immutable and hidden by default;
+- published-only reads expose only published collections;
+- duplicate collection positions are deterministic by record ID;
+- collection items belong to the same site and collection;
+- item titles/positions are validated;
+- item targets may be safe root-relative internal paths or credential-free HTTPS external URLs only;
+- HTTP, protocol-relative, credential-bearing, JavaScript, FTP, and empty targets are rejected;
+- item ordering is deterministic by position then record ID;
+- items cannot be added, changed, or deleted after their collection is archived;
+- cross-site and cross-tenant collection/item reads and mutations fail closed;
+- archived sites cannot be modified;
+- no public rendering, affiliate inference, analytics, storefront, download, or payment behavior is introduced in this task.
 
 ### S6-T05 — Digital-download catalog metadata
 Add metadata for downloadable creator products without implementing payment capture or generalized binary storage.
