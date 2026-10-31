@@ -101,9 +101,9 @@ See [Sprint 6 Plan — Creator and Commerce Tools](sprint-6-plan.md).
 
 ### Current step
 
-S6-T03 — Affiliate-link metadata and disclosure controls.
+S6-T04 — Content collections.
 
-This step adds site-scoped affiliate records with strict HTTPS destinations, required disclosure metadata, inert bounded tracking data, publication lifecycle, and cross-tenant/site isolation.
+This step adds site-scoped creator collections and ordered content items with unique per-site slugs, safe internal/HTTPS targets, publication lifecycle, archival immutability, and cross-tenant/site isolation.
 
 ### Protected baselines
 
