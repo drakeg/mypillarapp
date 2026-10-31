@@ -82,13 +82,19 @@ Acceptance:
 Add affiliate records with destination URLs, network/program metadata, labels, and disclosure behavior.
 
 Acceptance:
-- affiliate links are tenant/site-owned;
-- destination URLs are validated HTTPS;
-- disclosure text is explicit and configurable within bounded limits;
-- public rendering can visibly distinguish affiliate links;
-- tracking parameters may be stored but arbitrary script injection is prohibited;
-- inactive/archived records are not public;
-- cross-tenant mutation/read attempts fail closed.
+- affiliate links are canonical site-owned records and inherit tenant ownership through the Site Builder site;
+- labels, network names, program names, disclosure text, tracking metadata, and positions are bounded/validated;
+- destination URLs require credential-free HTTPS and reject HTTP, JavaScript, FTP, and embedded credentials;
+- disclosure text is required for every affiliate record and is stored separately from destination/tracking metadata;
+- disclosure/tracking/network/program fields reject executable script content rather than accepting arbitrary markup;
+- tracking metadata remains inert data and does not execute third-party scripts;
+- lifecycle is draft, published, or archived;
+- archived affiliate records are immutable and hidden by default;
+- published-only reads expose only published records;
+- duplicate positions remain deterministically ordered by record ID;
+- cross-site and cross-tenant reads/updates fail closed;
+- archived sites cannot be modified;
+- no public rendering, click analytics, storefront, payment, tax, invoice, or subscription behavior is introduced in this task.
 
 ### S6-T04 — Content collections
 Add tenant/site-owned collections for videos, articles, travel guides, gear lists, or other creator content.
