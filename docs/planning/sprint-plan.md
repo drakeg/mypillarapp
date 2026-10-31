@@ -101,9 +101,9 @@ See [Sprint 6 Plan — Creator and Commerce Tools](sprint-6-plan.md).
 
 ### Current step
 
-S6-T05 — Digital-download catalog metadata.
+S6-T06 — Storefront/product catalog foundations.
 
-This step adds site-scoped download catalog metadata with safe HTTPS/opaque-storage references, explicit visibility and publication lifecycle, archival immutability, and no entitlement or payment behavior.
+This step adds site-scoped product catalog records with explicit product types, optional integer-cent/ISO-currency pricing metadata, same-site download linkage, deterministic storefront ordering, and no transactional behavior.
 
 ### Protected baselines
 

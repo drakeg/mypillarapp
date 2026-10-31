@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Site-scoped storefront product catalog foundations with explicit product types, optional integer-cent/ISO-currency price metadata, same-site digital-download linkage, safe external-product URLs, deterministic ordering, archival immutability, and no transactional/payment state.
 - Site-scoped digital-download catalog metadata with safe HTTPS or opaque storage-key sources, explicit public/customer/internal visibility, publication lifecycle, archival immutability, and no inferred payment or entitlement behavior.
 - Site-scoped creator content collections with unique per-site slugs, ordered safe internal/HTTPS content items, deterministic ordering, publication lifecycle, archival immutability, and cross-tenant/site isolation.
 - Site-scoped affiliate-link records with credential-free HTTPS destinations, required bounded disclosures, inert network/program/tracking metadata, deterministic ordering, archival immutability, and cross-tenant/site isolation.
