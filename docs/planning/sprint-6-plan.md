@@ -121,13 +121,20 @@ Acceptance:
 Add metadata for downloadable creator products without implementing payment capture or generalized binary storage.
 
 Acceptance:
-- download catalog records are tenant/site-owned;
-- title/description/status/version and optional file metadata are validated;
-- source references use safe external HTTPS URLs or opaque storage keys;
-- customer/public visibility is explicit;
-- storage keys are never exposed directly by public rendering;
-- no payment entitlement is inferred from catalog presence;
-- binary storage/delivery provider remains outside this task.
+- download records are canonical site-owned records and inherit tenant ownership through the Site Builder site;
+- title/description/version/file-name/MIME metadata are bounded and validated;
+- source type is explicitly either `external_url` or `storage_key`;
+- external URLs require credential-free HTTPS;
+- storage keys are opaque metadata and reject absolute paths, traversal, empty path segments, and `file:` URIs;
+- visibility is explicitly `public`, `customer`, or `internal`;
+- lifecycle is draft, published, or archived;
+- archived records are immutable and hidden by default;
+- published/visibility filters are tenant/site scoped;
+- public source exposure returns an external URL only for published public records and never returns storage keys;
+- cross-site and cross-tenant reads/updates fail closed;
+- archived sites cannot be modified;
+- catalog presence creates no pricing, payment-provider, or entitlement state;
+- generalized binary storage/delivery remains outside this task.
 
 ### S6-T06 — Storefront/product catalog foundations
 Add creator product/storefront records for free or future-paid offerings without payment processing.
