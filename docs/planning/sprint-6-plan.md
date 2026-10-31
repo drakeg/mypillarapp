@@ -140,13 +140,20 @@ Acceptance:
 Add creator product/storefront records for free or future-paid offerings without payment processing.
 
 Acceptance:
-- products are tenant/site-owned;
-- product type is explicitly enumerated;
-- price metadata, when present, uses integer cents and ISO currency but does not trigger payment behavior;
-- product publication lifecycle is explicit;
-- optional digital-download linkage is same-tenant/site;
-- storefront ordering is deterministic;
-- no checkout, invoice, subscription, tax, or payment-provider behavior is introduced.
+- products are canonical site-owned records and inherit tenant ownership through the Site Builder site;
+- product type is explicitly one of `service`, `digital_download`, `physical`, or `external`;
+- title/description/position/status are bounded and validated;
+- optional price metadata uses a non-negative integer number of cents plus a three-letter ISO currency code;
+- zero-price products are valid and price metadata remains catalog-only;
+- digital-download products require a same-site download record and other product types may not link downloads;
+- external products require a credential-free HTTPS URL and non-external product types may not define one;
+- lifecycle is draft, published, or archived;
+- archived products are immutable and hidden by default;
+- published-only reads expose only published records;
+- duplicate storefront positions remain deterministically ordered by record ID;
+- cross-site and cross-tenant reads/updates fail closed;
+- archived sites cannot be modified;
+- no checkout, payment provider, invoice, subscription, tax, licensing, order, or entitlement behavior is introduced.
 
 ### S6-T07 — Creator analytics event foundation
 Add bounded first-party analytics events for creator page views, link clicks, collection opens, and download/storefront interactions.
