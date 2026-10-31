@@ -101,9 +101,9 @@ See [Sprint 6 Plan — Creator and Commerce Tools](sprint-6-plan.md).
 
 ### Current step
 
-S6-T02 — Creator profile and link-page foundation.
+S6-T03 — Affiliate-link metadata and disclosure controls.
 
-This step adds site-scoped creator profile metadata and ordered safe link records with strict HTTPS/internal-target validation and draft/published/archived lifecycle.
+This step adds site-scoped affiliate records with strict HTTPS destinations, required disclosure metadata, inert bounded tracking data, publication lifecycle, and cross-tenant/site isolation.
 
 ### Protected baselines
 
