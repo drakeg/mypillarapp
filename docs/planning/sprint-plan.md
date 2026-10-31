@@ -101,9 +101,9 @@ See [Sprint 6 Plan — Creator and Commerce Tools](sprint-6-plan.md).
 
 ### Current step
 
-S6-T04 — Content collections.
+S6-T05 — Digital-download catalog metadata.
 
-This step adds site-scoped creator collections and ordered content items with unique per-site slugs, safe internal/HTTPS targets, publication lifecycle, archival immutability, and cross-tenant/site isolation.
+This step adds site-scoped download catalog metadata with safe HTTPS/opaque-storage references, explicit visibility and publication lifecycle, archival immutability, and no entitlement or payment behavior.
 
 ### Protected baselines
 
