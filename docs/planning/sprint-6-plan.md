@@ -64,13 +64,19 @@ Acceptance:
 Add tenant/site-owned creator profile metadata and ordered public links.
 
 Acceptance:
-- profiles are site-scoped;
-- link titles/URLs/order/visibility are validated;
-- external links require safe HTTPS URLs;
-- internal links are restricted to safe site-relative targets;
-- hidden/archived links are excluded from public rendering;
-- duplicate ordering remains deterministic;
-- cross-site/cross-tenant access fails closed.
+- exactly one creator profile may exist per site;
+- profile display name is required/bounded, bio is bounded, and optional avatar URLs require credential-free HTTPS;
+- profile lifecycle is draft, published, or archived;
+- archived profiles are immutable;
+- creator links are site-scoped with bounded labels, safe targets, nonnegative positions, and draft/published/archived lifecycle;
+- external links require credential-free HTTPS URLs;
+- internal links are restricted to root-relative targets and protocol-relative targets are rejected;
+- archived links are immutable and hidden by default;
+- published-only reads expose only published links;
+- duplicate positions remain deterministic by creation ID;
+- cross-site and cross-tenant reads/updates fail closed;
+- archived sites cannot be modified;
+- no affiliate disclosure, analytics, storefront, download, or payment behavior is introduced in this task.
 
 ### S6-T03 — Affiliate-link metadata and disclosure controls
 Add affiliate records with destination URLs, network/program metadata, labels, and disclosure behavior.

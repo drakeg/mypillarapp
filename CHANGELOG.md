@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Site-scoped creator profiles and ordered creator link-page records with strict credential-free HTTPS/root-relative target validation, deterministic ordering, publication lifecycle, archival immutability, and cross-tenant/site isolation.
 - Sprint 6 creator tenant/site boundary with active-membership authoring, published-domain public scope, and read-only legacy Site Builder URL/ownership audit for safe creator migration.
 - Final Sprint 5 repository/CI closure at `474fa941cca5f092d748479aeeef8e90bafdbc4c` and locked Sprint 6 Creator and Commerce Tools plan covering creator profiles, link pages, affiliate links, content collections, digital-download metadata, storefront foundations, and creator analytics without payment processing.
 - Focused `make test-sprint5` regression gate in GitHub Actions plus formal Sprint 5 Customer Portal repository/CI closure evidence and rollback documentation.
