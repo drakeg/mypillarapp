@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Append-only first-party creator analytics events with enumerated event/target types, same-site creator record validation, bounded inert metadata, tenant/site-scoped bounded reads, and no user/email/ad-tech cross-site identity fields.
 - Site-scoped storefront product catalog foundations with explicit product types, optional integer-cent/ISO-currency price metadata, same-site digital-download linkage, safe external-product URLs, deterministic ordering, archival immutability, and no transactional/payment state.
 - Site-scoped digital-download catalog metadata with safe HTTPS or opaque storage-key sources, explicit public/customer/internal visibility, publication lifecycle, archival immutability, and no inferred payment or entitlement behavior.
 - Site-scoped creator content collections with unique per-site slugs, ordered safe internal/HTTPS content items, deterministic ordering, publication lifecycle, archival immutability, and cross-tenant/site isolation.

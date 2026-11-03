@@ -159,13 +159,17 @@ Acceptance:
 Add bounded first-party analytics events for creator page views, link clicks, collection opens, and download/storefront interactions.
 
 Acceptance:
-- analytics events are tenant/site-owned;
-- supported event types are explicitly enumerated;
-- target references remain same-tenant/site when applicable;
-- event payloads are bounded and do not accept arbitrary executable content;
-- analytics reads are tenant-scoped and bounded;
-- public event creation cannot probe another tenant/site;
-- no ad-tech profile building or cross-tenant tracking is introduced.
+- analytics events are append-only canonical site-owned records and inherit tenant ownership through the Site Builder site;
+- supported event types are explicitly enumerated for creator page views, creator link clicks, affiliate clicks, collection opens, download views/interactions, and product views/interactions;
+- each targeted event type accepts only its matching target type;
+- referenced creator links, affiliates, collections, downloads, and products must belong to the same site;
+- cross-site and cross-tenant target probes fail closed;
+- event metadata is an inert bounded string-to-string object with key/value/count/total-size limits;
+- executable script content is rejected from metadata;
+- analytics reads are tenant/site scoped, newest-first, optionally event-type filtered, and bounded to 1-500 records;
+- archived sites cannot accept new analytics events;
+- event records intentionally contain no email, user/customer identifier, advertising identifier, IP address, or cross-site identity field;
+- no third-party ad-tech profile building, fingerprinting, or cross-tenant tracking is introduced.
 
 ### S6-T08 — Creator authorization and administration
 Add reusable creator-management authorization and an administration facade.

@@ -101,9 +101,9 @@ See [Sprint 6 Plan — Creator and Commerce Tools](sprint-6-plan.md).
 
 ### Current step
 
-S6-T06 — Storefront/product catalog foundations.
+S6-T07 — Creator analytics event foundation.
 
-This step adds site-scoped product catalog records with explicit product types, optional integer-cent/ISO-currency pricing metadata, same-site download linkage, deterministic storefront ordering, and no transactional behavior.
+This step adds append-only first-party site-scoped analytics events with enumerated event/target types, same-site target validation, bounded inert metadata, bounded tenant-safe reads, and no cross-site identity tracking.
 
 ### Protected baselines
 
