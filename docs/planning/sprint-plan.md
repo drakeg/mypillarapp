@@ -101,9 +101,9 @@ See [Sprint 6 Plan — Creator and Commerce Tools](sprint-6-plan.md).
 
 ### Current step
 
-S6-T07 — Creator analytics event foundation.
+S6-T08 — Creator authorization and administration.
 
-This step adds append-only first-party site-scoped analytics events with enumerated event/target types, same-site target validation, bounded inert metadata, bounded tenant-safe reads, and no cross-site identity tracking.
+This step adds active-user/membership/site creator authorization with owner/admin administration, staff content management, viewer read-only access, explicit cross-tenant membership handling, and an authorization-enforcing creator operations facade.
 
 ### Protected baselines
 
