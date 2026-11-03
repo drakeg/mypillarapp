@@ -37,17 +37,20 @@ class CreatorAccess:
 def _active_user_and_org(user_id:int,organization_slug:str)->bool:
     tenant_auth.ensure_schema()
     with tenant_auth.db() as conn:
-        row=conn.execute(
-            '''
-            SELECT u.is_active,o.status
-            FROM auth_users u
-            JOIN auth_organizations o ON o.id=u.organization_id
-            WHERE u.id=? AND o.slug=?
-            LIMIT 1
-            ''',
-            (int(user_id),(organization_slug or '').strip().lower()),
+        user=conn.execute(
+            'SELECT is_active FROM auth_users WHERE id=? LIMIT 1',
+            (int(user_id),),
         ).fetchone()
-    return bool(row and int(row['is_active'])==1 and row['status']=='active')
+        organization=conn.execute(
+            'SELECT status FROM auth_organizations WHERE slug=? LIMIT 1',
+            ((organization_slug or '').strip().lower(),),
+        ).fetchone()
+    return bool(
+        user
+        and int(user['is_active'])==1
+        and organization
+        and organization['status']=='active'
+    )
 
 
 def access_for(user_id:int,organization_slug:str)->CreatorAccess|None:
