@@ -175,12 +175,17 @@ Acceptance:
 Add reusable creator-management authorization and an administration facade.
 
 Acceptance:
-- owner/admin may administer creator configuration;
-- staff may manage creator content according to least privilege;
-- viewer is read-only or denied mutation;
-- platform-admin identity does not implicitly grant tenant creator mutation rights;
-- revoked memberships and inactive/suspended tenants fail closed;
-- all mutations pass through tenant/site authorization.
+- owner/admin may view, manage creator content, and use creator-administration capability;
+- staff may view/manage creator profiles, links, affiliates, collections, downloads, and products but may not use creator-administration capability;
+- viewer may view creator configuration/analytics but may not mutate creator content;
+- unknown capabilities fail closed;
+- authorization requires an active auth user, active organization, active explicit membership, and non-archived target site;
+- an explicitly granted cross-tenant membership authorizes only that tenant and no primary-organization fallback is used;
+- revoked memberships, disabled users, inactive/suspended organizations, and archived sites fail closed;
+- platform-admin/bootstrap identity does not implicitly grant tenant creator access without a tenant membership;
+- creator administration mutations are routed through the authorization-enforcing facade;
+- analytics/admin reads through the facade are tenant/site authorized;
+- underlying persistence remains site-scoped and the facade does not broaden cross-tenant access.
 
 ### S6-T09 — Public creator and storefront rendering
 Expose published creator profiles, link pages, collections, affiliate disclosures, download/catalog metadata, and storefront foundations through resolved public sites.
