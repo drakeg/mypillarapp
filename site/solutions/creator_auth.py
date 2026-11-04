@@ -35,7 +35,6 @@ class CreatorAccess:
 
 
 def _active_user_and_org(user_id:int,organization_slug:str)->bool:
-    tenant_auth.ensure_schema()
     with tenant_auth.db() as conn:
         user=conn.execute(
             'SELECT is_active FROM auth_users WHERE id=? LIMIT 1',
