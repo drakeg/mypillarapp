@@ -101,9 +101,9 @@ See [Sprint 6 Plan — Creator and Commerce Tools](sprint-6-plan.md).
 
 ### Current step
 
-S6-T08 — Creator authorization and administration.
+S6-T09 — Public creator and storefront rendering.
 
-This step adds active-user/membership/site creator authorization with owner/admin administration, staff content management, viewer read-only access, explicit cross-tenant membership handling, and an authorization-enforcing creator operations facade.
+This step adds published-site `/creator` and `/store` rendering with escaped published-only creator content, visible affiliate disclosures, safe storefront links, storage-key non-disclosure, and preserved Site Builder/Solutions compatibility.
 
 ### Protected baselines
 
