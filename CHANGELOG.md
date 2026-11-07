@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Hostname-aware public `/creator` and `/store` rendering for published Site Builder sites with escaped published-only creator content, visible affiliate disclosures, safe storefront/download links, storage-key non-disclosure, and protected Solutions compatibility fallback.
 - Creator authorization and administration facade with active-user/organization/membership/site checks, least-privilege owner/admin/staff/viewer capabilities, explicit cross-tenant membership support, platform-admin separation, and authorized creator-content operations.
 - Append-only first-party creator analytics events with enumerated event/target types, same-site creator record validation, bounded inert metadata, tenant/site-scoped bounded reads, and no user/email/ad-tech cross-site identity fields.
 - Site-scoped storefront product catalog foundations with explicit product types, optional integer-cent/ISO-currency price metadata, same-site digital-download linkage, safe external-product URLs, deterministic ordering, archival immutability, and no transactional/payment state.
