@@ -11,6 +11,7 @@ if str(SOLUTIONS) not in sys.path:
 
 import creator_admin
 import creator_auth
+import server
 import tenant_auth
 import tenant_memberships
 import tenant_sites
@@ -175,26 +176,34 @@ class Sprint6CreatorAuthorizationTests(unittest.TestCase):
             )
 
     def test_platform_admin_identity_has_no_implicit_tenant_access(self):
-        with tenant_auth.db() as conn:
-            org=conn.execute(
-                "SELECT id FROM auth_organizations WHERE slug='solutions'"
-            ).fetchone()
-            now=tenant_auth.now()
-            cur=conn.execute(
-                '''INSERT INTO auth_users(
-                       created_at,updated_at,organization_id,email,
-                       first_name,last_name,password_hash,role,is_active
-                   ) VALUES(?,?,?,?,?,?,?,?,1)''',
-                (
-                    now,now,org['id'],'platform@example.com','Platform','Admin',
-                    tenant_auth.hash_password('abcdefghijkl'),'admin',
-                ),
-            )
-            platform_user=int(cur.lastrowid)
-            conn.commit()
-        self.assertFalse(
-            creator_auth.can(platform_user,'solutions','creator_admin')
+        original=(
+            server.ADMIN_USERNAME,
+            server.ADMIN_PASSWORD_HASH,
+            server.ADMIN_SESSION_SECRET,
         )
+        try:
+            server.ADMIN_USERNAME='platform-admin'
+            server.ADMIN_PASSWORD_HASH='configured'
+            server.ADMIN_SESSION_SECRET='test-platform-secret'
+            token=server.make_admin_session('platform-admin')
+            self.assertTrue(
+                server.verify_admin_session(
+                    token,
+                    server.PLATFORM_ADMIN_SCOPE,
+                )
+            )
+            # Platform administration is a separate authenticated scope, not
+            # a tenant auth_users identity or membership. Having a valid
+            # platform session therefore cannot satisfy creator tenant RBAC.
+            self.assertFalse(
+                creator_auth.can(999999,'solutions','creator_admin')
+            )
+        finally:
+            (
+                server.ADMIN_USERNAME,
+                server.ADMIN_PASSWORD_HASH,
+                server.ADMIN_SESSION_SECRET,
+            )=original
 
     def test_archived_site_denies_mutation_and_read_facade(self):
         tenant_sites.create_site(
