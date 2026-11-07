@@ -191,13 +191,19 @@ Acceptance:
 Expose published creator profiles, link pages, collections, affiliate disclosures, download/catalog metadata, and storefront foundations through resolved public sites.
 
 Acceptance:
-- public rendering is hostname/site aware;
-- only published/visible records appear;
-- HTML is escaped;
-- affiliate disclosure is visible where required;
-- hidden storage keys and internal metadata are not exposed;
-- unsafe links/scripts are not rendered;
-- existing protected Site Builder public behavior remains compatible.
+- public creator/storefront routes resolve through the existing hostname/site renderer and require a published site;
+- `/creator` requires a published creator profile and renders only published creator links, affiliates, and collections;
+- creator/profile/link/collection/affiliate text and URL attributes are escaped;
+- affiliate links visibly render the stored disclosure and use sponsored/nofollow relationship metadata;
+- draft/archived creator records are excluded from public output;
+- `/store` renders published products only with catalog price metadata;
+- external products expose only validated credential-free HTTPS URLs;
+- digital-download products expose an external download URL only when the linked download is published, public, and external-url backed;
+- opaque storage keys are never written to public HTML;
+- managed-storage digital products may show non-sensitive availability text without exposing internal references;
+- existing Site Builder pages/navigation/home behavior remains compatible;
+- the protected Solutions main-site static compatibility fallback remains unchanged;
+- no checkout, payment, entitlement, account-specific delivery, or public analytics collection is introduced in this rendering step.
 
 ### S6-T10 — Adventures compatibility migration
 Stage existing Mad Mallards Adventures creator/link/affiliate/content configuration into canonical Sprint 6 records where safe.
