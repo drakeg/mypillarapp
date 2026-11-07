@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import html
 
+import creator_public
 import site_branding
 import site_forms
 import site_navigation
@@ -205,6 +206,34 @@ def render_public_path(host: str, path: str) -> PublicRenderResult | None:
     normalized_path = '/' + (path or '/').strip('/')
     if normalized_path == '/':
         return _home(site)
+    if normalized_path == '/creator':
+        result = creator_public.render_creator(site)
+        branding = site_branding.get_branding(site.organization_slug, site.slug)
+        if branding is None:
+            return PublicRenderResult(404, '<h1>Site unavailable</h1>')
+        return PublicRenderResult(
+            result.status,
+            _page_shell(
+                f'Creator - {branding.site_name}',
+                f'<header><strong>{_esc(branding.site_name)}</strong>{_nav_html(site.organization_slug, site.slug)}</header>{result.body}',
+                primary=branding.primary_color,
+                secondary=branding.secondary_color,
+            ),
+        )
+    if normalized_path == '/store':
+        result = creator_public.render_store(site)
+        branding = site_branding.get_branding(site.organization_slug, site.slug)
+        if branding is None:
+            return PublicRenderResult(404, '<h1>Site unavailable</h1>')
+        return PublicRenderResult(
+            result.status,
+            _page_shell(
+                f'Storefront - {branding.site_name}',
+                f'<header><strong>{_esc(branding.site_name)}</strong>{_nav_html(site.organization_slug, site.slug)}</header>{result.body}',
+                primary=branding.primary_color,
+                secondary=branding.secondary_color,
+            ),
+        )
     if normalized_path.startswith('/pages/'):
         slug = normalized_path[len('/pages/'):].strip('/')
         return _published_page(site, slug)
