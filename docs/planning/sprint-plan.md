@@ -101,9 +101,9 @@ See [Sprint 6 Plan — Creator and Commerce Tools](sprint-6-plan.md).
 
 ### Current step
 
-S6-T10 — Adventures compatibility migration.
+S6-T11 — Sprint 6 regression and closure.
 
-This step stages safe existing Mad Mallards Adventures Site Builder branding, navigation, page links, and media references into draft canonical Sprint 6 creator records with persistent legacy mappings, unsafe/unmatched reporting, owner-edit preservation, and no automatic live cutover.
+This step adds the focused `make test-sprint6` regression gate to CI, records repository/CI evidence and rollback guidance, and closes the Creator and Commerce Tools implementation scope without claiming production deployment verification.
 
 ### Protected baselines
 
