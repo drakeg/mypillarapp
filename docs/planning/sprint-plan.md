@@ -101,9 +101,9 @@ See [Sprint 6 Plan — Creator and Commerce Tools](sprint-6-plan.md).
 
 ### Current step
 
-S6-T09 — Public creator and storefront rendering.
+S6-T10 — Adventures compatibility migration.
 
-This step adds published-site `/creator` and `/store` rendering with escaped published-only creator content, visible affiliate disclosures, safe storefront links, storage-key non-disclosure, and preserved Site Builder/Solutions compatibility.
+This step stages safe existing Mad Mallards Adventures Site Builder branding, navigation, page links, and media references into draft canonical Sprint 6 creator records with persistent legacy mappings, unsafe/unmatched reporting, owner-edit preservation, and no automatic live cutover.
 
 ### Protected baselines
 
