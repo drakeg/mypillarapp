@@ -8,7 +8,9 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
-- Explicit idempotent, non-destructive Mad Mallards Adventures compatibility migration that stages safe legacy branding/navigation/page/media references as draft creator records, preserves owner edits through persistent mappings, reports unsafe/unmatched inputs, and performs no live cutover.\n- Hostname-aware public `/creator` and `/store` rendering for published Site Builder sites with escaped published-only creator content, visible affiliate disclosures, safe storefront/download links, storage-key non-disclosure, and protected Solutions compatibility fallback.
+- Focused `make test-sprint6` regression gate in GitHub Actions plus Sprint 6 repository/CI closure and rollback evidence.
+- Explicit idempotent, non-destructive Mad Mallards Adventures compatibility migration that stages safe legacy branding/navigation/page/media references as draft creator records, preserves owner edits through persistent mappings, reports unsafe/unmatched inputs, and performs no live cutover.
+- Hostname-aware public `/creator` and `/store` rendering for published Site Builder sites with escaped published-only creator content, visible affiliate disclosures, safe storefront/download links, storage-key non-disclosure, and protected Solutions compatibility fallback.
 - Creator authorization and administration facade with active-user/organization/membership/site checks, least-privilege owner/admin/staff/viewer capabilities, explicit cross-tenant membership support, platform-admin separation, and authorized creator-content operations.
 - Append-only first-party creator analytics events with enumerated event/target types, same-site creator record validation, bounded inert metadata, tenant/site-scoped bounded reads, and no user/email/ad-tech cross-site identity fields.
 - Site-scoped storefront product catalog foundations with explicit product types, optional integer-cent/ISO-currency price metadata, same-site digital-download linkage, safe external-product URLs, deterministic ordering, archival immutability, and no transactional/payment state.
