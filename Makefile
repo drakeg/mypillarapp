@@ -4,7 +4,7 @@ BACKEND_CONFIG := $(TF_DIR)/backend.hcl
 TF_INIT_ARGS := $(if $(wildcard $(BACKEND_CONFIG)),-backend-config=backend.hcl,)
 PYTHON ?= python3
 
-.PHONY: test test-sprint2 test-sprint3 test-sprint4 test-sprint5 tf-fmt tf-init tf-init-migrate tf-init-reconfigure tf-validate tf-plan tf-apply tf-output tf-destroy package
+.PHONY: test test-sprint2 test-sprint3 test-sprint4 test-sprint5 test-sprint6 tf-fmt tf-init tf-init-migrate tf-init-reconfigure tf-validate tf-plan tf-apply tf-output tf-destroy package
 
 test:
 	$(PYTHON) -m unittest discover -s tests -p 'test_*.py' -v
@@ -20,6 +20,9 @@ test-sprint4:
 
 test-sprint5:
 	$(PYTHON) -m unittest discover -s tests -p 'test_sprint5_*.py' -v
+
+test-sprint6:
+	$(PYTHON) -m unittest discover -s tests -p 'test_sprint6_*.py' -v
 
 tf-fmt:
 	terraform fmt -recursive terraform
