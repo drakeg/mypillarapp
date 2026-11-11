@@ -89,21 +89,35 @@ Repository/CI acceptance is complete at `474fa941cca5f092d748479aeeef8e90bafdbc4
 
 ## Sprint 6 status
 
-Sprint 6 — Creator and Commerce Tools is the active planning/implementation Sprint.
+Sprint 6 — Creator and Commerce Tools is complete at the repository/CI level.
+
+### Objective achieved
+
+The platform now has tenant-safe creator profiles, links, affiliate disclosures, content collections, digital-download metadata, storefront/product foundations, first-party analytics, least-privilege creator administration, safe public creator/storefront rendering, and non-destructive Mad Mallards Adventures compatibility.
+
+### Closure evidence
+
+See [Sprint 6 Closure Record](../09-release/sprint-6-closure.md).
+
+Repository/CI acceptance is complete at `ae3c1ba9f0a6e4959c69f617fec0d4ef3f368a35`. Production/manual smoke evidence remains deployment-time work.
+
+## Sprint 7 status
+
+Sprint 7 — AI Assistance is the active planning/implementation Sprint.
 
 ### Objective
 
-Support Mad Mallards Adventures and other creator businesses with tenant-safe creator profiles, link pages, affiliate links, content collections, digital-download metadata, storefront foundations, and first-party analytics without introducing payment processing before Sprint 8.
+Add measurable AI assistance for tenant staff and creator workflows while preserving tenant isolation, requiring human review for consequential output, and preventing uncontrolled model usage or cost.
 
 ### Locked plan
 
-See [Sprint 6 Plan — Creator and Commerce Tools](sprint-6-plan.md).
+See [Sprint 7 Plan — AI Assistance](sprint-7-plan.md).
 
 ### Current step
 
-S6-T11 — Sprint 6 regression and closure.
+S7-T01 — AI tenant boundary, data classification, and threat audit.
 
-This step adds the focused `make test-sprint6` regression gate to CI, records repository/CI evidence and rollback guidance, and closes the Creator and Commerce Tools implementation scope without claiming production deployment verification.
+This step defines canonical AI request ownership and authorization, establishes allow-listed context classes, documents prompt-injection/data-exfiltration risks, and prevents provider integration until the tenant/data boundary is explicit.
 
 ### Protected baselines
 
@@ -112,3 +126,4 @@ This step adds the focused `make test-sprint6` regression gate to CI, records re
 - Sprint 3 Site Builder/domain/rendering behavior remains protected.
 - Sprint 4 CRM ownership, relationships, authorization, and migration compatibility remain protected.
 - Sprint 5 Customer Portal ownership, visibility, messaging, authorization, compatibility, and focused regression gate remain protected.
+- Sprint 6 Creator Tools ownership, publishing, analytics, authorization, compatibility, and focused regression gate remain protected.
