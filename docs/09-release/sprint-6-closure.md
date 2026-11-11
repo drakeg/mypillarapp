@@ -1,13 +1,15 @@
 # Sprint 6 Closure Record
 
 - Sprint: Sprint 6 — Creator and Commerce Tools
-- Status: Closure candidate at repository/CI level
+- Status: Closed at repository/CI level
 - Sprint 6 implementation candidate before closure gate: `d275c10796e258816825bed0b6629d77974c563d`
 - Pre-Sprint-6 rollback baseline: `474fa941cca5f092d748479aeeef8e90bafdbc4c`
 - Sprint 6 activation PR: #74
 - Sprint 6 implementation PRs: #76, #77, #78, #79, #80, #81, #82, #83, #85, #86
-- Closure gate: S6-T11 / this PR
-- Final Sprint 6 release-candidate SHA: recorded after the closure gate merges and required checks pass
+- Closure gate: S6-T11 / PR #87
+- Sprint 6 closure merge commit: `85aa5f1cf94664497a3bea37a949e9d37bf437a4`
+- Post-closure maintenance PRs included in the final release candidate: #88, #89
+- Final Sprint 6 repository/CI release candidate: `ae3c1ba9f0a6e4959c69f617fec0d4ef3f368a35`
 
 ## Objective
 
@@ -51,7 +53,15 @@ That application workflow ran the complete regression suite plus protected focus
 9. non-root runtime-home verification;
 10. Docker Compose `.env` host-port resolution verification.
 
-The final Sprint 6 release-candidate SHA and closure-gate workflow IDs must be recorded after this PR merges and the required checks complete successfully.
+The S6-T11 closure merge commit `85aa5f1cf94664497a3bea37a949e9d37bf437a4` passed:
+
+- application `smoke`: success — Actions run `42760558201`, job `129644985576`;
+- Terraform `validate`: success — Actions run `42760558182`, job `129644983252`.
+
+After closure, dependency maintenance PR #88 updated Django to 6.1.3 and PR #89 updated Gunicorn to 27.x. The final Sprint 6 repository/CI release candidate `ae3c1ba9f0a6e4959c69f617fec0d4ef3f368a35` passed:
+
+- application `smoke`: success — Actions run `42959100805`, job `130321111417`;
+- Terraform `validate`: success — Actions run `42959100803`, job `130321111415`.
 
 CI success must not be represented as production verification.
 
@@ -125,6 +135,6 @@ The following remain outside Sprint 6:
 
 S6-T01 through S6-T10 are implemented on the pre-closure baseline `d275c10796e258816825bed0b6629d77974c563d`.
 
-S6-T11 adds the explicit focused Sprint 6 regression gate and this closure/rollback record. Sprint 6 is considered closed at repository/CI level only after the closure PR merges and its required application/Terraform checks pass.
+S6-T11 added the explicit focused Sprint 6 regression gate and closure/rollback record. The closure gate and post-closure maintenance baseline are green, so Sprint 6 is closed at repository/CI level at `ae3c1ba9f0a6e4959c69f617fec0d4ef3f368a35`.
 
 Production deployment/manual smoke evidence remains intentionally outstanding and must not be inferred from repository closure.
