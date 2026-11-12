@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import ai_auth
 import ai_boundary
 import ai_execution
 import creator_profiles
@@ -38,6 +39,12 @@ def summarize_records(
     requested_output_units: int = DEFAULT_OUTPUT_UNITS,
     timeout_seconds: int = 30,
 ) -> SummarySuggestion:
+    ai_auth.require(
+        user_id,
+        organization_slug,
+        'summary',
+        site_slug=site_slug,
+    )
     scope = ai_boundary.authorize_request(
         user_id,
         organization_slug,
