@@ -86,3 +86,21 @@ def usage_records(
         organization_slug,
         limit=limit,
     )
+
+
+def operational_summary(
+    user_id: int,
+    organization_slug: str,
+    *,
+    since: int | None = None,
+):
+    ai_auth.require(
+        user_id,
+        organization_slug,
+        'view_usage',
+    )
+    return ai_execution.operational_summary(
+        user_id,
+        organization_slug,
+        since=since,
+    )
