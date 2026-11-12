@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+import ai_boundary
 import ai_settings
 import tenant_auth
 
@@ -236,9 +237,7 @@ def list_usage(
     *,
     limit: int = 100,
 ) -> list[AIUsageRecord]:
-    scope = ai_settings.ai_boundary.authorize_request(
-        user_id, organization_slug
-    )
+    scope = ai_boundary.authorize_request(user_id, organization_slug)
     clean_limit = _bounded_list_limit(limit)
     ensure_schema()
     with tenant_auth.db() as conn:
