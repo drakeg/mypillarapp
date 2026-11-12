@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from typing import Protocol
 
 import ai_boundary
@@ -16,8 +17,10 @@ TASK_TYPES = {
 }
 USAGE_STATUSES = {
     'success',
+    'rejected_before_call',
     'provider_error',
     'timeout',
+    'quota_limit',
     'invalid_response',
 }
 MAX_TASK_TYPE_LENGTH = 64
@@ -25,6 +28,7 @@ MAX_PROVIDER_NAME_LENGTH = 80
 MAX_MODEL_ID_LENGTH = 160
 MAX_TIMEOUT_SECONDS = 120
 ROLLING_WINDOW_SECONDS = 24 * 60 * 60
+AI_KILL_SWITCH_ENV = 'MADMALLARD_AI_KILL_SWITCH'
 
 
 @dataclass(frozen=True)
@@ -64,6 +68,19 @@ class AIUsageRecord:
 
 
 @dataclass(frozen=True)
+class AIOperationalSummary:
+    organization_slug: str
+    total_events: int
+    successful_events: int
+    failed_events: int
+    total_units: int
+    failure_rate: float
+    by_status: dict[str, int]
+    by_task: dict[str, int]
+    by_model: dict[str, int]
+
+
+@dataclass(frozen=True)
 class AIExecutionResult:
     text: str
     usage: AIUsageRecord
@@ -73,9 +90,23 @@ class AIExecutionError(RuntimeError):
     pass
 
 
+def kill_switch_enabled() -> bool:
+    return os.environ.get(AI_KILL_SWITCH_ENV, '').strip().lower() in {
+        '1', 'true', 'yes', 'on',
+    }
+
+
 def ensure_schema() -> None:
     ai_settings.ensure_schema()
     with tenant_auth.db() as conn:
+        row = conn.execute(
+            "SELECT sql FROM sqlite_master "
+            "WHERE type='table' AND name='ai_usage_events'"
+        ).fetchone()
+        if row and 'rejected_before_call' not in str(row['sql'] or ''):
+            conn.execute(
+                'ALTER TABLE ai_usage_events RENAME TO ai_usage_events_legacy'
+            )
         conn.execute(
             '''
             CREATE TABLE IF NOT EXISTS ai_usage_events (
@@ -91,13 +122,31 @@ def ensure_schema() -> None:
                 CHECK(input_units >= 0),
                 CHECK(output_units >= 0),
                 CHECK(status IN (
-                    'success','provider_error','timeout','invalid_response'
+                    'success','rejected_before_call','provider_error',
+                    'timeout','quota_limit','invalid_response'
                 )),
                 FOREIGN KEY(organization_id)
                     REFERENCES auth_organizations(id) ON DELETE CASCADE
             )
             '''
         )
+        legacy = conn.execute(
+            "SELECT 1 FROM sqlite_master "
+            "WHERE type='table' AND name='ai_usage_events_legacy'"
+        ).fetchone()
+        if legacy:
+            conn.execute(
+                '''
+                INSERT INTO ai_usage_events(
+                    id, organization_id, task_type, provider_name, model_id,
+                    input_units, output_units, status, created_at
+                )
+                SELECT id, organization_id, task_type, provider_name, model_id,
+                       input_units, output_units, status, created_at
+                FROM ai_usage_events_legacy
+                '''
+            )
+            conn.execute('DROP TABLE ai_usage_events_legacy')
         conn.execute(
             'CREATE INDEX IF NOT EXISTS idx_ai_usage_org_created '
             'ON ai_usage_events(organization_id, created_at DESC, id DESC)'
@@ -130,14 +179,46 @@ def execute(
         MAX_MODEL_ID_LENGTH,
     )
 
-    rolling_used = rolling_usage_units(organization_slug)
-    scope, settings = ai_settings.require_usage_allowed(
-        user_id,
-        organization_slug,
-        requested_input_units=requested_input_units,
-        requested_output_units=requested_output_units,
-        rolling_used_units=rolling_used,
-    )
+    scope = ai_boundary.authorize_request(user_id, organization_slug)
+    if kill_switch_enabled():
+        _record_usage(
+            scope.organization_id,
+            scope.organization_slug,
+            clean_task,
+            provider_name,
+            model_id,
+            0,
+            0,
+            'rejected_before_call',
+        )
+        raise PermissionError('AI is temporarily disabled by the operational kill switch.')
+
+    rolling_used = rolling_usage_units(scope.organization_slug)
+    try:
+        scope, settings = ai_settings.require_usage_allowed(
+            user_id,
+            scope.organization_slug,
+            requested_input_units=requested_input_units,
+            requested_output_units=requested_output_units,
+            rolling_used_units=rolling_used,
+        )
+    except PermissionError as exc:
+        status = (
+            'quota_limit'
+            if 'limit exceeded' in str(exc).lower()
+            else 'rejected_before_call'
+        )
+        _record_usage(
+            scope.organization_id,
+            scope.organization_slug,
+            clean_task,
+            provider_name,
+            model_id,
+            0,
+            0,
+            status,
+        )
+        raise
 
     try:
         response = provider.generate(
@@ -148,7 +229,7 @@ def execute(
             timeout_seconds=clean_timeout,
         )
     except TimeoutError as exc:
-        usage = _record_usage(
+        _record_usage(
             scope.organization_id,
             scope.organization_slug,
             clean_task,
@@ -160,7 +241,7 @@ def execute(
         )
         raise AIExecutionError('AI provider request timed out.') from exc
     except Exception as exc:
-        usage = _record_usage(
+        _record_usage(
             scope.organization_id,
             scope.organization_slug,
             clean_task,
@@ -174,8 +255,12 @@ def execute(
 
     try:
         text = _clean_output_text(response.text)
-        actual_input = _bounded_usage(response.input_units, 'AI provider input usage')
-        actual_output = _bounded_usage(response.output_units, 'AI provider output usage')
+        actual_input = _bounded_usage(
+            response.input_units, 'AI provider input usage'
+        )
+        actual_output = _bounded_usage(
+            response.output_units, 'AI provider output usage'
+        )
         if actual_input > settings.max_input_units:
             raise ValueError('AI provider input usage exceeded tenant limit.')
         if actual_output > settings.max_output_units:
@@ -253,6 +338,66 @@ def list_usage(
             (scope.organization_id, clean_limit),
         ).fetchall()
     return [_usage_from_row(row) for row in rows]
+
+
+def operational_summary(
+    user_id: int,
+    organization_slug: str,
+    *,
+    since: int | None = None,
+) -> AIOperationalSummary:
+    scope = ai_boundary.authorize_request(user_id, organization_slug)
+    ensure_schema()
+    params: list[object] = [scope.organization_id]
+    where = 'WHERE organization_id=?'
+    if since is not None:
+        where += ' AND created_at>=?'
+        params.append(int(since))
+
+    with tenant_auth.db() as conn:
+        rows = conn.execute(
+            f'''
+            SELECT task_type, model_id, status,
+                   COUNT(*) AS event_count,
+                   COALESCE(SUM(input_units + output_units), 0) AS total_units
+            FROM ai_usage_events
+            {where}
+            GROUP BY task_type, model_id, status
+            ORDER BY task_type, model_id, status
+            ''',
+            params,
+        ).fetchall()
+
+    by_status = {status: 0 for status in sorted(USAGE_STATUSES)}
+    by_task: dict[str, int] = {}
+    by_model: dict[str, int] = {}
+    total_events = 0
+    total_units = 0
+    for row in rows:
+        count = int(row['event_count'])
+        units = int(row['total_units'] or 0)
+        status = str(row['status'])
+        task = str(row['task_type'])
+        model = str(row['model_id'])
+        by_status[status] = by_status.get(status, 0) + count
+        by_task[task] = by_task.get(task, 0) + count
+        by_model[model] = by_model.get(model, 0) + count
+        total_events += count
+        total_units += units
+
+    successful = by_status.get('success', 0)
+    failed = total_events - successful
+    return AIOperationalSummary(
+        organization_slug=scope.organization_slug,
+        total_events=total_events,
+        successful_events=successful,
+        failed_events=failed,
+        total_units=total_units,
+        failure_rate=(failed / total_events) if total_events else 0.0,
+        by_status=by_status,
+        by_task=by_task,
+        by_model=by_model,
+    )
 
 
 def _record_usage(
