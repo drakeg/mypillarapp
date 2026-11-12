@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Human-reviewed AI drafting assistance over explicitly selected authorized tenant context, with bounded prompt construction, untrusted-output classification, source-reference traceability, and no auto-save/send/publish or canonical record mutation.
 - Provider-neutral AI execution facade with explicit timeout/error handling, fail-before-call tenant usage admission, 24-hour rolling usage accounting, append-only tenant-scoped provider/model/unit/status metadata, and no prompt/response/provider-secret persistence.
 - Tenant-owned AI enablement and bounded provider-neutral request/rolling usage controls with owner/admin-only configuration, staff/viewer configuration denial, fail-closed inactive/cross-tenant enforcement, and no billing semantics.
 - Sprint 7 AI request/data boundary with active tenant-membership authorization, optional site locking, allow-listed context classes, blocked secret/storage/internal context classes, pre-prompt record ownership validation, untrusted-output classification, and documented prompt-injection/data-exfiltration threats without provider integration.
