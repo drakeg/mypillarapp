@@ -249,10 +249,6 @@ def _score_candidate(candidate, terms):
     score = sum(normalized.count(term) for term in terms)
     if score <= 0:
         return None
-    ai_boundary.validate_context_reference(
-        _scope_for_validation(reference),
-        reference,
-    ) if False else None
     snippet = ' '.join(text.split())
     if len(snippet) > 500:
         snippet = snippet[:497].rstrip() + '...'
@@ -263,9 +259,6 @@ def _score_candidate(candidate, terms):
         score=score,
     )
 
-
-def _scope_for_validation(reference):
-    raise RuntimeError('unreachable')
 
 
 def _answer_context(hits):
