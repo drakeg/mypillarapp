@@ -115,9 +115,9 @@ See [Sprint 7 Plan — AI Assistance](sprint-7-plan.md).
 
 ### Current step
 
-S7-T07 — Tenant-safe knowledge search.
+S7-T08 — AI authorization and administration.
 
-This step adds deterministic lexical retrieval over allow-listed tenant/site records plus optional provider answers constrained to retrieved sources, with source-reference traceability, viewer denial, and no arbitrary external crawling.
+This step centralizes capability-based AI RBAC and tenant administration: viewers are explicitly read-only for status, staff can use approved assistance but cannot administer limits/usage, owner/admin roles manage settings and usage, and unknown/revoked/disabled/inactive/archived states fail closed.
 
 ### Protected baselines
 
