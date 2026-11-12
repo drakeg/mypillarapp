@@ -103,7 +103,7 @@ Repository/CI acceptance is complete at `ae3c1ba9f0a6e4959c69f617fec0d4ef3f368a3
 
 ## Sprint 7 status
 
-Sprint 7 — AI Assistance is the active planning/implementation Sprint.
+Sprint 7 — AI Assistance is at repository/CI closure candidate status.
 
 ### Objective
 
@@ -115,9 +115,9 @@ See [Sprint 7 Plan — AI Assistance](sprint-7-plan.md).
 
 ### Current step
 
-S7-T09 — AI auditability and operational safeguards.
+S7-T10 — Sprint 7 regression and closure.
 
-This step adds auditable pre-call rejection and quota/limit statuses, content-free owner/admin operational summaries, a global AI-only kill switch, safe usage-schema migration, and documented production verification/rollback procedures.
+This step adds the focused `make test-sprint7` gate, enforces it in CI, records closure/rollback evidence, and establishes the final Sprint 7 repository/CI baseline when the closure PR merges green.
 
 ### Protected baselines
 
@@ -127,3 +127,9 @@ This step adds auditable pre-call rejection and quota/limit statuses, content-fr
 - Sprint 4 CRM ownership, relationships, authorization, and migration compatibility remain protected.
 - Sprint 5 Customer Portal ownership, visibility, messaging, authorization, compatibility, and focused regression gate remain protected.
 - Sprint 6 Creator Tools ownership, publishing, analytics, authorization, compatibility, and focused regression gate remain protected.
+
+### Closure evidence
+
+See [Sprint 7 Closure Record](../09-release/sprint-7-closure.md).
+
+The closure record becomes final when the S7-T10 pull request merges with all required CI checks green. Production/provider verification remains deployment-time work.
