@@ -115,9 +115,9 @@ See [Sprint 7 Plan — AI Assistance](sprint-7-plan.md).
 
 ### Current step
 
-S7-T08 — AI authorization and administration.
+S7-T09 — AI auditability and operational safeguards.
 
-This step centralizes capability-based AI RBAC and tenant administration: viewers are explicitly read-only for status, staff can use approved assistance but cannot administer limits/usage, owner/admin roles manage settings and usage, and unknown/revoked/disabled/inactive/archived states fail closed.
+This step adds auditable pre-call rejection and quota/limit statuses, content-free owner/admin operational summaries, a global AI-only kill switch, safe usage-schema migration, and documented production verification/rollback procedures.
 
 ### Protected baselines
 
