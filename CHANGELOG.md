@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Tenant-safe AI knowledge search with deterministic lexical retrieval across allow-listed tenant records, optional provider answers constrained to retrieved sources, source-reference traceability, site/tenant namespace isolation, and no arbitrary external crawling.
 - Human-reviewed AI customer reply suggestions for authorized staff, with internal-message exclusion, validated same-customer Portal project context, untrusted-output classification, and a strict no-auto-send/no-conversation-mutation boundary.
 - Authorized AI record summarization with bounded tenant-safe context, source-reference traceability, preserved internal/customer conversation visibility labels, cross-customer aggregation rejection, and non-authoritative non-persisted output.
 - Human-reviewed AI drafting assistance over explicitly selected authorized tenant context, with bounded prompt construction, untrusted-output classification, source-reference traceability, and no auto-save/send/publish or canonical record mutation.
