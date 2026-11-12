@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import ai_auth
 import ai_boundary
 import ai_execution
 import creator_profiles
@@ -58,13 +59,17 @@ def search_knowledge(
 ) -> KnowledgeSearchResult:
     clean_query = _clean_query(query)
     clean_limit = _clean_limit(limit)
+    ai_auth.require(
+        user_id,
+        organization_slug,
+        'knowledge_search',
+        site_slug=site_slug,
+    )
     scope = ai_boundary.authorize_request(
         user_id,
         organization_slug,
         site_slug=site_slug,
     )
-    if scope.role not in {'owner', 'admin', 'staff'}:
-        raise PermissionError('AI knowledge search access denied.')
 
     sources = _clean_sources(source_classes)
     terms = _terms(clean_query)
