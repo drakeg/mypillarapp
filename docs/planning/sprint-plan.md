@@ -115,9 +115,9 @@ See [Sprint 7 Plan — AI Assistance](sprint-7-plan.md).
 
 ### Current step
 
-S7-T05 — Authorized record summarization.
+S7-T06 — Suggested customer replies.
 
-This step adds bounded, non-authoritative summaries over explicitly authorized tenant records, preserves source references and internal/customer visibility labels, and prevents cross-customer aggregation inside a tenant.
+This step adds human-reviewed customer-facing reply suggestions for authorized staff, excludes internal-only conversation content, validates optional linked Portal project context, and keeps sending as a separate protected human action.
 
 ### Protected baselines
 
