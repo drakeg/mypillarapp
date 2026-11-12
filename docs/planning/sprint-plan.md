@@ -115,9 +115,9 @@ See [Sprint 7 Plan — AI Assistance](sprint-7-plan.md).
 
 ### Current step
 
-S7-T02 — AI settings and usage-control foundation.
+S7-T03 — Provider-neutral AI execution and usage accounting.
 
-This step adds tenant-owned AI enablement plus bounded provider-neutral request and rolling usage limits, restricted to owner/admin configuration with fail-closed admission checks and no billing semantics.
+This step adds a narrow provider interface, explicit timeout/error handling, fail-before-call usage admission, a 24-hour rolling usage window, and append-only tenant-scoped usage metadata without persisting prompts, responses, or provider credentials.
 
 ### Protected baselines
 
