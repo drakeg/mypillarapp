@@ -115,9 +115,9 @@ See [Sprint 7 Plan — AI Assistance](sprint-7-plan.md).
 
 ### Current step
 
-S7-T03 — Provider-neutral AI execution and usage accounting.
+S7-T04 — Human-reviewed drafting assistance.
 
-This step adds a narrow provider interface, explicit timeout/error handling, fail-before-call usage admission, a 24-hour rolling usage window, and append-only tenant-scoped usage metadata without persisting prompts, responses, or provider credentials.
+This step adds bounded drafting over explicitly selected authorized Site Builder, CRM, Customer Portal, Creator, and conversation-metadata context, returning untrusted editable suggestions without auto-saving, sending, publishing, or mutating canonical records.
 
 ### Protected baselines
 
