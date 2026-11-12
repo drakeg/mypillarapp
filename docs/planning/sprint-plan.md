@@ -115,9 +115,9 @@ See [Sprint 7 Plan — AI Assistance](sprint-7-plan.md).
 
 ### Current step
 
-S7-T06 — Suggested customer replies.
+S7-T07 — Tenant-safe knowledge search.
 
-This step adds human-reviewed customer-facing reply suggestions for authorized staff, excludes internal-only conversation content, validates optional linked Portal project context, and keeps sending as a separate protected human action.
+This step adds deterministic lexical retrieval over allow-listed tenant/site records plus optional provider answers constrained to retrieved sources, with source-reference traceability, viewer denial, and no arbitrary external crawling.
 
 ### Protected baselines
 
