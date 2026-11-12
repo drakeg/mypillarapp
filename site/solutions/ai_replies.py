@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import ai_auth
 import ai_boundary
 import ai_execution
 import messaging
@@ -38,6 +39,7 @@ def suggest_reply(
     timeout_seconds: int = 30,
 ) -> ReplySuggestion:
     portal_auth.require_staff(user_id, organization_slug, 'messaging')
+    ai_auth.require(user_id, organization_slug, 'suggested_reply')
     scope = ai_boundary.authorize_request(user_id, organization_slug)
     token = (conversation_token or '').strip()
     if not token:
