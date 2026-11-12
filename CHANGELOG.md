@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Sprint 7 AI request/data boundary with active tenant-membership authorization, optional site locking, allow-listed context classes, blocked secret/storage/internal context classes, pre-prompt record ownership validation, untrusted-output classification, and documented prompt-injection/data-exfiltration threats without provider integration.
 - Final Sprint 6 repository/CI closure at `ae3c1ba9f0a6e4959c69f617fec0d4ef3f368a35` and locked Sprint 7 AI Assistance plan covering tenant-safe drafting, summarization, suggested replies, knowledge search, provider-neutral execution, usage controls, auditability, and human-review safeguards.
 - Focused `make test-sprint6` regression gate in GitHub Actions plus Sprint 6 repository/CI closure and rollback evidence.
 - Explicit idempotent, non-destructive Mad Mallards Adventures compatibility migration that stages safe legacy branding/navigation/page/media references as draft creator records, preserves owner edits through persistent mappings, reports unsafe/unmatched inputs, and performs no live cutover.

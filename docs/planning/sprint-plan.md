@@ -117,7 +117,7 @@ See [Sprint 7 Plan — AI Assistance](sprint-7-plan.md).
 
 S7-T01 — AI tenant boundary, data classification, and threat audit.
 
-This step defines canonical AI request ownership and authorization, establishes allow-listed context classes, documents prompt-injection/data-exfiltration risks, and prevents provider integration until the tenant/data boundary is explicit.
+This step now implements canonical AI request ownership and explicit membership/site authorization, allow-lists eligible context classes, blocks secrets/storage/internal-only classes, validates record ownership before future prompt construction, and documents prompt-injection/data-exfiltration risks without introducing a provider call or AI persistence.
 
 ### Protected baselines
 
