@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Human-reviewed AI customer reply suggestions for authorized staff, with internal-message exclusion, validated same-customer Portal project context, untrusted-output classification, and a strict no-auto-send/no-conversation-mutation boundary.
 - Authorized AI record summarization with bounded tenant-safe context, source-reference traceability, preserved internal/customer conversation visibility labels, cross-customer aggregation rejection, and non-authoritative non-persisted output.
 - Human-reviewed AI drafting assistance over explicitly selected authorized tenant context, with bounded prompt construction, untrusted-output classification, source-reference traceability, and no auto-save/send/publish or canonical record mutation.
 - Provider-neutral AI execution facade with explicit timeout/error handling, fail-before-call tenant usage admission, 24-hour rolling usage accounting, append-only tenant-scoped provider/model/unit/status metadata, and no prompt/response/provider-secret persistence.
