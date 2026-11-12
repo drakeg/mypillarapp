@@ -115,9 +115,9 @@ See [Sprint 7 Plan — AI Assistance](sprint-7-plan.md).
 
 ### Current step
 
-S7-T01 — AI tenant boundary, data classification, and threat audit.
+S7-T02 — AI settings and usage-control foundation.
 
-This step now implements canonical AI request ownership and explicit membership/site authorization, allow-lists eligible context classes, blocks secrets/storage/internal-only classes, validates record ownership before future prompt construction, and documents prompt-injection/data-exfiltration risks without introducing a provider call or AI persistence.
+This step adds tenant-owned AI enablement plus bounded provider-neutral request and rolling usage limits, restricted to owner/admin configuration with fail-closed admission checks and no billing semantics.
 
 ### Protected baselines
 
