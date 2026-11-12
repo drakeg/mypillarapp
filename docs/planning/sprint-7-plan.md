@@ -1,6 +1,6 @@
 # Sprint 7 Plan — AI Assistance
 
-- Status: Active
+- Status: Closure candidate
 - Epic: EP-010 — AI Assistance
 - Protected baselines: Sprint 1 Single-Business MVP, Sprint 2 Multi-Tenant Foundation, Sprint 3 Site Builder, Sprint 4 CRM, Sprint 5 Customer Portal, Sprint 6 Creator and Commerce Tools
 - Sprint 6 repository/CI baseline: `ae3c1ba9f0a6e4959c69f617fec0d4ef3f368a35`
@@ -188,7 +188,7 @@ Acceptance:
 
 ### S7-T10 — Sprint 7 regression and closure
 
-Add `make test-sprint7`, enforce the focused CI gate, record rollback evidence, and formally close Sprint 7.
+Status: implemented on the closure candidate branch. Adds `make test-sprint7`, enforces the focused CI gate, records rollback evidence, and formally closes Sprint 7 when the closure PR merges green.
 
 ## Testing requirements
 
