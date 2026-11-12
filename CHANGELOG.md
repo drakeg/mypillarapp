@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- AI operational safeguards with auditable rejected-before-call/quota-limit statuses, safe usage-ledger schema migration, an AI-only environment kill switch, content-free owner/admin task/model/status diagnostics, and production verification/rollback guidance.
 - Centralized AI capability authorization and administration with explicit viewer read-only status, owner/admin settings and usage controls, staff-only approved assistance, archived-site and inactive-identity fail-closed checks, and feature integration across drafting, summaries, replies, and knowledge search.
 - Tenant-safe AI knowledge search with deterministic lexical retrieval across allow-listed tenant records, optional provider answers constrained to retrieved sources, source-reference traceability, site/tenant namespace isolation, and no arbitrary external crawling.
 - Human-reviewed AI customer reply suggestions for authorized staff, with internal-message exclusion, validated same-customer Portal project context, untrusted-output classification, and a strict no-auto-send/no-conversation-mutation boundary.
