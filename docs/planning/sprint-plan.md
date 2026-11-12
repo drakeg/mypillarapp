@@ -115,9 +115,9 @@ See [Sprint 7 Plan — AI Assistance](sprint-7-plan.md).
 
 ### Current step
 
-S7-T04 — Human-reviewed drafting assistance.
+S7-T05 — Authorized record summarization.
 
-This step adds bounded drafting over explicitly selected authorized Site Builder, CRM, Customer Portal, Creator, and conversation-metadata context, returning untrusted editable suggestions without auto-saving, sending, publishing, or mutating canonical records.
+This step adds bounded, non-authoritative summaries over explicitly authorized tenant records, preserves source references and internal/customer visibility labels, and prevents cross-customer aggregation inside a tenant.
 
 ### Protected baselines
 
