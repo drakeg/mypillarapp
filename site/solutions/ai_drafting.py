@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import ai_auth
 import ai_boundary
 import ai_execution
 import creator_profiles
@@ -40,6 +41,12 @@ def draft_text(
         'Drafting instructions',
         MAX_INSTRUCTION_CHARS,
         required=True,
+    )
+    ai_auth.require(
+        user_id,
+        organization_slug,
+        'draft',
+        site_slug=site_slug,
     )
     scope = ai_boundary.authorize_request(
         user_id,
