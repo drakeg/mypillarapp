@@ -103,7 +103,7 @@ Repository/CI acceptance is complete at `ae3c1ba9f0a6e4959c69f617fec0d4ef3f368a3
 
 ## Sprint 7 status
 
-Sprint 7 — AI Assistance is at repository/CI closure candidate status.
+Sprint 7 — AI Assistance is complete at the repository/CI level.
 
 ### Objective
 
@@ -132,4 +132,23 @@ This step adds the focused `make test-sprint7` gate, enforces it in CI, records 
 
 See [Sprint 7 Closure Record](../09-release/sprint-7-closure.md).
 
-The closure record becomes final when the S7-T10 pull request merges with all required CI checks green. Production/provider verification remains deployment-time work.
+Repository/CI acceptance is complete at `ddddd495795d3c3b9de84191acb2cf9aa48167e8`. Production/provider verification remains deployment-time work.
+
+
+## Sprint 8 status
+
+Sprint 8 — Billing and Commercialization is the active planning/implementation Sprint.
+
+### Objective
+
+Support external paying organizations with tenant-safe plans, subscriptions, billing state, quotas, invoices, licensing, and onboarding while preserving existing product behavior for unpaid/internal tenants.
+
+### Locked plan
+
+See [Sprint 8 Plan — Billing and Commercialization](sprint-8-plan.md).
+
+### Current step
+
+S8-T01 — Billing tenant boundary and commercialization audit.
+
+This step defines canonical billing ownership, prohibited payment data, provider-reference semantics, legacy-price migration rules, and tenant-safe commercialization boundaries before Stripe integration.

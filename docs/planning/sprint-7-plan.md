@@ -1,6 +1,6 @@
 # Sprint 7 Plan — AI Assistance
 
-- Status: Closure candidate
+- Status: Closed at repository/CI level
 - Epic: EP-010 — AI Assistance
 - Protected baselines: Sprint 1 Single-Business MVP, Sprint 2 Multi-Tenant Foundation, Sprint 3 Site Builder, Sprint 4 CRM, Sprint 5 Customer Portal, Sprint 6 Creator and Commerce Tools
 - Sprint 6 repository/CI baseline: `ae3c1ba9f0a6e4959c69f617fec0d4ef3f368a35`
