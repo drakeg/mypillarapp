@@ -1,10 +1,11 @@
 # Sprint 7 Closure Record — AI Assistance
 
-- Status: Repository/CI closure candidate
+- Status: Closed at repository/CI level
 - Sprint: Sprint 7 — AI Assistance
 - Epic: EP-010 — AI Assistance
 - Protected predecessor baseline: Sprint 6 at `ae3c1ba9f0a6e4959c69f617fec0d4ef3f368a35`
 - S7-T09 merged baseline: `3f470840f3fec987314c256d18f4851e5c04cf34`
+- Sprint 7 repository/CI closure baseline: `ddddd495795d3c3b9de84191acb2cf9aa48167e8`
 
 ## Objective result
 
@@ -94,9 +95,9 @@ If Sprint 7 must be disabled or rolled back:
 4. Provider credentials/protected internal data excluded from persistence/audit/model context by default — met.
 5. Existing protected non-AI product areas remain regression-gated — met.
 6. AI can be disabled without disabling the underlying product workflow — met.
-7. Full protected regression evidence — pending final S7-T10 branch/CI verification.
+7. Full protected regression evidence — met.
 8. Release/rollback evidence and known limitations — met.
 
 ## Finalization rule
 
-This closure record becomes final when the S7-T10 closure pull request is merged with all required CI checks green. The merge commit of that pull request is the Sprint 7 repository/CI closure baseline.
+This closure record is final. S7-T10 / PR #101 merged with required CI green at `ddddd495795d3c3b9de84191acb2cf9aa48167e8`, which is the Sprint 7 repository/CI closure baseline.
