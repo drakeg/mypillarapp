@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Final Sprint 7 repository/CI closure at `ddddd495795d3c3b9de84191acb2cf9aa48167e8` and locked Sprint 8 Billing and Commercialization plan covering tenant-safe plans, subscriptions, Stripe integration, webhooks, invoices, entitlements/quotas, licensing, onboarding, and billing operations.
 - Focused `make test-sprint7` regression gate in GitHub Actions plus Sprint 7 AI Assistance repository/CI closure and rollback evidence.
 - AI operational safeguards with auditable rejected-before-call/quota-limit statuses, safe usage-ledger schema migration, an AI-only environment kill switch, content-free owner/admin task/model/status diagnostics, and production verification/rollback guidance.
 - Centralized AI capability authorization and administration with explicit viewer read-only status, owner/admin settings and usage controls, staff-only approved assistance, archived-site and inactive-identity fail-closed checks, and feature integration across drafting, summaries, replies, and knowledge search.
