@@ -3,7 +3,7 @@ services:
     build: ./app
     restart: unless-stopped
     environment:
-      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,pillar.madmallards.com"
+      DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,pillar.madmallards.com}"
       DJANGO_DEBUG: "False"
     volumes:
       - ./data:/app/data
