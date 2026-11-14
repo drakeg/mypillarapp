@@ -63,6 +63,7 @@ Example `.env`:
 ```dotenv
 APP_BIND_ADDRESS=127.0.0.1
 APP_PORT=8080
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,pillar.madmallards.com
 ```
 
 Then start the stack:
@@ -72,3 +73,13 @@ docker compose up --build
 ```
 
 The application still listens on port `8000` inside the container; `APP_PORT` controls only the host-side published port. With the example above, open `http://127.0.0.1:8080`.
+
+For access from other devices on the same LAN, set `APP_BIND_ADDRESS=0.0.0.0` and add the host machine's LAN IP and/or mDNS hostname to `DJANGO_ALLOWED_HOSTS`. For example:
+
+```dotenv
+APP_BIND_ADDRESS=0.0.0.0
+APP_PORT=8017
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.0.155,Gregs-MacBook-Pro.local,pillar.madmallards.com
+```
+
+Then browse to `http://192.168.0.155:8017` or `http://Gregs-MacBook-Pro.local:8017` from another device on the same network.
