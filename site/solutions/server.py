@@ -5,6 +5,7 @@ from pathlib import Path
 from urllib.parse import unquote, parse_qs, urlparse
 import html
 import json
+import ipaddress
 import mimetypes
 import os
 import secrets
@@ -47,6 +48,7 @@ ADMIN_SESSION_SECRET = (os.environ.get('MADMALLARD_ADMIN_SESSION_SECRET') or ADM
 PRIMARY_DOMAIN = os.environ.get('MADMALLARD_PRIMARY_DOMAIN', 'pillar.madmallards.com')
 ROOT_MODE = os.environ.get('MADMALLARD_ROOT_MODE', 'public').strip().lower()
 ADMIN_COOKIE_SECURE = os.environ.get('MADMALLARD_ADMIN_COOKIE_SECURE', 'true').strip().lower() not in {'0', 'false', 'no', 'off'}
+LOCAL_ADMIN_MODE = os.environ.get('MADMALLARD_LOCAL_ADMIN', 'false').strip().lower() in {'1', 'true', 'yes', 'on'}
 PLATFORM_ADMIN_SCOPE = 'platform_super_admin'
 
 FORM_CONFIG = {
@@ -249,7 +251,18 @@ def verify_admin_session(
     return True
 
 
+def local_admin_is_authenticated(handler: BaseHTTPRequestHandler) -> bool:
+    if not LOCAL_ADMIN_MODE:
+        return False
+    try:
+        return ipaddress.ip_address(handler.client_address[0]).is_private
+    except (ValueError, TypeError, IndexError):
+        return False
+
+
 def admin_is_authenticated(handler: BaseHTTPRequestHandler, query: dict | None = None) -> bool:
+    if local_admin_is_authenticated(handler):
+        return True
     if not admin_auth_configured():
         return False
     cookie_session = get_cookie(handler, 'mms_admin_session')
@@ -264,6 +277,8 @@ def platform_admin_is_authenticated(
     handler: BaseHTTPRequestHandler,
     query: dict | None = None,
 ) -> bool:
+    if local_admin_is_authenticated(handler):
+        return True
     if not admin_auth_configured():
         return False
     cookie_session = get_cookie(handler, 'mms_admin_session')
@@ -278,6 +293,8 @@ def platform_admin_is_authenticated(
 
 
 def require_admin(handler: BaseHTTPRequestHandler, query: dict | None = None) -> bool:
+    if local_admin_is_authenticated(handler):
+        return True
     if not admin_auth_configured():
         html_response(handler, 403, '<h1>Admin disabled</h1><p>Set admin_username, admin_password_hash, and admin_session_secret in Terraform to enable the inbox.</p>')
         return False
@@ -291,6 +308,8 @@ def require_platform_admin(
     handler: BaseHTTPRequestHandler,
     query: dict | None = None,
 ) -> bool:
+    if local_admin_is_authenticated(handler):
+        return True
     if not admin_auth_configured():
         html_response(
             handler,
