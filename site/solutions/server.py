@@ -46,6 +46,7 @@ ADMIN_PASSWORD_HASH = (os.environ.get('MADMALLARD_ADMIN_PASSWORD_HASH') or ADMIN
 ADMIN_SESSION_SECRET = (os.environ.get('MADMALLARD_ADMIN_SESSION_SECRET') or ADMIN_CONFIG.get('admin_session_secret') or '').strip()
 PRIMARY_DOMAIN = os.environ.get('MADMALLARD_PRIMARY_DOMAIN', 'pillar.madmallards.com')
 ROOT_MODE = os.environ.get('MADMALLARD_ROOT_MODE', 'public').strip().lower()
+ADMIN_COOKIE_SECURE = os.environ.get('MADMALLARD_ADMIN_COOKIE_SECURE', 'true').strip().lower() not in {'0', 'false', 'no', 'off'}
 PLATFORM_ADMIN_SCOPE = 'platform_super_admin'
 
 FORM_CONFIG = {
@@ -724,7 +725,8 @@ class Handler(BaseHTTPRequestHandler):
             password = str(payload.get('password', ''))
             if admin_auth_configured() and secrets.compare_digest(username, ADMIN_USERNAME) and verify_password(password, ADMIN_PASSWORD_HASH):
                 session = make_admin_session(username)
-                return redirect(self, '/admin', {'Set-Cookie': f'mms_admin_session={session}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000'})
+                secure = '; Secure' if ADMIN_COOKIE_SECURE else ''
+                return redirect(self, '/admin', {'Set-Cookie': f'mms_admin_session={session}; Path=/; HttpOnly{secure}; SameSite=Lax; Max-Age=2592000'})
             return html_response(self, 403, '<h1>Invalid username or password</h1><p><a href="/admin/login">Try again</a></p>')
 
         if parsed.path.startswith('/api/portal/messages/'):
