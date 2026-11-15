@@ -45,6 +45,7 @@ ADMIN_USERNAME = (os.environ.get('MADMALLARD_ADMIN_USERNAME') or ADMIN_CONFIG.ge
 ADMIN_PASSWORD_HASH = (os.environ.get('MADMALLARD_ADMIN_PASSWORD_HASH') or ADMIN_CONFIG.get('admin_password_hash') or '').strip()
 ADMIN_SESSION_SECRET = (os.environ.get('MADMALLARD_ADMIN_SESSION_SECRET') or ADMIN_CONFIG.get('admin_session_secret') or '').strip()
 PRIMARY_DOMAIN = os.environ.get('MADMALLARD_PRIMARY_DOMAIN', 'pillar.madmallards.com')
+ROOT_MODE = os.environ.get('MADMALLARD_ROOT_MODE', 'public').strip().lower()
 PLATFORM_ADMIN_SCOPE = 'platform_super_admin'
 
 FORM_CONFIG = {
@@ -415,6 +416,8 @@ class Handler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path
         query = parse_qs(parsed.query)
+        if path == '/' and ROOT_MODE == 'admin':
+            return redirect(self, '/admin/sites')
         allowed, context = self.require_public_tenant(path)
         if not allowed:
             return
