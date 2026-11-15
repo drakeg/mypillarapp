@@ -7,6 +7,7 @@ services:
       MADMALLARD_PRIMARY_DOMAIN: "${MADMALLARD_PRIMARY_DOMAIN:-pillar.madmallards.com}"
       MADMALLARD_ROOT_MODE: "${MADMALLARD_ROOT_MODE:-public}"
       MADMALLARD_ADMIN_COOKIE_SECURE: "${MADMALLARD_ADMIN_COOKIE_SECURE:-true}"
+      MADMALLARD_LOCAL_ADMIN: "${MADMALLARD_LOCAL_ADMIN:-false}"
     volumes:
       - ./data:/data
     ports:
