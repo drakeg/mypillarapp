@@ -52,34 +52,33 @@ Only the active Sprint step may change implementation. Unrelated cleanup, protec
 
 ## Local Docker Compose
 
-Copy the example environment file and choose the host port you want to publish:
+Docker Compose runs the real Mad Mallard platform server, including the platform dashboard, site registry/editor, CRM, inbox, tenant administration, and public-site runtime.
 
-```bash
-cp .env.example .env
-```
-
-Example `.env`:
-
-```dotenv
-APP_BIND_ADDRESS=127.0.0.1
-APP_PORT=8080
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,pillar.madmallards.com
-```
-
-Then start the stack:
-
-```bash
-docker compose up --build
-```
-
-The application still listens on port `8000` inside the container; `APP_PORT` controls only the host-side published port. With the example above, open `http://127.0.0.1:8080`.
-
-For access from other devices on the same LAN, set `APP_BIND_ADDRESS=0.0.0.0` and add the host machine's LAN IP and/or mDNS hostname to `DJANGO_ALLOWED_HOSTS`. For example:
+For a trusted local-network review instance, use:
 
 ```dotenv
 APP_BIND_ADDRESS=0.0.0.0
 APP_PORT=8017
-DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,192.168.0.155,Gregs-MacBook-Pro.local,pillar.madmallards.com
+MADMALLARD_ROOT_MODE=admin
+MADMALLARD_LOCAL_ADMIN=true
+MADMALLARD_ADMIN_COOKIE_SECURE=false
+MADMALLARD_PRIMARY_DOMAIN=pillar.madmallards.com
 ```
 
-Then browse to `http://192.168.0.155:8017` or `http://Gregs-MacBook-Pro.local:8017` from another device on the same network.
+Then start it:
+
+```bash
+docker compose up -d --build
+```
+
+With `MADMALLARD_ROOT_MODE=admin`, opening the root URL redirects to `/admin/sites`. The development-only LAN admin mode accepts only loopback/private client addresses and is disabled by default; do not enable it on an Internet-exposed deployment.
+
+For normal production/public behavior, keep:
+
+```dotenv
+MADMALLARD_ROOT_MODE=public
+MADMALLARD_LOCAL_ADMIN=false
+MADMALLARD_ADMIN_COOKIE_SECURE=true
+```
+
+The container listens on port `8000`; `APP_PORT` controls the host-side published port.

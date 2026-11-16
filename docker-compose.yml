@@ -1,11 +1,14 @@
 services:
   app:
-    build: ./app
+    build: ./site/solutions
     restart: unless-stopped
     environment:
-      DJANGO_ALLOWED_HOSTS: "${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1,pillar.madmallards.com}"
-      DJANGO_DEBUG: "False"
+      MADMALLARD_DATA_DIR: /data
+      MADMALLARD_PRIMARY_DOMAIN: "${MADMALLARD_PRIMARY_DOMAIN:-pillar.madmallards.com}"
+      MADMALLARD_ROOT_MODE: "${MADMALLARD_ROOT_MODE:-public}"
+      MADMALLARD_ADMIN_COOKIE_SECURE: "${MADMALLARD_ADMIN_COOKIE_SECURE:-true}"
+      MADMALLARD_LOCAL_ADMIN: "${MADMALLARD_LOCAL_ADMIN:-false}"
     volumes:
-      - ./data:/app/data
+      - ./data:/data
     ports:
       - "${APP_BIND_ADDRESS:-127.0.0.1}:${APP_PORT:-8000}:8000"
