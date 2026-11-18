@@ -151,4 +151,4 @@ See [Sprint 8 Plan — Billing and Commercialization](sprint-8-plan.md).
 
 S8-T01 — Billing tenant boundary and commercialization audit.
 
-This step defines canonical billing ownership, prohibited payment data, provider-reference semantics, legacy-price migration rules, and tenant-safe commercialization boundaries before Stripe integration.
+This step implements canonical billing ownership, prohibited payment-data classification, owner/admin billing administration scope, opaque provider-reference semantics, and explicit legacy quote/storefront/service-price migration rules before Stripe integration.
