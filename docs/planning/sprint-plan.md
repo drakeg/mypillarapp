@@ -149,6 +149,6 @@ See [Sprint 8 Plan — Billing and Commercialization](sprint-8-plan.md).
 
 ### Current step
 
-S8-T01 — Billing tenant boundary and commercialization audit.
+S8-T02 — Plan and entitlement foundation.
 
-This step implements canonical billing ownership, prohibited payment-data classification, owner/admin billing administration scope, opaque provider-reference semantics, and explicit legacy quote/storefront/service-price migration rules before Stripe integration.
+This step adds tenant-owned plan definitions, explicit same-tenant assignment, deterministic boolean/quota entitlements, server-side fail-closed checks, and an explicit internal-tenant compatibility policy without any provider dependency.
