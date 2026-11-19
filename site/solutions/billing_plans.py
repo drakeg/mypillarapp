@@ -37,6 +37,8 @@ _INTERNAL_DEFAULTS: dict[str, bool | int | None] = {
 @dataclass(frozen=True)
 class BillingPlan:
     id: int
+    organization_id: int
+    organization_slug: str
     slug: str
     name: str
     status: str
@@ -72,15 +74,19 @@ def ensure_schema() -> None:
             '''
             CREATE TABLE IF NOT EXISTS billing_plans (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                slug TEXT NOT NULL UNIQUE,
+                organization_id INTEGER NOT NULL,
+                slug TEXT NOT NULL,
                 name TEXT NOT NULL,
                 status TEXT NOT NULL DEFAULT 'active',
                 commercial INTEGER NOT NULL DEFAULT 1,
                 entitlements_json TEXT NOT NULL,
                 created_at INTEGER NOT NULL,
                 updated_at INTEGER NOT NULL,
+                UNIQUE(organization_id, slug),
                 CHECK(status IN ('active','archived')),
-                CHECK(commercial IN (0,1))
+                CHECK(commercial IN (0,1)),
+                FOREIGN KEY(organization_id)
+                    REFERENCES auth_organizations(id) ON DELETE CASCADE
             )
             '''
         )
@@ -102,7 +108,7 @@ def ensure_schema() -> None:
         )
         conn.execute(
             'CREATE INDEX IF NOT EXISTS idx_billing_plans_status_slug '
-            'ON billing_plans(status, slug)'
+            'ON billing_plans(organization_id, status, slug)'
         )
         conn.commit()
 
@@ -116,7 +122,7 @@ def create_plan(
     entitlements: dict[str, object],
     commercial: bool = True,
 ) -> BillingPlan:
-    billing_boundary.authorize_billing_admin(user_id, organization_slug)
+    scope = billing_boundary.authorize_billing_admin(user_id, organization_slug)
     clean_slug = _plan_slug(slug)
     clean_name = _plan_name(name)
     clean_entitlements = _normalize_entitlements(entitlements)
@@ -127,11 +133,12 @@ def create_plan(
             cur = conn.execute(
                 '''
                 INSERT INTO billing_plans(
-                    slug,name,status,commercial,entitlements_json,
+                    organization_id,slug,name,status,commercial,entitlements_json,
                     created_at,updated_at
-                ) VALUES(?,?,'active',?,?,?,?)
+                ) VALUES(?,?,?,'active',?,?,?,?)
                 ''',
                 (
+                    scope.organization_id,
                     clean_slug,
                     clean_name,
                     1 if bool(commercial) else 0,
@@ -142,34 +149,44 @@ def create_plan(
             )
         except Exception as exc:
             if 'UNIQUE constraint failed' in str(exc):
-                raise ValueError('A billing plan with that slug already exists.') from exc
+                raise ValueError('A billing plan with that slug already exists for this organization.') from exc
             raise
         conn.commit()
         row = conn.execute(
-            'SELECT * FROM billing_plans WHERE id=?',
+            '''SELECT p.*,o.slug AS organization_slug
+               FROM billing_plans p
+               JOIN auth_organizations o ON o.id=p.organization_id
+               WHERE p.id=?''',
             (cur.lastrowid,),
         ).fetchone()
     return _plan_from_row(row)
 
 
-def get_plan(slug: str) -> BillingPlan | None:
+def get_plan(organization_slug: str, slug: str) -> BillingPlan | None:
     ensure_schema()
     with tenant_auth.db() as conn:
         row = conn.execute(
-            'SELECT * FROM billing_plans WHERE slug=? LIMIT 1',
-            (_plan_slug(slug),),
+            '''SELECT p.*,o.slug AS organization_slug
+               FROM billing_plans p
+               JOIN auth_organizations o ON o.id=p.organization_id
+               WHERE o.slug=? AND p.slug=? LIMIT 1''',
+            ((organization_slug or '').strip().lower(), _plan_slug(slug)),
         ).fetchone()
     return _plan_from_row(row) if row else None
 
 
-def list_plans(*, include_archived: bool = False) -> list[BillingPlan]:
+def list_plans(organization_slug: str, *, include_archived: bool = False) -> list[BillingPlan]:
     ensure_schema()
-    sql = 'SELECT * FROM billing_plans'
+    sql = '''SELECT p.*,o.slug AS organization_slug
+             FROM billing_plans p
+             JOIN auth_organizations o ON o.id=p.organization_id
+             WHERE o.slug=?'''
+    params: list[object] = [(organization_slug or '').strip().lower()]
     if not include_archived:
-        sql += " WHERE status='active'"
-    sql += ' ORDER BY name COLLATE NOCASE, id'
+        sql += " AND p.status='active'"
+    sql += ' ORDER BY p.name COLLATE NOCASE, p.id'
     with tenant_auth.db() as conn:
-        rows = conn.execute(sql).fetchall()
+        rows = conn.execute(sql, params).fetchall()
     return [_plan_from_row(row) for row in rows]
 
 
@@ -178,7 +195,7 @@ def archive_plan(
     organization_slug: str,
     plan_slug: str,
 ) -> BillingPlan:
-    billing_boundary.authorize_billing_admin(user_id, organization_slug)
+    scope = billing_boundary.authorize_billing_admin(user_id, organization_slug)
     ensure_schema()
     clean_slug = _plan_slug(plan_slug)
     with tenant_auth.db() as conn:
@@ -187,22 +204,22 @@ def archive_plan(
             SELECT 1
             FROM billing_tenant_plans tp
             JOIN billing_plans p ON p.id=tp.plan_id
-            WHERE p.slug=?
+            WHERE p.organization_id=? AND p.slug=?
             LIMIT 1
             ''',
-            (clean_slug,),
+            (scope.organization_id, clean_slug),
         ).fetchone()
         if assigned:
             raise ValueError('Assigned billing plans cannot be archived.')
         cur = conn.execute(
             "UPDATE billing_plans SET status='archived', updated_at=? "
-            "WHERE slug=? AND status!='archived'",
-            (tenant_auth.now(), clean_slug),
+            "WHERE organization_id=? AND slug=? AND status!='archived'",
+            (tenant_auth.now(), scope.organization_id, clean_slug),
         )
         if cur.rowcount != 1:
             raise ValueError('Active billing plan not found.')
         conn.commit()
-    return get_plan(clean_slug)
+    return get_plan(scope.organization_slug, clean_slug)
 
 
 def assign_plan(
@@ -211,7 +228,7 @@ def assign_plan(
     plan_slug: str,
 ) -> TenantPlanAssignment:
     scope = billing_boundary.authorize_billing_admin(user_id, organization_slug)
-    plan = get_plan(plan_slug)
+    plan = get_plan(scope.organization_slug, plan_slug)
     if plan is None or plan.status != 'active':
         raise ValueError('Active billing plan not found.')
     ensure_schema()
@@ -265,18 +282,20 @@ def entitlement(
     key: str,
 ) -> EntitlementDecision:
     clean_key = _entitlement_key(key)
-    assignment = get_assignment(organization_slug)
+    slug = (organization_slug or '').strip().lower()
+    _require_active_organization(slug)
+    assignment = get_assignment(slug)
     if assignment is None:
         value = _INTERNAL_DEFAULTS[clean_key]
         return _decision(
-            assignment.organization_slug if assignment else (organization_slug or '').strip().lower(),
+            slug,
             clean_key,
             value,
             source='internal_default',
             plan_slug=None,
         )
 
-    plan = get_plan(assignment.plan_slug)
+    plan = get_plan(assignment.organization_slug, assignment.plan_slug)
     if plan is None or plan.status != 'active':
         return EntitlementDecision(
             organization_slug=assignment.organization_slug,
@@ -402,9 +421,21 @@ def _nonnegative_int(value: object, label: str) -> int:
     return clean
 
 
+def _require_active_organization(slug: str) -> None:
+    with tenant_auth.db() as conn:
+        row = conn.execute(
+            "SELECT status FROM auth_organizations WHERE slug=? LIMIT 1",
+            (slug,),
+        ).fetchone()
+    if row is None or row['status'] != 'active':
+        raise PermissionError('Billing entitlement organization denied.')
+
+
 def _plan_from_row(row) -> BillingPlan:
     return BillingPlan(
         id=int(row['id']),
+        organization_id=int(row['organization_id']),
+        organization_slug=str(row['organization_slug']),
         slug=str(row['slug']),
         name=str(row['name']),
         status=str(row['status']),
