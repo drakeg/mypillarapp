@@ -149,11 +149,16 @@ See [Sprint 8 Plan — Billing and Commercialization](sprint-8-plan.md).
 
 ### Current step
 
-S8-T10 — Billing operations, recovery, and rollback.
+S8-T11 — Sprint 8 regression and closure.
 
-This step adds a provider-write maintenance switch, owner/admin tenant-safe operational summaries, explicit signed retry for rejected Stripe events with immutable event identity checks, and documented past-due/cancellation recovery and rollback procedures.
+This step adds the focused `make test-sprint8` gate, enforces it in CI, reruns the full protected regression baseline, records closure/rollback evidence, and establishes the Sprint 8 repository/CI baseline when the closure PR merges green.
 
 
 ### Repository standards maintenance
 
 Standardized README badge maintenance was incorporated into Sprint 8 delivery hygiene using `drakeg/madmallard-repository-standards` as the source of truth. The repository now keeps a generated badge block under the README title, validates badge drift in CI, and documents ongoing badge maintenance in `AGENTS.md` and `CONTRIBUTING.md`.
+
+
+### Sprint 8 closure evidence
+
+See [Sprint 8 Closure Record](../09-release/sprint-8-closure.md).
