@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Final Sprint 8 repository/CI closure at `0751ac4c5cd3049473bada3c620052dbdad9ec88`, with full regression, focused Sprint 2–8 gates, Docker/runtime checks, badge validation, and Terraform validation green.
 - Focused `make test-sprint8` regression gate in GitHub Actions plus Sprint 8 Billing and Commercialization closure/rollback evidence.
 - Sprint 8 billing operations/recovery controls with provider-write maintenance mode, tenant-safe operational summaries, signed retry of previously rejected Stripe events with immutable identity checks, and documented past-due/cancellation recovery procedures.
 - Owner/admin-only Sprint 8 billing administration facade providing tenant-scoped plan assignment, provider-price configuration, checkout initiation, subscription visibility, recent invoice history, and provider-customer visibility through existing safe billing boundaries.
