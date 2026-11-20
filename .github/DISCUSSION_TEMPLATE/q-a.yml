@@ -1,0 +1,21 @@
+title: "[Q&A] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use Q&A for setup, usage, configuration, architecture, and deployment questions. For confirmed software defects, please open an Issue instead.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What are you trying to do, and where are you stuck?
+      placeholder: Describe the desired outcome and the specific question.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment and context
+      description: Include relevant version, Docker, operating system, deployment, or configuration details. Do not include secrets.
+    validations:
+      required: false

@@ -50,3 +50,20 @@ README badges follow the centralized standards in `drakeg/madmallard-repository-
 5. run `python3 scripts/badges.py --mode check`.
 
 The badge generator preserves all README content outside the bounded `madmallard-badges` block. Missing evidence means the badge should be omitted rather than guessed.
+
+
+## Discussions and support
+
+Use GitHub Discussions before opening an Issue when the topic is exploratory, a question, or an early product idea:
+
+- Q&A: https://github.com/drakeg/mypillarapp/discussions/categories/q-a
+- Ideas: https://github.com/drakeg/mypillarapp/discussions/categories/ideas
+- General: https://github.com/drakeg/mypillarapp/discussions
+
+Use Issues for confirmed bugs, accepted/scoped work, and concrete repository tasks.
+
+Do not post secrets, credentials, tokens, private customer information, or vulnerability details in public Discussions or Issues.
+
+## Sponsorship maintenance
+
+The repository Sponsor button is configured through `.github/FUNDING.yml`. Keep it aligned with the repository owner's active GitHub Sponsors account. Sponsorship must not be presented as influencing merge decisions, security handling, technical conclusions, or roadmap truthfulness.

@@ -41,3 +41,12 @@ Every implementation change must identify:
 - Omit unsupported claims rather than adding speculative badges. In particular, do not add license, release, or security-status badges unless corresponding repository evidence exists.
 - When supported technologies, workflows, licensing, deployment configuration, or release state change, update the badges in the same normal development PR.
 - Run `python3 scripts/badges.py --mode dry-run`, then `--mode write` when changes are expected, and always finish with `python3 scripts/badges.py --mode check`.
+
+
+## Community configuration maintenance
+
+- Keep GitHub Sponsors configuration in `.github/FUNDING.yml`.
+- Keep discussion category forms in `.github/DISCUSSION_TEMPLATE/` aligned with the enabled GitHub Discussions categories.
+- Route exploratory questions and ideas to Discussions; use Issues for confirmed defects and actionable work.
+- Preserve `SUPPORT.md` and README community links when repository structure changes.
+- Never place secrets, tokens, private customer data, or vulnerability details in public community templates.

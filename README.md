@@ -88,3 +88,20 @@ MADMALLARD_ADMIN_COOKIE_SECURE=true
 ```
 
 The container listens on port `8000`; `APP_PORT` controls the host-side published port.
+
+
+## Community and support
+
+GitHub Discussions is the primary place for questions, product ideas, deployment experiences, and broader community conversation:
+
+- [Q&A](https://github.com/drakeg/mypillarapp/discussions/categories/q-a) — setup, configuration, deployment, and usage questions.
+- [Ideas](https://github.com/drakeg/mypillarapp/discussions/categories/ideas) — product suggestions and early feature conversations.
+- [General Discussions](https://github.com/drakeg/mypillarapp/discussions) — open-ended project and community conversation.
+- [Issues](https://github.com/drakeg/mypillarapp/issues) — confirmed defects and actionable implementation work.
+- [Support guidance](SUPPORT.md) — what to include when asking for help.
+
+## Sponsor development
+
+If Mad Mallard Platform is useful to you or your business, you can support continued open-source development through [GitHub Sponsors](https://github.com/sponsors/drakeg).
+
+Sponsorship does not influence technical decisions, issue priority, security handling, or the accuracy of project documentation.
