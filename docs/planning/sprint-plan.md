@@ -137,7 +137,7 @@ Repository/CI acceptance is complete at `ddddd495795d3c3b9de84191acb2cf9aa48167e
 
 ## Sprint 8 status
 
-Sprint 8 — Billing and Commercialization is the active planning/implementation Sprint.
+Sprint 8 — Billing and Commercialization is complete at the repository/CI level.
 
 ### Objective
 
@@ -147,11 +147,9 @@ Support external paying organizations with tenant-safe plans, subscriptions, bil
 
 See [Sprint 8 Plan — Billing and Commercialization](sprint-8-plan.md).
 
-### Current step
+### Closure baseline
 
-S8-T11 — Sprint 8 regression and closure.
-
-This step adds the focused `make test-sprint8` gate, enforces it in CI, reruns the full protected regression baseline, records closure/rollback evidence, and establishes the Sprint 8 repository/CI baseline when the closure PR merges green.
+Repository/CI acceptance is complete at `0751ac4c5cd3049473bada3c620052dbdad9ec88`. Production Stripe/live-money verification remains deployment-time work.
 
 
 ### Repository standards maintenance
