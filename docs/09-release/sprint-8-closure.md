@@ -1,11 +1,11 @@
 # Sprint 8 Closure Record — Billing and Commercialization
 
-- Status: Closure candidate; final after S8-T11 merges green
+- Status: Closed at repository/CI level
 - Sprint: Sprint 8 — Billing and Commercialization
 - Epic: EP-011 — Billing and Commercialization
 - Protected predecessor baseline: Sprint 7 at `ddddd495795d3c3b9de84191acb2cf9aa48167e8`
 - S8-T10 merged baseline: `e975db9496b23270a17e6c639a85d466b3ff4963`
-- Sprint 8 repository/CI closure baseline: established when S8-T11 merges green
+- Sprint 8 repository/CI closure baseline: `0751ac4c5cd3049473bada3c620052dbdad9ec88`
 
 ## Objective result
 
@@ -62,7 +62,7 @@ All Stripe/provider behavior remains fake/mock based in repository CI. CI succes
 
 S8-T10 focused billing operations/recovery verification passed 73 tests.
 
-S8-T11 closure verification is executed on the repository's Python 3.15 baseline. Exact full/focused counts are recorded in the closure PR validation evidence once the run completes.
+S8-T11 closure verification passed on the repository's Python 3.15 GitHub Actions baseline: badge validation, the full regression suite, focused Sprint 2–8 suites, Docker image build, non-root runtime verification, Docker Compose configuration validation, and Terraform validation all completed successfully.
 
 The macOS system Python 3.9 is not valid closure evidence for this repository because several protected modules use syntax supported by the configured Python 3.15 runtime.
 
@@ -93,12 +93,10 @@ If Sprint 8 provider behavior must be contained or rolled back:
 2. Stripe integration is bounded, secret-safe, and replay-safe — met at repository/CI level.
 3. Entitlements/quotas are deterministic and server-side — met.
 4. Commercial onboarding does not reinterpret legacy tenant data — met.
-5. Existing non-billing product workflows remain compatibility-protected — met subject to final full regression.
-6. Full protected regression evidence is green — pending final S8-T11 validation/CI.
+5. Existing non-billing product workflows remain compatibility-protected — met.
+6. Full protected regression evidence is green — met.
 7. Release/rollback evidence and known limitations are recorded — met.
 
 ## Finalization rule
 
-S8-T11 closes Sprint 8 when the full regression suite, focused Sprint 8 gate, badge validation, Docker/CI checks, and protected predecessor gates all pass on the closure PR.
-
-The final repository/CI closure baseline is the merge commit of that green closure PR and is recorded in repository documentation after merge.
+S8-T11 / PR #117 merged with all required repository/CI validation green at `0751ac4c5cd3049473bada3c620052dbdad9ec88`. This commit is the final Sprint 8 repository/CI closure baseline.
