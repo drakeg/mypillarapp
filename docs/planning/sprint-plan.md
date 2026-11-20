@@ -149,9 +149,9 @@ See [Sprint 8 Plan — Billing and Commercialization](sprint-8-plan.md).
 
 ### Current step
 
-S8-T07 — Invoice and payment-history metadata.
+S8-T08 — Quotas and commercialization enforcement.
 
-This step adds tenant-scoped invoice/payment metadata, authenticated Stripe invoice reconciliation, validated HTTPS invoice references, owner/admin-only bounded reads, and stale/out-of-order invoice protection without storing payment credentials.
+This step enforces assigned plan site quotas and AI feature/rolling-unit entitlements server-side while preserving explicit unlimited billing-layer behavior for unassigned/internal tenants and keeping existing AI tenant controls as a stricter override.
 
 
 ### Repository standards maintenance
