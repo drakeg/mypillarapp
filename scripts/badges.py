@@ -50,18 +50,31 @@ def cmd(*args: str, cwd: Path) -> str:
 def detected(root: Path) -> list[str]:
     found: set[str] = set()
 
-    if list(root.glob("**/Dockerfile")):
+    dockerfiles = [
+        path for path in (
+            root / "Dockerfile",
+            root / "app" / "Dockerfile",
+            root / "site" / "solutions" / "Dockerfile",
+        )
+        if path.is_file()
+    ]
+    if dockerfiles:
         found.add("Docker")
     if any((root / name).is_file() for name in (
         "compose.yml", "compose.yaml", "docker-compose.yml", "docker-compose.yaml"
     )):
         found.update(("Docker", "Docker Compose"))
 
-    python_evidence = (
-        list(root.glob("**/requirements.txt"))
-        + list(root.glob("**/pyproject.toml"))
-        + list(root.glob("**/Dockerfile"))
-    )
+    python_evidence = [
+        path for path in (
+            root / "requirements.txt",
+            root / "pyproject.toml",
+            root / "app" / "requirements.txt",
+            root / "app" / "pyproject.toml",
+            *dockerfiles,
+        )
+        if path.is_file()
+    ]
     if python_evidence:
         for path in python_evidence:
             text = read(path)
@@ -69,7 +82,14 @@ def detected(root: Path) -> list[str]:
                 found.add("Python")
                 break
 
-    django_text = "\n".join(read(path) for path in root.glob("**/requirements.txt"))
+    django_text = "\n".join(
+        read(path)
+        for path in (
+            root / "requirements.txt",
+            root / "app" / "requirements.txt",
+        )
+        if path.is_file()
+    )
     if re.search(r"(?im)^\s*django\s*(?:[=<>!~\[]|$)", django_text):
         found.add("Django")
 
@@ -81,9 +101,15 @@ def detected(root: Path) -> list[str]:
     if "sqlite3" in sqlite_evidence:
         found.add("SQLite")
 
-    if list(root.glob("terraform/**/*.tf")):
+    terraform_root = root / "terraform"
+    terraform_files = (
+        list(terraform_root.rglob("*.tf"))
+        if terraform_root.is_dir()
+        else []
+    )
+    if terraform_files:
         found.add("Terraform")
-    terraform_text = "\n".join(read(path) for path in root.glob("terraform/**/*.tf"))
+    terraform_text = "\n".join(read(path) for path in terraform_files)
     if "hashicorp/aws" in terraform_text or re.search(r"(?m)^\s*provider\s+\"aws\"", terraform_text):
         found.add("AWS")
 
