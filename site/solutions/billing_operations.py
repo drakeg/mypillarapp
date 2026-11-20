@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import billing_boundary
+import billing_invoices
 import billing_provider
 import stripe_webhooks
 import tenant_auth
@@ -29,6 +30,7 @@ def operational_summary(
     )
     limit = _bounded_limit(rejected_limit)
     stripe_webhooks.ensure_schema()
+    billing_invoices.ensure_schema()
 
     with tenant_auth.db() as conn:
         provider_rows = conn.execute(
