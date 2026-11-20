@@ -149,9 +149,9 @@ See [Sprint 8 Plan — Billing and Commercialization](sprint-8-plan.md).
 
 ### Current step
 
-S8-T09 — Billing administration and onboarding.
+S8-T10 — Billing operations, recovery, and rollback.
 
-This step adds an owner/admin-only tenant billing facade for plan assignment, provider-price configuration, checkout initiation, subscription visibility, recent invoice history, and provider-customer visibility without exposing lower-level provider primitives.
+This step adds a provider-write maintenance switch, owner/admin tenant-safe operational summaries, explicit signed retry for rejected Stripe events with immutable event identity checks, and documented past-due/cancellation recovery and rollback procedures.
 
 
 ### Repository standards maintenance
