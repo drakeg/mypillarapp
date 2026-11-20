@@ -1,0 +1,29 @@
+title: "[Idea] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use Ideas for product suggestions that are not yet ready to become implementation issues. Focus on the SMB problem, customer value, and expected outcome.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: What user or business problem should this solve?
+      placeholder: Describe the pain point, affected user, and why it matters.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the smallest useful solution you have in mind.
+      placeholder: Explain the workflow or capability you would like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: value
+    attributes:
+      label: Customer value
+      description: How could this save time, reduce cost/risk, or generate revenue for an SMB?
+    validations:
+      required: false
