@@ -29,3 +29,15 @@ Every implementation change must identify:
 - Update documentation with the behavior or decision it describes.
 - Record material architecture choices as ADRs under `docs/adr/`.
 - Do not mark work complete until its acceptance tests pass.
+
+
+## README badge maintenance
+
+- `drakeg/madmallard-repository-standards` is the source of truth for repository badge policy.
+- Keep the bounded `madmallard-badges` block immediately below the root README H1.
+- Inspect manifests, dependency declarations, Docker/Compose files, Terraform/deployment configuration, GitHub Actions, releases, and license files before adding or changing a badge.
+- Technology badges require repository evidence. Never claim an unverified version.
+- GitHub Actions, releases, licenses, issues, and pull-request status must use dynamic badges; never hardcode passing status.
+- Omit unsupported claims rather than adding speculative badges. In particular, do not add license, release, or security-status badges unless corresponding repository evidence exists.
+- When supported technologies, workflows, licensing, deployment configuration, or release state change, update the badges in the same normal development PR.
+- Run `python3 scripts/badges.py --mode dry-run`, then `--mode write` when changes are expected, and always finish with `python3 scripts/badges.py --mode check`.
