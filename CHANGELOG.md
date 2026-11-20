@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Standardized README badge block generated from verified repository evidence, centralized badge-maintenance guidance, and CI drift validation aligned with `drakeg/madmallard-repository-standards`.
 - Application-owned Sprint 8 subscription lifecycle with same-tenant plan references, deterministic trialing/active/past-due/suspended/canceled transitions, append-only transition history, terminal cancellation, and opaque optional provider references.
 - Tenant-owned Sprint 8 plans with explicit same-tenant assignment, deterministic boolean/quota entitlements, owner/admin administration, fail-closed unknown features, bounded quotas, and an explicit provider-independent internal-tenant compatibility policy.
 - Sprint 8 billing tenant boundary with explicit active-membership ownership, owner/admin billing administration scope, prohibited payment-credential classification, opaque bounded provider references, and fail-closed legacy quote/storefront/service-price migration rules that cannot authorize charges or entitlements.
