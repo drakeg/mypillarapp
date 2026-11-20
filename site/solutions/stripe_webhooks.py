@@ -176,7 +176,10 @@ def process_stripe_event(
             (event_ref,),
         ).fetchone()
         if existing is not None:
-            if not (retry_rejected and str(existing['status']) == 'rejected'):
+            if not (
+                retry_rejected
+                and str(existing['status']) == 'rejected'
+            ):
                 return WebhookResult(
                     event_ref=event_ref,
                     event_type=event_type,
@@ -203,26 +206,24 @@ def process_stripe_event(
                    WHERE provider_name='stripe' AND event_ref=?''',
                 (received_at, event_ref),
             )
-            conn.commit()
         else:
-        if existing is None:
             conn.execute(
-            '''
-            INSERT INTO billing_provider_events(
-                provider_name,event_ref,event_type,event_created,
-                organization_id,object_ref,status,detail,received_at
-            ) VALUES('stripe',?,?,?,?,?,'received','',?)
-            ''',
-            (
-                event_ref,
-                event_type,
-                event_created,
-                None,
-                object_ref,
-                received_at,
-            ),
-        )
-            conn.commit()
+                '''
+                INSERT INTO billing_provider_events(
+                    provider_name,event_ref,event_type,event_created,
+                    organization_id,object_ref,status,detail,received_at
+                ) VALUES('stripe',?,?,?,?,?,'received','',?)
+                ''',
+                (
+                    event_ref,
+                    event_type,
+                    event_created,
+                    None,
+                    object_ref,
+                    received_at,
+                ),
+            )
+        conn.commit()
 
     try:
         if event_type == SUPPORTED_CHECKOUT_EVENT:
