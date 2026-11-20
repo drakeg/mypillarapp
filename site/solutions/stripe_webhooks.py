@@ -146,6 +146,7 @@ def process_stripe_event(
     webhook_secret: str,
     *,
     now: int | None = None,
+    retry_rejected: bool = False,
 ) -> WebhookResult:
     verify_stripe_signature(
         payload,
@@ -175,19 +176,37 @@ def process_stripe_event(
             (event_ref,),
         ).fetchone()
         if existing is not None:
-            return WebhookResult(
-                event_ref=event_ref,
-                event_type=event_type,
-                status=str(existing['status']),
-                organization_slug=(
-                    str(existing['organization_slug'])
-                    if existing['organization_slug'] is not None
-                    else None
-                ),
-                duplicate=True,
-                detail=str(existing['detail']),
+            if not (retry_rejected and str(existing['status']) == 'rejected'):
+                return WebhookResult(
+                    event_ref=event_ref,
+                    event_type=event_type,
+                    status=str(existing['status']),
+                    organization_slug=(
+                        str(existing['organization_slug'])
+                        if existing['organization_slug'] is not None
+                        else None
+                    ),
+                    duplicate=True,
+                    detail=str(existing['detail']),
+                )
+            if (
+                str(existing['event_type']) != event_type
+                or int(existing['event_created']) != int(event_created)
+                or str(existing['object_ref']) != object_ref
+            ):
+                raise PermissionError(
+                    'Rejected Stripe event retry does not match the original event.'
+                )
+            conn.execute(
+                '''UPDATE billing_provider_events
+                   SET status='received',detail='',received_at=?
+                   WHERE provider_name='stripe' AND event_ref=?''',
+                (received_at, event_ref),
             )
-        conn.execute(
+            conn.commit()
+        else:
+        if existing is None:
+            conn.execute(
             '''
             INSERT INTO billing_provider_events(
                 provider_name,event_ref,event_type,event_created,
@@ -203,7 +222,7 @@ def process_stripe_event(
                 received_at,
             ),
         )
-        conn.commit()
+            conn.commit()
 
     try:
         if event_type == SUPPORTED_CHECKOUT_EVENT:
