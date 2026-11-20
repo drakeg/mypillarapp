@@ -7,6 +7,7 @@ import json
 import time
 
 import billing_checkout
+import billing_invoices
 import billing_plans
 import billing_subscriptions
 import tenant_auth
@@ -19,7 +20,14 @@ SUPPORTED_SUBSCRIPTION_EVENTS = {
     'customer.subscription.updated',
     'customer.subscription.deleted',
 }
-IGNORED_EVENT_PREFIXES = ('invoice.',)
+SUPPORTED_INVOICE_EVENTS = {
+    'invoice.created',
+    'invoice.finalized',
+    'invoice.paid',
+    'invoice.payment_failed',
+    'invoice.voided',
+    'invoice.marked_uncollectible',
+}
 _STRIPE_STATUS_MAP = {
     'trialing': 'trialing',
     'active': 'active',
@@ -212,11 +220,24 @@ def process_stripe_event(
                 event_created,
                 obj,
             )
-        if event_type.startswith(IGNORED_EVENT_PREFIXES):
+        if event_type in SUPPORTED_INVOICE_EVENTS:
+            organization_id, detail = billing_invoices.reconcile_stripe_invoice(
+                event_ref=event_ref,
+                event_type=event_type,
+                event_created=event_created,
+                invoice=obj,
+            )
+            return _finish_event(
+                event_ref,
+                status='processed',
+                organization_id=organization_id,
+                detail=detail,
+            )
+        if event_type.startswith('invoice.'):
             return _finish_event(
                 event_ref,
                 status='ignored',
-                detail='invoice_event_deferred_to_s8_t07',
+                detail='unsupported_invoice_event',
             )
         return _finish_event(
             event_ref,
