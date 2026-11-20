@@ -197,8 +197,8 @@ class Sprint8BillingOperationsTests(unittest.TestCase):
             self.owner, 'solutions'
         )
         self.assertEqual('solutions', summary.organization_slug)
-        self.assertEqual(1, summary.provider_events_by_status['rejected'])
-        self.assertEqual(('evt_retry',), summary.rejected_event_refs)
+        self.assertNotIn('rejected', summary.provider_events_by_status)
+        self.assertEqual((), summary.rejected_event_refs)
 
         with self.assertRaises(PermissionError):
             billing_operations.operational_summary(
