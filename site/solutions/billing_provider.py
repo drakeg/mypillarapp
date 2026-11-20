@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from typing import Mapping, Protocol
 
 
@@ -10,6 +11,9 @@ ALLOWED_OPERATIONS = {
     'subscription.retrieve',
     'invoice.retrieve',
 }
+BILLING_MAINTENANCE_ENV = 'MADMALLARD_BILLING_MAINTENANCE'
+WRITE_OPERATIONS = {'customer.create', 'checkout_session.create'}
+
 PROHIBITED_FIELD_NAMES = {
     'api_key',
     'secret_key',
@@ -71,8 +75,18 @@ def validate_request(request: ProviderRequest) -> ProviderRequest:
     return ProviderRequest(operation=operation, fields=request.fields)
 
 
+def maintenance_enabled() -> bool:
+    return os.environ.get(BILLING_MAINTENANCE_ENV, '').strip().lower() in {
+        '1', 'true', 'yes', 'on',
+    }
+
+
 def execute(provider: BillingProvider, request: ProviderRequest) -> ProviderResponse:
     checked = validate_request(request)
+    if maintenance_enabled() and checked.operation in WRITE_OPERATIONS:
+        raise BillingProviderUnavailable(
+            'Billing provider writes are temporarily disabled for maintenance.'
+        )
     try:
         response = provider.execute(checked)
     except BillingProviderError:
