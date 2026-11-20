@@ -6,6 +6,7 @@ from typing import Protocol
 
 import ai_boundary
 import ai_settings
+import billing_plans
 import tenant_auth
 
 
@@ -195,6 +196,20 @@ def execute(
 
     rolling_used = rolling_usage_units(scope.organization_slug)
     try:
+        ai_entitlement = billing_plans.require_entitlement(
+            scope.organization_slug, 'ai'
+        )
+        plan_usage = billing_plans.entitlement(
+            scope.organization_slug, 'ai_rolling_units'
+        )
+        if (
+            plan_usage.quota is not None
+            and rolling_used
+                + int(requested_input_units)
+                + int(requested_output_units)
+                > plan_usage.quota
+        ):
+            raise PermissionError('AI plan rolling usage limit exceeded.')
         scope, settings = ai_settings.require_usage_allowed(
             user_id,
             scope.organization_slug,
