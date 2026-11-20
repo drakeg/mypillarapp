@@ -149,9 +149,9 @@ See [Sprint 8 Plan — Billing and Commercialization](sprint-8-plan.md).
 
 ### Current step
 
-S8-T08 — Quotas and commercialization enforcement.
+S8-T09 — Billing administration and onboarding.
 
-This step enforces assigned plan site quotas and AI feature/rolling-unit entitlements server-side while preserving explicit unlimited billing-layer behavior for unassigned/internal tenants and keeping existing AI tenant controls as a stricter override.
+This step adds an owner/admin-only tenant billing facade for plan assignment, provider-price configuration, checkout initiation, subscription visibility, recent invoice history, and provider-customer visibility without exposing lower-level provider primitives.
 
 
 ### Repository standards maintenance
