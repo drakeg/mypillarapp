@@ -149,9 +149,9 @@ See [Sprint 8 Plan — Billing and Commercialization](sprint-8-plan.md).
 
 ### Current step
 
-S8-T07 — Invoice and payment-history metadata.
+S8-T09 — Billing administration and onboarding.
 
-This step adds tenant-scoped invoice/payment metadata, authenticated Stripe invoice reconciliation, validated HTTPS invoice references, owner/admin-only bounded reads, and stale/out-of-order invoice protection without storing payment credentials.
+This step adds an owner/admin-only tenant billing facade for plan assignment, provider-price configuration, checkout initiation, subscription visibility, recent invoice history, and provider-customer visibility without exposing lower-level provider primitives.
 
 
 ### Repository standards maintenance

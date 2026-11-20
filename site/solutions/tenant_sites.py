@@ -103,10 +103,24 @@ def create_site(
     if normalized_status not in SITE_STATUSES:
         raise ValueError(f'Unknown site status: {normalized_status}')
 
+    # Sprint 8 billing enforcement is imported lazily to avoid a module cycle
+    # through billing_boundary -> tenant_sites.
+    import billing_plans
+    site_entitlement = billing_plans.entitlement(organization_slug, 'sites')
+
     with tenant_auth.db() as conn:
         organization_id = _organization_id(conn, organization_slug)
         if organization_id is None:
             raise ValueError('Organization not found.')
+        if site_entitlement.quota is not None:
+            current_count = conn.execute(
+                '''SELECT COUNT(*) AS total
+                   FROM site_builder_sites
+                   WHERE organization_id=? AND status!='archived' ''',
+                (organization_id,),
+            ).fetchone()
+            if int(current_count['total'] or 0) >= site_entitlement.quota:
+                raise PermissionError('Site quota exceeded for this organization.')
         timestamp = tenant_auth.now()
         try:
             cursor = conn.execute(
