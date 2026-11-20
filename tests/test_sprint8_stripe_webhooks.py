@@ -13,6 +13,7 @@ if str(SOLUTIONS) not in sys.path:
     sys.path.insert(0, str(SOLUTIONS))
 
 import billing_checkout
+import billing_invoices
 import billing_plans
 import billing_provider
 import billing_subscriptions
@@ -51,6 +52,7 @@ class Sprint8StripeWebhookTests(unittest.TestCase):
         tenant_auth.DB_PATH = data / 'madmallard.sqlite3'
         tenant_sites.ensure_schema()
         self.owner = self._user('solutions', 'owner@example.com', 'owner')
+        self.staff = self._user('solutions', 'staff@example.com', 'staff')
         self.other = self._user('adventures', 'other@example.com', 'owner')
         billing_plans.create_plan(
             self.owner,
@@ -272,24 +274,172 @@ class Sprint8StripeWebhookTests(unittest.TestCase):
             billing_subscriptions.current_subscription('solutions').status,
         )
 
-    def test_invoice_event_is_safely_ignored_and_audited(self):
-        event = {
-            'id': 'evt_invoice',
-            'type': 'invoice.paid',
-            'created': 1000,
-            'data': {'object': {'id': 'in_1'}},
-        }
+    def _reconcile_checkout(self):
+        event = self._checkout_event(created=1000)
         payload = self._payload(event)
-        result = stripe_webhooks.process_stripe_event(
+        stripe_webhooks.process_stripe_event(
             payload,
             self._signature(payload, 1000),
             self.secret,
             now=1000,
         )
-        self.assertEqual('ignored', result.status)
+
+    def _invoice_event(
+        self,
+        *,
+        event_id='evt_invoice',
+        event_type='invoice.paid',
+        created=1200,
+        org='solutions',
+        status='paid',
+        hosted_url='https://invoice.stripe.com/i/acct_1/in_1',
+        pdf_url='https://pay.stripe.com/invoice/in_1/pdf',
+    ):
+        return {
+            'id': event_id,
+            'type': event_type,
+            'created': created,
+            'data': {'object': {
+                'id': 'in_1',
+                'customer': 'cus_1',
+                'subscription': 'sub_1',
+                'status': status,
+                'currency': 'usd',
+                'amount_due': 2500,
+                'amount_paid': 2500 if status == 'paid' else 0,
+                'amount_remaining': 0 if status == 'paid' else 2500,
+                'hosted_invoice_url': hosted_url,
+                'invoice_pdf': pdf_url,
+                'due_date': 1500,
+                'status_transitions': {
+                    'paid_at': 1250 if status == 'paid' else None,
+                },
+                'metadata': {'organization_slug': org},
+            }},
+        }
+
+    def test_invoice_event_creates_tenant_scoped_billing_history(self):
+        self._reconcile_checkout()
+        event = self._invoice_event()
+        payload = self._payload(event)
+        result = stripe_webhooks.process_stripe_event(
+            payload,
+            self._signature(payload, 1200),
+            self.secret,
+            now=1200,
+        )
+        self.assertEqual('processed', result.status)
+        self.assertEqual('solutions', result.organization_slug)
+        invoices = billing_invoices.list_invoices(
+            self.owner, 'solutions'
+        )
+        self.assertEqual(1, len(invoices))
+        invoice = invoices[0]
+        self.assertEqual('in_1', invoice.provider_invoice_ref)
+        self.assertEqual('paid', invoice.status)
+        self.assertEqual('usd', invoice.currency)
+        self.assertEqual(2500, invoice.amount_due)
+        self.assertEqual(2500, invoice.amount_paid)
+        self.assertEqual(0, invoice.amount_remaining)
+        self.assertTrue(
+            invoice.hosted_invoice_url.startswith('https://')
+        )
+        self.assertTrue(invoice.invoice_pdf_url.startswith('https://'))
+
+    def test_invoice_reads_are_owner_admin_only_and_tenant_scoped(self):
+        self._reconcile_checkout()
+        event = self._invoice_event()
+        payload = self._payload(event)
+        stripe_webhooks.process_stripe_event(
+            payload,
+            self._signature(payload, 1200),
+            self.secret,
+            now=1200,
+        )
+        with self.assertRaises(PermissionError):
+            billing_invoices.list_invoices(self.staff, 'solutions')
         self.assertEqual(
-            'invoice_event_deferred_to_s8_t07',
+            [],
+            billing_invoices.list_invoices(self.other, 'adventures'),
+        )
+
+    def test_invoice_metadata_tenant_mismatch_is_rejected(self):
+        self._reconcile_checkout()
+        event = self._invoice_event(org='adventures')
+        payload = self._payload(event)
+        with self.assertRaises(PermissionError):
+            stripe_webhooks.process_stripe_event(
+                payload,
+                self._signature(payload, 1200),
+                self.secret,
+                now=1200,
+            )
+        self.assertEqual(
+            [],
+            billing_invoices.list_invoices(self.owner, 'solutions'),
+        )
+
+    def test_invoice_customer_mismatch_is_rejected(self):
+        self._reconcile_checkout()
+        event = self._invoice_event()
+        event['data']['object']['customer'] = 'cus_other'
+        payload = self._payload(event)
+        with self.assertRaises(PermissionError):
+            stripe_webhooks.process_stripe_event(
+                payload,
+                self._signature(payload, 1200),
+                self.secret,
+                now=1200,
+            )
+
+    def test_invoice_urls_must_be_https(self):
+        self._reconcile_checkout()
+        event = self._invoice_event(
+            hosted_url='http://invoice.example/in_1'
+        )
+        payload = self._payload(event)
+        with self.assertRaises(ValueError):
+            stripe_webhooks.process_stripe_event(
+                payload,
+                self._signature(payload, 1200),
+                self.secret,
+                now=1200,
+            )
+
+    def test_invoice_reconciliation_ignores_older_event(self):
+        self._reconcile_checkout()
+        paid = self._invoice_event(created=1200)
+        paid_payload = self._payload(paid)
+        stripe_webhooks.process_stripe_event(
+            paid_payload,
+            self._signature(paid_payload, 1200),
+            self.secret,
+            now=1200,
+        )
+
+        older = self._invoice_event(
+            event_id='evt_invoice_old',
+            event_type='invoice.payment_failed',
+            created=1100,
+            status='open',
+        )
+        older_payload = self._payload(older)
+        result = stripe_webhooks.process_stripe_event(
+            older_payload,
+            self._signature(older_payload, 1100),
+            self.secret,
+            now=1100,
+        )
+        self.assertEqual('processed', result.status)
+        self.assertEqual(
+            'invoice_stale_or_out_of_order',
             result.detail,
+        )
+        self.assertEqual(
+            'paid',
+            billing_invoices.list_invoices(
+                self.owner, 'solutions'
+            )[0].status,
         )
 
 

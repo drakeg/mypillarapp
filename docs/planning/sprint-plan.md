@@ -149,9 +149,9 @@ See [Sprint 8 Plan — Billing and Commercialization](sprint-8-plan.md).
 
 ### Current step
 
-S8-T06 — Webhook verification and reconciliation.
+S8-T07 — Invoice and payment-history metadata.
 
-This step adds timestamped HMAC signature verification, provider-event idempotency, checkout-to-subscription reconciliation, cross-tenant ownership checks, and stale/out-of-order event protection. Invoice events remain authenticated/audited but deferred to S8-T07.
+This step adds tenant-scoped invoice/payment metadata, authenticated Stripe invoice reconciliation, validated HTTPS invoice references, owner/admin-only bounded reads, and stale/out-of-order invoice protection without storing payment credentials.
 
 
 ### Repository standards maintenance
