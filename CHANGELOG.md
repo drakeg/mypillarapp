@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Server-side Sprint 8 commercialization enforcement for assigned-plan site quotas and AI feature/rolling-unit limits, while preserving explicit unlimited billing-layer policy for unassigned/internal tenants and retaining stricter tenant AI controls.
 - Tenant-safe Sprint 8 invoice/payment-history metadata with authenticated Stripe invoice reconciliation, validated HTTPS invoice/PDF references, bounded owner/admin reads, cross-tenant/customer mismatch rejection, and stale-event protection without storing payment credentials.
 - Authenticated/idempotent Sprint 8 Stripe webhook reconciliation with timestamped HMAC verification, checkout-to-subscription activation only after verified ownership, cross-tenant mismatch rejection, provider-event audit records, and stale/out-of-order replay protection.
 - Tenant-safe Sprint 8 Stripe customer and checkout onboarding with provider price mappings, customer reuse, exact allow-listed HTTPS return URLs, pending checkout-session persistence, and no entitlement activation before verified provider reconciliation.
