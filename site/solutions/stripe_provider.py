@@ -118,6 +118,7 @@ class StripeBillingProvider:
         object_id = str(payload.get('id') or '').strip()
         object_type = str(payload.get('object') or '').strip()
         raw_status = str(payload.get('status') or '').strip()
+        redirect_url = str(payload.get('url') or '').strip()
         if not object_id or not object_type:
             raise billing_provider.BillingProviderError(
                 'Stripe returned an incomplete object.'
@@ -130,6 +131,7 @@ class StripeBillingProvider:
             ),
             object_type=object_type,
             raw_status=raw_status,
+            redirect_url=_safe_redirect_url(redirect_url),
         )
 
 
@@ -234,3 +236,19 @@ def _flatten_form(
         elif value is not None:
             output.append((name, str(value)))
     return output
+
+
+def _safe_redirect_url(value: str) -> str:
+    clean = (value or '').strip()
+    if not clean:
+        return ''
+    parsed = parse.urlsplit(clean)
+    if parsed.scheme != 'https' or not parsed.netloc:
+        raise billing_provider.BillingProviderError(
+            'Stripe returned an invalid redirect URL.'
+        )
+    if parsed.username or parsed.password:
+        raise billing_provider.BillingProviderError(
+            'Stripe returned an invalid redirect URL.'
+        )
+    return clean
