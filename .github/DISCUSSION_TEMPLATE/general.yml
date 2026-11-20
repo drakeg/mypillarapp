@@ -1,0 +1,21 @@
+title: "[General] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for starting a discussion about Mad Mallard Platform. Use this category for open-ended project conversation, deployment experiences, integration ideas, and community feedback.
+  - type: textarea
+    id: topic
+    attributes:
+      label: What would you like to discuss?
+      description: Give enough context for maintainers and community members to understand the topic.
+      placeholder: Describe the topic, what you are trying to accomplish, and any relevant context.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add relevant environment details, links, screenshots, or examples when useful.
+    validations:
+      required: false
