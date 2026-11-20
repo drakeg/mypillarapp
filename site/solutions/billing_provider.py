@@ -20,6 +20,13 @@ PROHIBITED_FIELD_NAMES = {
     'bank_account_number',
     'routing_number',
     'raw_payment_method',
+    'card',
+    'number',
+    'cvc',
+    'cvv',
+    'payment_method',
+    'payment_method_data',
+    'source',
 }
 
 
