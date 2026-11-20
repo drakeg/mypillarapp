@@ -149,9 +149,9 @@ See [Sprint 8 Plan — Billing and Commercialization](sprint-8-plan.md).
 
 ### Current step
 
-S8-T04 — Stripe integration boundary.
+S8-T05 — Stripe customer and checkout onboarding.
 
-This step adds a provider-neutral billing interface, environment-only Stripe configuration, injected transport for CI, raw-payment-field rejection, and controlled provider/network failure handling without product-level checkout or webhook behavior.
+This step adds tenant-scoped provider price mappings, authorized Stripe customer creation/reuse, allow-listed HTTPS checkout return URLs, pending checkout-session persistence, and an explicit rule that provider responses do not activate application entitlements before verified reconciliation.
 
 
 ### Repository standards maintenance
