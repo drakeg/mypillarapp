@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Authenticated/idempotent Sprint 8 Stripe webhook reconciliation with timestamped HMAC verification, checkout-to-subscription activation only after verified ownership, cross-tenant mismatch rejection, provider-event audit records, and stale/out-of-order replay protection.
 - Tenant-safe Sprint 8 Stripe customer and checkout onboarding with provider price mappings, customer reuse, exact allow-listed HTTPS return URLs, pending checkout-session persistence, and no entitlement activation before verified provider reconciliation.
 - Provider-neutral Sprint 8 billing interface and Stripe adapter with environment-only secrets, HTTPS configuration validation, injected CI transport, raw payment/card/bank field rejection, bounded provider references, and controlled network/provider failures.
 - Standardized README badge block generated from verified repository evidence, centralized badge-maintenance guidance, and CI drift validation aligned with `drakeg/madmallard-repository-standards`.
