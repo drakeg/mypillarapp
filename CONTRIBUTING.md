@@ -37,3 +37,16 @@ Before contributing, read:
 ## Documentation workflow
 
 Documentation-only phases may be committed directly to `main` when explicitly authorized.
+
+
+## Repository badge validation
+
+README badges follow the centralized standards in `drakeg/madmallard-repository-standards`. Before opening or updating a PR that changes dependencies, workflows, deployment configuration, licensing, or release state:
+
+1. inspect the repository evidence supporting each badge;
+2. run `python3 scripts/badges.py --mode dry-run`;
+3. run `python3 scripts/badges.py --mode write` when the generated block should change;
+4. review the README diff; and
+5. run `python3 scripts/badges.py --mode check`.
+
+The badge generator preserves all README content outside the bounded `madmallard-badges` block. Missing evidence means the badge should be omitted rather than guessed.
