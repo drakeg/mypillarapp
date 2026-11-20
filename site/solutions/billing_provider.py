@@ -51,6 +51,7 @@ class ProviderResponse:
     object_id: str
     object_type: str
     raw_status: str
+    redirect_url: str = ''
 
 
 class BillingProvider(Protocol):

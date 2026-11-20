@@ -149,9 +149,9 @@ See [Sprint 8 Plan — Billing and Commercialization](sprint-8-plan.md).
 
 ### Current step
 
-S8-T04 — Stripe integration boundary.
+S8-T06 — Webhook verification and reconciliation.
 
-This step adds a provider-neutral billing interface, environment-only Stripe configuration, injected transport for CI, raw-payment-field rejection, and controlled provider/network failure handling without product-level checkout or webhook behavior.
+This step adds timestamped HMAC signature verification, provider-event idempotency, checkout-to-subscription reconciliation, cross-tenant ownership checks, and stale/out-of-order event protection. Invoice events remain authenticated/audited but deferred to S8-T07.
 
 
 ### Repository standards maintenance
