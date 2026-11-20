@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Sprint 8 billing operations/recovery controls with provider-write maintenance mode, tenant-safe operational summaries, signed retry of previously rejected Stripe events with immutable identity checks, and documented past-due/cancellation recovery procedures.
 - Owner/admin-only Sprint 8 billing administration facade providing tenant-scoped plan assignment, provider-price configuration, checkout initiation, subscription visibility, recent invoice history, and provider-customer visibility through existing safe billing boundaries.
 - Server-side Sprint 8 commercialization enforcement for assigned-plan site quotas and AI feature/rolling-unit limits, while preserving explicit unlimited billing-layer policy for unassigned/internal tenants and retaining stricter tenant AI controls.
 - Tenant-safe Sprint 8 invoice/payment-history metadata with authenticated Stripe invoice reconciliation, validated HTTPS invoice/PDF references, bounded owner/admin reads, cross-tenant/customer mismatch rejection, and stale-event protection without storing payment credentials.
