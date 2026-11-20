@@ -149,9 +149,9 @@ See [Sprint 8 Plan — Billing and Commercialization](sprint-8-plan.md).
 
 ### Current step
 
-S8-T03 — Subscription lifecycle foundation.
+S8-T04 — Stripe integration boundary.
 
-This step adds application-owned tenant subscriptions with deterministic trialing/active/past-due/suspended/canceled transitions, same-tenant plan references, append-only transition history, and optional opaque provider references.
+This step adds a provider-neutral billing interface, environment-only Stripe configuration, injected transport for CI, raw-payment-field rejection, and controlled provider/network failure handling without product-level checkout or webhook behavior.
 
 
 ### Repository standards maintenance
