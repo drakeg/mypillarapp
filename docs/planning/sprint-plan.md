@@ -152,3 +152,8 @@ See [Sprint 8 Plan — Billing and Commercialization](sprint-8-plan.md).
 S8-T03 — Subscription lifecycle foundation.
 
 This step adds application-owned tenant subscriptions with deterministic trialing/active/past-due/suspended/canceled transitions, same-tenant plan references, append-only transition history, and optional opaque provider references.
+
+
+### Repository standards maintenance
+
+Standardized README badge maintenance was incorporated into Sprint 8 delivery hygiene using `drakeg/madmallard-repository-standards` as the source of truth. The repository now keeps a generated badge block under the README title, validates badge drift in CI, and documents ongoing badge maintenance in `AGENTS.md` and `CONTRIBUTING.md`.
