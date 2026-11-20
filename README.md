@@ -10,7 +10,7 @@ Mad Mallard Platform is a low-cost, self-hosted business operating platform incu
 
 ## Current status
 
-Sprint 8 — Billing and Commercialization is in repository/CI closure. Sprints 1–7 remain protected compatibility baselines, and Sprint 8 adds tenant-safe plans, subscriptions, Stripe boundaries, invoices, quotas, billing administration, and operational recovery controls.
+Sprint 8 — Billing and Commercialization is complete at the repository/CI level. Sprints 1–8 are protected compatibility baselines, including tenant-safe plans, subscriptions, Stripe boundaries, invoices, quotas, billing administration, and operational recovery controls.
 
 The current system includes:
 
