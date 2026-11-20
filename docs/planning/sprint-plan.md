@@ -149,9 +149,9 @@ See [Sprint 8 Plan — Billing and Commercialization](sprint-8-plan.md).
 
 ### Current step
 
-S8-T05 — Stripe customer and checkout onboarding.
+S8-T06 — Webhook verification and reconciliation.
 
-This step adds tenant-scoped provider price mappings, authorized Stripe customer creation/reuse, allow-listed HTTPS checkout return URLs, pending checkout-session persistence, and an explicit rule that provider responses do not activate application entitlements before verified reconciliation.
+This step adds timestamped HMAC signature verification, provider-event idempotency, checkout-to-subscription reconciliation, cross-tenant ownership checks, and stale/out-of-order event protection. Invoice events remain authenticated/audited but deferred to S8-T07.
 
 
 ### Repository standards maintenance
