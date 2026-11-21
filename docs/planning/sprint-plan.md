@@ -176,6 +176,6 @@ See [Sprint 9 Plan — Bookings and Calendars](sprint-9-plan.md).
 
 ### Current step
 
-S9-T06 — Public booking creation.
+S9-T07 — Customer self-service.
 
-This step adds authoritative public slot claiming with guest contact snapshots, opaque non-auth booking references, multi-resource race fallback, and explicit refusal to auto-link customer/CRM identities from unverified public email.
+This step adds authenticated guest-booking claim, customer-owned appointment listing, transactional cancellation, and public-policy-aware rescheduling with customer ownership and audit-history preservation.
