@@ -176,6 +176,6 @@ See [Sprint 9 Plan — Bookings and Calendars](sprint-9-plan.md).
 
 ### Current step
 
-S9-T03 — Staff/resource availability.
+S9-T04 — Conflict-safe appointments.
 
-This step adds schedulable staff/room/equipment resources, same-tenant staff-user binding, non-overlapping weekly availability, UTC blackout periods, and same-calendar service/resource eligibility.
+This step adds canonical tenant-owned appointments with duration/buffer snapshots, immediate-write overlap protection, same-tenant customer/contact links, deterministic lifecycle states, and append-only transition history.
