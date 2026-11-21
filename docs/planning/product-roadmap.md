@@ -50,3 +50,10 @@ Includes drafting, summarization, knowledge search, suggested replies, and usage
 Goal: support external paying organizations.
 
 Includes Stripe, subscriptions, plans, quotas, invoices, licensing, and tenant onboarding.
+
+
+## Sprint 9 — Bookings and Calendars
+
+Goal: help SMBs convert inquiries into scheduled work while reducing manual scheduling effort.
+
+Includes tenant calendars, bookable services, availability, conflict-safe appointments, public/customer booking, reminders, and calendar export.
