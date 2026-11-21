@@ -8,6 +8,7 @@ import portal_tenancy
 import scheduling_appointments
 import scheduling_availability
 import scheduling_calendars
+import scheduling_notifications
 import scheduling_public
 import tenant_auth
 import tenant_sites
@@ -130,7 +131,12 @@ def cancel_customer_appointment(
             checked.user_id,
             appointment_id,
         )
-    return _appointment_from_row(updated)
+    result = _appointment_from_row(updated)
+    scheduling_notifications.cancel_scheduled_notifications(
+        checked.organization_slug,
+        result.id,
+    )
+    return result
 
 
 def reschedule_customer_appointment(
@@ -188,12 +194,18 @@ def reschedule_customer_appointment(
 
     for resource in sorted(resources, key=lambda item: item.id):
         try:
-            return _reschedule_owned(
+            updated = _reschedule_owned(
                 checked,
                 appointment,
                 resource,
                 int(start_at),
             )
+            scheduling_notifications.rebuild_reminders(
+                checked.organization_slug,
+                updated.id,
+                now=current,
+            )
+            return updated
         except scheduling_appointments.AppointmentConflictError:
             continue
 

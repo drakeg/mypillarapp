@@ -176,6 +176,6 @@ See [Sprint 9 Plan — Bookings and Calendars](sprint-9-plan.md).
 
 ### Current step
 
-S9-T08 — Staff calendar administration.
+S9-T09 — Reminders and notifications.
 
-This step adds a least-privilege scheduling administration facade: viewers are read-only, staff manage appointments, and owner/admin manage calendars, services, resources, availability, and blackouts.
+This step adds deterministic confirmation/reminder metadata, authenticated Portal delivery-queue integration with existing preferences, explicit guest-email adapter handoff, and lifecycle cleanup/rebuild on cancellation/rescheduling.
