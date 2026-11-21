@@ -176,6 +176,6 @@ See [Sprint 9 Plan — Bookings and Calendars](sprint-9-plan.md).
 
 ### Current step
 
-S9-T07 — Customer self-service.
+S9-T08 — Staff calendar administration.
 
-This step adds authenticated guest-booking claim, customer-owned appointment listing, transactional cancellation, and public-policy-aware rescheduling with customer ownership and audit-history preservation.
+This step adds a least-privilege scheduling administration facade: viewers are read-only, staff manage appointments, and owner/admin manage calendars, services, resources, availability, and blackouts.

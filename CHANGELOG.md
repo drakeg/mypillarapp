@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Least-privilege Sprint 9 scheduling administration facade with viewer read-only access, staff appointment management, owner/admin calendar/service/resource/availability configuration, tenant isolation, and actor-aware appointment audit history.
 - Authenticated Sprint 9 customer scheduling self-service with explicit guest-booking claim by verified tenant identity, ownership-scoped listing/cancellation, public-policy-aware rescheduling, alternate-resource race fallback, and append-only customer audit history.
 - Authoritative Sprint 9 public booking creation with revalidated published availability, serialized conflict-safe slot claims, multi-resource race fallback, opaque non-auth booking references, bounded guest contact snapshots, and no automatic identity linking from public email.
 - Privacy-safe Sprint 9 public booking availability for published site/calendar/services, enforcing notice/horizon, weekly timezone windows, blackouts, and blocking appointments while exposing only slot times and aggregate resource capacity.
