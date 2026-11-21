@@ -20,14 +20,21 @@ APPOINTMENT_STATUSES = {
     'no_show',
 }
 BLOCKING_STATUSES = {'pending', 'confirmed'}
-_PUBLIC_REF_RE = re.compile(r'^[A-Za-z0-9_-]{16,128}_TRANSITIONS = {
+_PUBLIC_REF_RE = re.compile(r'^[A-Za-z0-9_-]{16,128}$')
+_EMAIL_RE = re.compile(r'^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$')
+
+
+class AppointmentConflictError(ValueError):
+    pass
+
+
+_TRANSITIONS = {
     'pending': {'confirmed', 'canceled'},
     'confirmed': {'canceled', 'completed', 'no_show'},
     'canceled': set(),
     'completed': set(),
     'no_show': set(),
 }
-
 
 @dataclass(frozen=True)
 class Appointment:
