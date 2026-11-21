@@ -176,6 +176,6 @@ See [Sprint 9 Plan — Bookings and Calendars](sprint-9-plan.md).
 
 ### Current step
 
-S9-T04 — Conflict-safe appointments.
+S9-T05 — Public booking availability.
 
-This step adds canonical tenant-owned appointments with duration/buffer snapshots, immediate-write overlap protection, same-tenant customer/contact links, deterministic lifecycle states, and append-only transition history.
+This step exposes published site/calendar/service availability using timezone-aware weekly windows, notice/horizon rules, blackouts, and blocking appointments while returning only anonymous slot times and aggregate resource capacity.
