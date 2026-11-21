@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 import sqlite3
 
+import crm_contacts
+
 import scheduling_availability
 import scheduling_boundary
 import scheduling_calendars
@@ -63,6 +65,7 @@ class AppointmentTransition:
 
 def ensure_schema() -> None:
     scheduling_availability.ensure_schema()
+    crm_contacts.ensure_schema()
     with tenant_auth.db() as conn:
         conn.execute(
             '''
