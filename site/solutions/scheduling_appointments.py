@@ -229,6 +229,7 @@ def create_appointment(
     now = tenant_auth.now()
     clean_reason = _reason(reason)
     with tenant_auth.db() as conn:
+        conn.commit()
         conn.execute('BEGIN IMMEDIATE')
         _assert_resource_ownership(
             conn,
@@ -383,6 +384,7 @@ def transition_appointment(
     clean_reason = _reason(reason)
     now = tenant_auth.now()
     with tenant_auth.db() as conn:
+        conn.commit()
         conn.execute('BEGIN IMMEDIATE')
         row = _appointment_row(
             conn, organization_id, appointment_id
