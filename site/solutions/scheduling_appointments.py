@@ -466,6 +466,43 @@ def list_transitions(
     return [_transition_from_row(row) for row in rows]
 
 
+
+def list_blocking_intervals(
+    organization_slug: str,
+    resource_id: int,
+    *,
+    start_at: int,
+    end_at: int,
+) -> list[tuple[int, int]]:
+    ensure_schema()
+    organization_id = _organization_id(organization_slug)
+    resource = scheduling_availability.get_resource(
+        organization_slug, resource_id
+    )
+    if resource is None or resource.status != 'active':
+        return []
+    start, end = scheduling_boundary.validate_utc_range(
+        start_at, end_at
+    )
+    with tenant_auth.db() as conn:
+        rows = conn.execute(
+            """
+            SELECT block_start_at,block_end_at
+            FROM scheduling_appointments
+            WHERE organization_id=?
+              AND resource_id=?
+              AND status IN ('pending','confirmed')
+              AND block_start_at < ?
+              AND block_end_at > ?
+            ORDER BY block_start_at,block_end_at,id
+            """,
+            (organization_id, resource.id, end, start),
+        ).fetchall()
+    return [
+        (int(row['block_start_at']), int(row['block_end_at']))
+        for row in rows
+    ]
+
 def _assert_resource_ownership(
     conn,
     organization_id: int,
