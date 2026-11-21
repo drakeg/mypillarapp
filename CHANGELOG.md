@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Conflict-safe Sprint 9 appointment lifecycle with UTC service/conflict intervals, duration/buffer snapshots, immediate-write overlap protection, same-tenant customer/contact links, deterministic terminal states, and append-only transitions.
 - Sprint 9 schedulable staff/room/equipment resources with same-tenant staff membership binding, non-overlapping weekly availability, UTC blackout periods, archive lifecycle, and same-calendar service/resource eligibility.
 - Tenant-owned Sprint 9 scheduling calendars and bookable service types with same-tenant Site Builder linkage, IANA timezone/horizon/notice settings, bounded duration/buffers, publication lifecycle, and cross-tenant isolation.
 - Sprint 9 Bookings and Calendars plan plus tenant-safe scheduling authorization/time boundary with UTC epoch persistence rules, IANA timezone validation, DST-gap rejection, and same-tenant Site Builder/CRM/customer reference guards.
