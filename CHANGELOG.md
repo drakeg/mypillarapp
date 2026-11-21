@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Sprint 9 Bookings and Calendars plan plus tenant-safe scheduling authorization/time boundary with UTC epoch persistence rules, IANA timezone validation, DST-gap rejection, and same-tenant Site Builder/CRM/customer reference guards.
 - Final Sprint 8 repository/CI closure at `0751ac4c5cd3049473bada3c620052dbdad9ec88`, with full regression, focused Sprint 2–8 gates, Docker/runtime checks, badge validation, and Terraform validation green.
 - Focused `make test-sprint8` regression gate in GitHub Actions plus Sprint 8 Billing and Commercialization closure/rollback evidence.
 - Sprint 8 billing operations/recovery controls with provider-write maintenance mode, tenant-safe operational summaries, signed retry of previously rejected Stripe events with immutable identity checks, and documented past-due/cancellation recovery procedures.

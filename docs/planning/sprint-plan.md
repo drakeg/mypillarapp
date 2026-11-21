@@ -160,3 +160,22 @@ Standardized README badge maintenance was incorporated into Sprint 8 delivery hy
 ### Sprint 8 closure evidence
 
 See [Sprint 8 Closure Record](../09-release/sprint-8-closure.md).
+
+
+## Sprint 9 status
+
+Sprint 9 — Bookings and Calendars is the active planning/implementation Sprint.
+
+### Objective
+
+Help SMB tenants publish bookable services, manage availability, prevent double-booking, and let customers manage appointments without duplicating existing CRM/customer identities.
+
+### Locked plan
+
+See [Sprint 9 Plan — Bookings and Calendars](sprint-9-plan.md).
+
+### Current step
+
+S9-T01 — Scheduling tenant and time boundary.
+
+This step establishes tenant authorization, same-tenant reference validation, UTC/IANA timezone rules, and scheduling compatibility/security boundaries before appointment persistence.

@@ -20,7 +20,7 @@
 - contacts/companies/opportunities;
 - quotes and tasks;
 - projects/tickets/files;
-- bookings and calendars;
+- bookings and calendars — promoted to Sprint 9;
 - affiliate storefronts;
 - digital downloads;
 - analytics;
