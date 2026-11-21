@@ -176,6 +176,6 @@ See [Sprint 9 Plan — Bookings and Calendars](sprint-9-plan.md).
 
 ### Current step
 
-S9-T02 — Calendars and service types.
+S9-T03 — Staff/resource availability.
 
-This step adds tenant-owned calendars with optional Site Builder linkage, IANA timezone/horizon/notice settings, and lifecycle-managed bookable service types with bounded duration/buffer metadata.
+This step adds schedulable staff/room/equipment resources, same-tenant staff-user binding, non-overlapping weekly availability, UTC blackout periods, and same-calendar service/resource eligibility.
