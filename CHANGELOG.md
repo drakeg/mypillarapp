@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Authenticated Sprint 9 customer scheduling self-service with explicit guest-booking claim by verified tenant identity, ownership-scoped listing/cancellation, public-policy-aware rescheduling, alternate-resource race fallback, and append-only customer audit history.
 - Authoritative Sprint 9 public booking creation with revalidated published availability, serialized conflict-safe slot claims, multi-resource race fallback, opaque non-auth booking references, bounded guest contact snapshots, and no automatic identity linking from public email.
 - Privacy-safe Sprint 9 public booking availability for published site/calendar/services, enforcing notice/horizon, weekly timezone windows, blackouts, and blocking appointments while exposing only slot times and aggregate resource capacity.
 - Conflict-safe Sprint 9 appointment lifecycle with UTC service/conflict intervals, duration/buffer snapshots, immediate-write overlap protection, same-tenant customer/contact links, deterministic terminal states, and append-only transitions.
