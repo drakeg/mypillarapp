@@ -151,6 +151,58 @@ def list_public_slots(
     ]
 
 
+
+def _eligible_resources_for_slot(
+    organization_slug: str,
+    site_slug: str,
+    *,
+    calendar_slug: str,
+    service_slug: str,
+    start_at: int,
+    now: int,
+) -> tuple[
+    scheduling_calendars.SchedulingCalendar | None,
+    scheduling_calendars.ServiceType | None,
+    list[scheduling_availability.SchedulingResource],
+]:
+    site = _published_site(organization_slug, site_slug)
+    if site is None:
+        return None, None, []
+    calendar = _public_calendar(
+        organization_slug, site.id, calendar_slug
+    )
+    if calendar is None:
+        return None, None, []
+    service = _public_service(
+        organization_slug, calendar.id, service_slug
+    )
+    if service is None:
+        return calendar, None, []
+
+    start = int(start_at)
+    end = start + service.duration_minutes * 60
+    notice_start = int(now) + calendar.minimum_notice_minutes * 60
+    horizon_end = int(now) + calendar.booking_horizon_days * 86400
+    if start < notice_start or end > horizon_end:
+        return calendar, service, []
+
+    matches: list[scheduling_availability.SchedulingResource] = []
+    for resource in scheduling_availability.list_service_resources(
+        organization_slug, service.id
+    ):
+        starts = _resource_candidate_starts(
+            organization_slug,
+            calendar,
+            service,
+            resource,
+            start,
+            end,
+            DEFAULT_SLOT_STEP_MINUTES,
+        )
+        if start in starts:
+            matches.append(resource)
+    return calendar, service, matches
+
 def _resource_candidate_starts(
     organization_slug: str,
     calendar: scheduling_calendars.SchedulingCalendar,

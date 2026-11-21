@@ -176,6 +176,6 @@ See [Sprint 9 Plan — Bookings and Calendars](sprint-9-plan.md).
 
 ### Current step
 
-S9-T05 — Public booking availability.
+S9-T06 — Public booking creation.
 
-This step exposes published site/calendar/service availability using timezone-aware weekly windows, notice/horizon rules, blackouts, and blocking appointments while returning only anonymous slot times and aggregate resource capacity.
+This step adds authoritative public slot claiming with guest contact snapshots, opaque non-auth booking references, multi-resource race fallback, and explicit refusal to auto-link customer/CRM identities from unverified public email.

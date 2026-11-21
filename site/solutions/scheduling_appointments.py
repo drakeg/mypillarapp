@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 import sqlite3
 
 import crm_contacts
@@ -19,6 +20,14 @@ APPOINTMENT_STATUSES = {
     'no_show',
 }
 BLOCKING_STATUSES = {'pending', 'confirmed'}
+_PUBLIC_REF_RE = re.compile(r'^[A-Za-z0-9_-]{16,128}$')
+_EMAIL_RE = re.compile(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
+
+
+class AppointmentConflictError(ValueError):
+    pass
+
+
 _TRANSITIONS = {
     'pending': {'confirmed', 'canceled'},
     'confirmed': {'canceled', 'completed', 'no_show'},
@@ -26,7 +35,6 @@ _TRANSITIONS = {
     'completed': set(),
     'no_show': set(),
 }
-
 
 @dataclass(frozen=True)
 class Appointment:
@@ -38,6 +46,10 @@ class Appointment:
     resource_id: int
     customer_user_id: int | None
     crm_contact_id: int | None
+    public_ref: str
+    guest_name: str
+    guest_email: str
+    guest_phone: str
     status: str
     start_at: int
     end_at: int
@@ -77,6 +89,10 @@ def ensure_schema() -> None:
                 resource_id INTEGER NOT NULL,
                 customer_user_id INTEGER,
                 crm_contact_id INTEGER,
+                public_ref TEXT,
+                guest_name TEXT NOT NULL DEFAULT '',
+                guest_email TEXT NOT NULL DEFAULT '',
+                guest_phone TEXT NOT NULL DEFAULT '',
                 status TEXT NOT NULL,
                 start_at INTEGER NOT NULL,
                 end_at INTEGER NOT NULL,
@@ -111,6 +127,40 @@ def ensure_schema() -> None:
                 FOREIGN KEY(created_by_user_id)
                     REFERENCES auth_users(id) ON DELETE SET NULL
             )
+            '''
+        )
+        columns = {
+            str(row['name'])
+            for row in conn.execute(
+                'PRAGMA table_info(scheduling_appointments)'
+            ).fetchall()
+        }
+        if 'public_ref' not in columns:
+            conn.execute(
+                'ALTER TABLE scheduling_appointments '
+                'ADD COLUMN public_ref TEXT'
+            )
+        if 'guest_name' not in columns:
+            conn.execute(
+                "ALTER TABLE scheduling_appointments "
+                "ADD COLUMN guest_name TEXT NOT NULL DEFAULT ''"
+            )
+        if 'guest_email' not in columns:
+            conn.execute(
+                "ALTER TABLE scheduling_appointments "
+                "ADD COLUMN guest_email TEXT NOT NULL DEFAULT ''"
+            )
+        if 'guest_phone' not in columns:
+            conn.execute(
+                "ALTER TABLE scheduling_appointments "
+                "ADD COLUMN guest_phone TEXT NOT NULL DEFAULT ''"
+            )
+        conn.execute(
+            '''
+            CREATE UNIQUE INDEX IF NOT EXISTS
+                idx_scheduling_appointments_public_ref
+            ON scheduling_appointments(public_ref)
+            WHERE public_ref IS NOT NULL
             '''
         )
         conn.execute(
@@ -169,6 +219,10 @@ def create_appointment(
     status: str = 'confirmed',
     customer_user_id: int | None = None,
     crm_contact_id: int | None = None,
+    public_ref: str | None = None,
+    guest_name: str = '',
+    guest_email: str = '',
+    guest_phone: str = '',
     actor_user_id: int | None = None,
     reason: str = '',
 ) -> Appointment:
@@ -216,6 +270,10 @@ def create_appointment(
     clean_actor = _actor_user(
         organization_slug, actor_user_id
     )
+    clean_public_ref = _public_ref(public_ref)
+    clean_guest_name = _guest_name(guest_name)
+    clean_guest_email = _guest_email(guest_email)
+    clean_guest_phone = _guest_phone(guest_phone)
 
     start = _epoch(start_at, 'start_at')
     duration = int(service.duration_minutes)
@@ -252,11 +310,12 @@ def create_appointment(
             '''
             INSERT INTO scheduling_appointments(
                 organization_id,calendar_id,service_id,resource_id,
-                customer_user_id,crm_contact_id,status,start_at,end_at,
+                customer_user_id,crm_contact_id,public_ref,
+                guest_name,guest_email,guest_phone,status,start_at,end_at,
                 block_start_at,block_end_at,duration_minutes,
                 buffer_before_minutes,buffer_after_minutes,
                 created_by_user_id,created_at,updated_at
-            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             ''',
             (
                 organization_id,
@@ -265,6 +324,10 @@ def create_appointment(
                 resource.id,
                 clean_customer,
                 clean_contact,
+                clean_public_ref,
+                clean_guest_name,
+                clean_guest_email,
+                clean_guest_phone,
                 clean_status,
                 start,
                 end,
@@ -569,7 +632,7 @@ def _assert_no_conflict(
         ),
     ).fetchone()
     if row is not None:
-        raise ValueError(
+        raise AppointmentConflictError(
             'Appointment conflicts with an existing resource booking.'
         )
 
@@ -597,6 +660,42 @@ def _organization_id(organization_slug: str) -> int:
     if row is None:
         raise PermissionError('Scheduling organization is not active.')
     return int(row['id'])
+
+
+
+def _public_ref(value: str | None) -> str | None:
+    if value is None:
+        return None
+    clean = value.strip()
+    if not _PUBLIC_REF_RE.fullmatch(clean):
+        raise ValueError('Public booking reference is invalid.')
+    return clean
+
+
+def _guest_name(value: str) -> str:
+    clean = (value or '').strip()
+    if len(clean) > 200:
+        raise ValueError('Guest name must be 200 characters or fewer.')
+    return clean
+
+
+def _guest_email(value: str) -> str:
+    clean = (value or '').strip().lower()
+    if not clean:
+        return ''
+    if len(clean) > 320 or not _EMAIL_RE.fullmatch(clean):
+        raise ValueError('Guest email is invalid.')
+    return clean
+
+
+def _guest_phone(value: str) -> str:
+    clean = (value or '').strip()
+    if not clean:
+        return ''
+    digits = ''.join(ch for ch in clean if ch.isdigit())
+    if len(digits) < 7 or len(digits) > 15:
+        raise ValueError('Guest phone must contain 7 to 15 digits.')
+    return ('+' if clean.startswith('+') else '') + digits
 
 
 def _status(value: str) -> str:
@@ -675,6 +774,10 @@ def _appointment_from_row(row) -> Appointment:
             if row['crm_contact_id'] is not None
             else None
         ),
+        public_ref=str(row['public_ref'] or ''),
+        guest_name=str(row['guest_name'] or ''),
+        guest_email=str(row['guest_email'] or ''),
+        guest_phone=str(row['guest_phone'] or ''),
         status=str(row['status']),
         start_at=int(row['start_at']),
         end_at=int(row['end_at']),
