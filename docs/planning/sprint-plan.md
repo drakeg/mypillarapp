@@ -176,6 +176,6 @@ See [Sprint 9 Plan — Bookings and Calendars](sprint-9-plan.md).
 
 ### Current step
 
-S9-T01 — Scheduling tenant and time boundary.
+S9-T02 — Calendars and service types.
 
-This step establishes tenant authorization, same-tenant reference validation, UTC/IANA timezone rules, and scheduling compatibility/security boundaries before appointment persistence.
+This step adds tenant-owned calendars with optional Site Builder linkage, IANA timezone/horizon/notice settings, and lifecycle-managed bookable service types with bounded duration/buffer metadata.
