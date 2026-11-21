@@ -280,7 +280,7 @@ def create_appointment(
             INSERT INTO scheduling_appointment_transitions(
                 appointment_id,organization_id,from_status,to_status,
                 actor_user_id,reason,created_at
-            ) VALUES(?,?,'new',?,?,?,?,?)
+            ) VALUES(?,?,'new',?,?,?,?)
             ''',
             (
                 appointment_id,
