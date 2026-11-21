@@ -174,6 +174,26 @@ def _resource_candidate_starts(
     for row in availability:
         by_weekday.setdefault(row.weekday, []).append(row)
 
+    lookup_start = max(
+        0,
+        effective_start - service.buffer_before_minutes * 60,
+    )
+    lookup_end = (
+        effective_end + service.buffer_after_minutes * 60
+    )
+    blackouts = scheduling_availability.list_blackouts(
+        organization_slug,
+        resource.id,
+        start_at=lookup_start,
+        end_at=lookup_end,
+    )
+    blocking = scheduling_appointments.list_blocking_intervals(
+        organization_slug,
+        resource.id,
+        start_at=lookup_start,
+        end_at=lookup_end,
+    )
+
     current_date = zone_start.date()
     final_date = zone_end.date()
     while current_date <= final_date:
@@ -191,18 +211,12 @@ def _resource_candidate_starts(
                 end_at = start_at + service.duration_minutes * 60
                 if end_at > effective_end:
                     continue
-                if _is_blacked_out(
-                    organization_slug,
-                    resource.id,
-                    block_start,
-                    block_end,
+                if _overlaps_blackout(
+                    blackouts, block_start, block_end
                 ):
                     continue
-                if not scheduling_appointments.resource_is_free(
-                    organization_slug,
-                    resource.id,
-                    block_start_at=block_start,
-                    block_end_at=block_end,
+                if _overlaps_interval(
+                    blocking, block_start, block_end
                 ):
                     continue
                 yield start_at
@@ -252,19 +266,26 @@ def _window_candidate_starts(
     return rows
 
 
-def _is_blacked_out(
-    organization_slug: str,
-    resource_id: int,
+def _overlaps_blackout(
+    rows: list[scheduling_availability.BlackoutPeriod],
     block_start: int,
     block_end: int,
 ) -> bool:
-    rows = scheduling_availability.list_blackouts(
-        organization_slug,
-        resource_id,
-        start_at=block_start,
-        end_at=block_end,
+    return any(
+        row.start_at < block_end and row.end_at > block_start
+        for row in rows
     )
-    return bool(rows)
+
+
+def _overlaps_interval(
+    rows: list[tuple[int, int]],
+    block_start: int,
+    block_end: int,
+) -> bool:
+    return any(
+        start < block_end and end > block_start
+        for start, end in rows
+    )
 
 
 def _published_site(organization_slug: str, site_slug: str):
