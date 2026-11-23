@@ -6,6 +6,7 @@ import secrets
 import time
 
 import scheduling_appointments
+import scheduling_notifications
 import scheduling_public
 
 
@@ -78,6 +79,11 @@ def create_public_booking(
             )
         except scheduling_appointments.AppointmentConflictError:
             continue
+        scheduling_notifications.schedule_initial_notifications(
+            organization_slug,
+            appointment.id,
+            now=current,
+        )
         return PublicBooking(
             reference=appointment.public_ref,
             calendar_slug=calendar.slug,

@@ -6,6 +6,7 @@ import scheduling_appointments
 import scheduling_availability
 import scheduling_boundary
 import scheduling_calendars
+import scheduling_notifications
 
 
 @dataclass(frozen=True)
@@ -206,11 +207,16 @@ def create_appointment(
     scope = scheduling_boundary.require(
         actor_user_id, organization_slug, 'manage'
     )
-    return scheduling_appointments.create_appointment(
+    appointment = scheduling_appointments.create_appointment(
         organization_slug,
         actor_user_id=scope.user_id,
         **kwargs,
     )
+    scheduling_notifications.schedule_initial_notifications(
+        organization_slug,
+        appointment.id,
+    )
+    return appointment
 
 
 def transition_appointment(
@@ -224,10 +230,16 @@ def transition_appointment(
     scope = scheduling_boundary.require(
         actor_user_id, organization_slug, 'manage'
     )
-    return scheduling_appointments.transition_appointment(
+    appointment = scheduling_appointments.transition_appointment(
         organization_slug,
         appointment_id,
         to_status=to_status,
         actor_user_id=scope.user_id,
         reason=reason,
     )
+    if appointment.status in {'canceled', 'completed', 'no_show'}:
+        scheduling_notifications.cancel_scheduled_notifications(
+            organization_slug,
+            appointment.id,
+        )
+    return appointment
