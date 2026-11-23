@@ -176,6 +176,6 @@ See [Sprint 9 Plan — Bookings and Calendars](sprint-9-plan.md).
 
 ### Current step
 
-S9-T09 — Reminders and notifications.
+S9-T10 — Calendar export and integrations boundary.
 
-This step adds deterministic confirmation/reminder metadata, authenticated Portal delivery-queue integration with existing preferences, explicit guest-email adapter handoff, and lifecycle cleanup/rebuild on cancellation/rescheduling.
+This step adds privacy-safe ICS export, tenant-scoped calendar/window export, and a provider-neutral external-calendar boundary without OAuth credentials, provider secrets, or live synchronization.
