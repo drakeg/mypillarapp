@@ -8,6 +8,7 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Privacy-safe Sprint 9 ICS export and provider-neutral calendar integration boundary with tenant-scoped authorization, UTC event data, bounded opaque external references, and no OAuth/provider credential persistence.
 - Sprint 9 appointment confirmation/reminder ledger with deterministic UTC timing, authenticated Portal queue/preference integration, explicit guest-email adapter handoff, lifecycle cancellation/reschedule reconciliation, and no provider credentials in scheduling persistence.
 - Least-privilege Sprint 9 scheduling administration facade with viewer read-only access, staff appointment management, owner/admin calendar/service/resource/availability configuration, tenant isolation, and actor-aware appointment audit history.
 - Authenticated Sprint 9 customer scheduling self-service with explicit guest-booking claim by verified tenant identity, ownership-scoped listing/cancellation, public-policy-aware rescheduling, alternate-resource race fallback, and append-only customer audit history.
