@@ -1,12 +1,9 @@
 # Mad Mallard Platform
 
-[![License](https://img.shields.io/github/license/drakeg/mypillarapp)](https://github.com/drakeg/mypillarapp/blob/main/LICENSE)
-
-
 <!-- madmallard-badges:start -->
 [![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)](https://www.python.org/) [![Django](https://img.shields.io/badge/Django-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/) [![SQLite](https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white)](https://www.sqlite.org/) [![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](https://www.docker.com/) [![Docker Compose](https://img.shields.io/badge/Docker%20Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/) [![Terraform](https://img.shields.io/badge/Terraform-844FBA?logo=terraform&logoColor=white)](https://www.terraform.io/) [![AWS](https://img.shields.io/badge/AWS-232F3E?logo=amazonwebservices&logoColor=white)](https://aws.amazon.com/)
 
-[![django](https://github.com/drakeg/mypillarapp/actions/workflows/django.yml/badge.svg)](https://github.com/drakeg/mypillarapp/actions/workflows/django.yml) [![terraform](https://github.com/drakeg/mypillarapp/actions/workflows/terraform.yml/badge.svg)](https://github.com/drakeg/mypillarapp/actions/workflows/terraform.yml) [![Issues](https://img.shields.io/github/issues/drakeg/mypillarapp)](https://github.com/drakeg/mypillarapp/issues) [![Pull requests](https://img.shields.io/github/issues-pr/drakeg/mypillarapp)](https://github.com/drakeg/mypillarapp/pulls)
+[![django](https://github.com/drakeg/mypillarapp/actions/workflows/django.yml/badge.svg)](https://github.com/drakeg/mypillarapp/actions/workflows/django.yml) [![terraform](https://github.com/drakeg/mypillarapp/actions/workflows/terraform.yml/badge.svg)](https://github.com/drakeg/mypillarapp/actions/workflows/terraform.yml) [![License](https://img.shields.io/github/license/drakeg/mypillarapp)](https://github.com/drakeg/mypillarapp/blob/HEAD/LICENSE) [![Issues](https://img.shields.io/github/issues/drakeg/mypillarapp)](https://github.com/drakeg/mypillarapp/issues) [![Pull requests](https://img.shields.io/github/issues-pr/drakeg/mypillarapp)](https://github.com/drakeg/mypillarapp/pulls)
 <!-- madmallard-badges:end -->
 
 Mad Mallard Platform is a low-cost, self-hosted business operating platform incubated by Mad Mallard Solutions. The product begins as a practical platform for Mad Mallard Solutions and is intentionally designed to evolve into a multi-tenant SaaS product serving additional businesses.
