@@ -8,6 +8,8 @@ The format follows Keep a Changelog principles. Formal releases will use Semanti
 
 ### Added
 
+- Dedicated `make test-sprint9` regression target and CI gate for scheduling, booking, reminders and calendar exports.
+
 - Privacy-safe Sprint 9 ICS export and provider-neutral calendar integration boundary with tenant-scoped authorization, UTC event data, bounded opaque external references, and no OAuth/provider credential persistence.
 - Sprint 9 appointment confirmation/reminder ledger with deterministic UTC timing, authenticated Portal queue/preference integration, explicit guest-email adapter handoff, lifecycle cancellation/reschedule reconciliation, and no provider credentials in scheduling persistence.
 - Least-privilege Sprint 9 scheduling administration facade with viewer read-only access, staff appointment management, owner/admin calendar/service/resource/availability configuration, tenant isolation, and actor-aware appointment audit history.
