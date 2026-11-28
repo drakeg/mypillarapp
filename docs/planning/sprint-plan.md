@@ -176,6 +176,6 @@ See [Sprint 9 Plan — Bookings and Calendars](sprint-9-plan.md).
 
 ### Current step
 
-S9-T10 — Calendar export and integrations boundary.
+S9-T11 — Sprint 9 regression and closure.
 
-This step adds privacy-safe ICS export, tenant-scoped calendar/window export, and a provider-neutral external-calendar boundary without OAuth credentials, provider secrets, or live synchronization.
+The dedicated scheduling regression gate is required for closure. Full CI evidence and the merge baseline must be recorded before declaring the sprint closed. See [Sprint 9 closure candidate](../09-release/sprint-9-closure.md).
